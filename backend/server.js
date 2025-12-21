@@ -10,7 +10,15 @@ const app = express();
 const PORT = 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://kodeme-git-main-lognebudos-projects.vercel.app",
+    "https://kodeme.vercel.app"
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 // Debug: Log credentials (mask password)
