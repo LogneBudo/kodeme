@@ -43,6 +43,11 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Root endpoint
+app.get("/", (req, res) => {
+  res.json({ status: "OK", message: "Appointments API is running" });
+});
+
 // Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "OK", message: "Backend server is running" });
