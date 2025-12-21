@@ -1,13 +1,20 @@
 import express from "express";
 import cors from "cors";
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import dotenv from "dotenv";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
-// Load environment variables from .env file
-dotenv.config();
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+// Load environment variables from .env file in the backend directory
+dotenv.config({ path: `${__dirname}/.env` });
 
 const app = express();
 const PORT = 3001;
+
+// Initialize Resend client
+const resend = new Resend(process.env.RESEND_[REMOVED]);
 
 // Middleware
 app.use(cors({
@@ -28,23 +35,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Debug: Log credentials (mask password)
+// Debug: Log configuration
 console.log("📧 Email Configuration:");
-console.log(`   User: ${process.env.EMAIL_USER}`);
-console.log(`   Password length: ${(process.env.EMAIL_PASSWORD || "").length} characters`);
-console.log(`   Password (masked): ${(process.env.EMAIL_PASSWORD || "").substring(0, 4)}${"*".repeat(Math.max(0, (process.env.EMAIL_PASSWORD || "").length - 4))}`);
-
-// Configure email transporter for Gmail
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false, // Use TLS (not SSL)
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-});
-
+console.log(`   Provider: Resend`);
+console.log(`   API Key configured: ${!!process.env.RESEND_[REMOVED]}`);
+console.log(`   From Email: ${process.env.RESEND_[REMOVED] || "noreply@resend.dev"}`);
 // Root endpoint
 app.get("/", (req, res) => {
   res.json({ status: "OK", message: "Appointments API is running" });
@@ -87,23 +82,23 @@ Best regards,
 The Appointments Team
     `;
 
-    // Send email with ICS attachment
-    const mailOptions = {
-      from: process.env.EMAIL_USER || "appointments@example.com",
+    // Send email using Resend with ICS attachment
+    const response = await resend.emails.send({
+      from: process.env.RESEND_[REMOVED] || "noreply@resend.dev",
       to: email,
       subject: "Appointment Confirmation",
-      text: emailContent,
       html: `<pre>${emailContent}</pre>`,
       attachments: [
         {
           filename: `appointment-${appointment.id}.ics`,
-          content: icsContent,
-          contentType: "text/calendar",
+          content: Buffer.from(icsContent),
         },
       ],
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
+    if (response.error) {
+      throw new Error(response.error.message || "Failed to send email");
+    }
 
     console.log(`✓ Confirmation email sent to ${email}`);
     res.json({
@@ -123,6 +118,6 @@ The Appointments Team
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`📧 Email service configured`);
-  console.log(`   User: ${process.env.EMAIL_USER || "Not configured"}`);
+  console.log(`📧 Email service configured (Resend)`);
+  console.log(`   API Key: ${process.env.RESEND_[REMOVED] ? "✓ Configured" : "✗ Missing"}`);
 });
