@@ -11,12 +11,19 @@ const PORT = 3001;
 
 // Middleware
 app.use(cors({
-  origin: [
-    "http://localhost:3000",
-    "http://localhost:5173",
-    "https://kodeme-git-main-lognebudos-projects.vercel.app",
-    "https://kodeme.vercel.app"
-  ],
+  origin: (origin, callback) => {
+    // Allow localhost for development
+    if (!origin || origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      return callback(null, true);
+    }
+    // Allow all Vercel preview and production URLs
+    if (origin.includes("vercel.app")) {
+      return callback(null, true);
+    }
+    // For other origins, log and block
+    console.warn(`⚠️  CORS rejected origin: ${origin}`);
+    callback(new Error("Not allowed by CORS"));
+  },
   credentials: true,
 }));
 app.use(express.json());
