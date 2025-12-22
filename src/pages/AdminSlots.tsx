@@ -80,7 +80,14 @@ useEffect(() => {
       // Default to "unavailable" if status is undefined
       const currentStatus = existingSlot.status || "unavailable";
       const newStatus = currentStatus === "available" ? "unavailable" : "available";
-      
+
+      // Optimistically update local state immediately
+      setSlots(
+        slots.map((s) =>
+          s.id === existingSlot.id ? { ...s, status: newStatus } : s
+        )
+      );
+
       await updateTimeSlot(existingSlot.id, {
         status: newStatus,
       });
