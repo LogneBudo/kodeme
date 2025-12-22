@@ -57,6 +57,8 @@ export default function LocationStep({
   const [error, setError] = useState("");
   const [coords, setCoords] = useState<[number, number] | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [satelliteView, setSatelliteView] = useState(false);
 
   // Geocode address to coordinates using Nominatim (free OpenStreetMap service)
   const geocodeAddress = async (address: string) => {
@@ -97,16 +99,15 @@ export default function LocationStep({
     }
   };
 
-  // Debounced geocoding
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if ((selectedLocation === "other" || selectedLocation === "your_premises") && locationDetails.trim()) {
-        geocodeAddress(locationDetails);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [locationDetails, selectedLocation]);
+  // Handle show map button click
+  const handleShowMap = async () => {
+    if (!locationDetails.trim()) {
+      setError("Please enter a location first");
+      return;
+    }
+    await geocodeAddress(locationDetails);
+    setShowMap(true);
+  };
 
   const handleNext = () => {
     if (!selectedLocation) {
@@ -288,29 +289,72 @@ export default function LocationStep({
         </div>
       )}
 
-      {isGeocoding && (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#64748b", marginBottom: "16px", justifyContent: "center" }}>
-          <Loader size={16} className="animate-spin" />
-          <span style={{ fontSize: "14px" }}>Finding location...</span>
-        </div>
-      )}
-
-      {coords && (
-        <div style={{ marginBottom: "20px", borderRadius: "12px", overflow: "hidden", border: "2px solid #e2e8f0", height: "250px" }}>
-          <MapContainer
-            center={coords}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}
-            scrollWheelZoom={false}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker position={coords}>
-              <Popup>{locationDetails}</Popup>
-            </Marker>
-          </MapContainer>
+      {showMap && coords && (
+        <div style={{ marginBottom: "20px", borderRadius: "12px", overflow: "hidden", border: "2px solid #e2e8f0" }}>
+          <div style={{ display: "flex", gap: "8px", padding: "12px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0" }}>
+            <button
+              onClick={() => setSatelliteView(false)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: !satelliteView ? "#0f172a" : "#e2e8f0",
+                color: !satelliteView ? "white" : "#0f172a",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            >
+              Map
+            </button>
+            <button
+              onClick={() => setSatelliteView(true)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: satelliteView ? "#0f172a" : "#e2e8f0",
+                color: satelliteView ? "white" : "#0f172a",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            >
+              Satellite
+            </button>
+            <button
+              onClick={() => setShowMap(false)}
+              style={{
+                marginLeft: "auto",
+                padding: "6px 12px",
+                borderRadius: "6px",
+                border: "none",
+                background: "#e2e8f0",
+                color: "#0f172a",
+                cursor: "pointer",
+                fontSize: "12px",
+                fontWeight: 600,
+              }}
+            >
+              Close
+            </button>
+          </div>
+          <div style={{ height: "300px" }}>
+            <MapContainer
+              center={coords}
+              zoom={13}
+              style={{ height: "100%", width: "100%" }}
+              scrollWheelZoom={false}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url={satelliteView ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+              />
+              <Marker position={coords}>
+                <Popup>{locationDetails}</Popup>
+              </Marker>
+            </MapContainer>
+          </div>
         </div>
       )}
 
