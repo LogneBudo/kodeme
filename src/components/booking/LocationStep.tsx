@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   MapPin,
   Video,
@@ -7,9 +7,21 @@ import {
   MapPinned,
   ArrowLeft,
   ArrowRight,
+  Loader,
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 import type { Appointment } from "../../types/appointment";
 import type { LucideIcon } from "lucide-react";
+import "leaflet/dist/leaflet.css";
+
+// Fix for default leaflet marker icon
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
 
 type LocationType = Appointment["location_type"];
 
@@ -43,6 +55,58 @@ export default function LocationStep({
   onBack,
 }: LocationStepProps) {
   const [error, setError] = useState("");
+  const [coords, setCoords] = useState<[number, number] | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  // Geocode address to coordinates using Nominatim (free OpenStreetMap service)
+  const geocodeAddress = async (address: string) => {
+    if (!address.trim()) {
+      setCoords(null);
+      return;
+    }
+
+    // Check if it looks like coordinates (number,number format)
+    const coordMatch = address.trim().match(/^(-?\d+\.?\d*),\s*(-?\d+\.?\d*)$/);
+    if (coordMatch) {
+      const lat = parseFloat(coordMatch[1]);
+      const lon = parseFloat(coordMatch[2]);
+      if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        setCoords([lat, lon]);
+        return;
+      }
+    }
+
+    // Try to geocode the address
+    try {
+      setIsGeocoding(true);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`
+      );
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        setCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+      } else {
+        setCoords(null);
+      }
+    } catch (err) {
+      console.error("Geocoding error:", err);
+      setCoords(null);
+    } finally {
+      setIsGeocoding(false);
+    }
+  };
+
+  // Debounced geocoding
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if ((selectedLocation === "other" || selectedLocation === "your_premises") && locationDetails.trim()) {
+        geocodeAddress(locationDetails);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [locationDetails, selectedLocation]);
 
   const handleNext = () => {
     if (!selectedLocation) {
@@ -221,6 +285,32 @@ export default function LocationStep({
           <p style={{ fontSize: "12px", color: "#64748b", marginTop: "8px" }}>
             {selectedLocation === "your_premises" ? "Enter your business address or GPS coordinates" : "Enter the venue address or GPS coordinates"}
           </p>
+        </div>
+      )}
+
+      {isGeocoding && (
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", color: "#64748b", marginBottom: "16px", justifyContent: "center" }}>
+          <Loader size={16} className="animate-spin" />
+          <span style={{ fontSize: "14px" }}>Finding location...</span>
+        </div>
+      )}
+
+      {coords && (
+        <div style={{ marginBottom: "20px", borderRadius: "12px", overflow: "hidden", border: "2px solid #e2e8f0", height: "250px" }}>
+          <MapContainer
+            center={coords}
+            zoom={13}
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom={false}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <Marker position={coords}>
+              <Popup>{locationDetails}</Popup>
+            </Marker>
+          </MapContainer>
         </div>
       )}
 
