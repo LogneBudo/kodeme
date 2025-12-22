@@ -49,8 +49,8 @@ export default function LocationStep({
       setError("Please select a location");
       return;
     }
-    if (selectedLocation === "other" && !locationDetails.trim()) {
-      setError("Please specify the location");
+    if ((selectedLocation === "other" || selectedLocation === "your_premises") && !locationDetails.trim()) {
+      setError("Please specify the location details (address or geo coordinates)");
       return;
     }
     setError("");
@@ -194,10 +194,13 @@ export default function LocationStep({
         })}
       </div>
 
-      {selectedLocation === "other" && (
+      {(selectedLocation === "other" || selectedLocation === "your_premises") && (
         <div style={{ marginBottom: "24px" }}>
-          <input
-            placeholder="Enter location details (e.g., address, venue name)"
+          <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 500, color: "#0f172a" }}>
+            {selectedLocation === "your_premises" ? "Location Details" : "Location Details"}
+          </label>
+          <textarea
+            placeholder="Enter address or geo coordinates (e.g., 123 Main St, City or 40.7128,-74.0060)"
             value={locationDetails}
             onChange={(e) => {
               setLocationDetails(e.target.value);
@@ -205,13 +208,19 @@ export default function LocationStep({
             }}
             style={{
               width: "100%",
-              height: "56px",
-              fontSize: "18px",
-              padding: "0 20px",
+              minHeight: "80px",
+              fontSize: "16px",
+              padding: "12px 16px",
               borderRadius: "12px",
               border: "2px solid #e2e8f0",
+              fontFamily: "inherit",
+              resize: "vertical",
+              boxSizing: "border-box",
             }}
           />
+          <p style={{ fontSize: "12px", color: "#64748b", marginTop: "8px" }}>
+            {selectedLocation === "your_premises" ? "Enter your business address or GPS coordinates" : "Enter the venue address or GPS coordinates"}
+          </p>
         </div>
       )}
 
