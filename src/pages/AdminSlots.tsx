@@ -99,14 +99,17 @@ useEffect(() => {
         `Slot marked as ${newStatus}`
       );
     } else {
-      await createTimeSlot({
+      // When creating a new slot, default to "available" for single-click convenience
+      const newSlot = await createTimeSlot({
         date: dateStr,
         time,
-        status: "unavailable",
+        status: "available",
       });
 
-      toast.success("Slot created and marked as unavailable");
-      await loadData();
+      // Optimistically update UI with the newly created slot
+      setSlots((prevSlots) => [...prevSlots, newSlot]);
+
+      toast.success("Slot created and marked as available");
     }
   };
 
