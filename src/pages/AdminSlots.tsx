@@ -81,12 +81,15 @@ useEffect(() => {
       const currentStatus = existingSlot.status || "unavailable";
       const newStatus = currentStatus === "available" ? "unavailable" : "available";
 
-      // Optimistically update local state immediately
-      setSlots(
-        slots.map((s) =>
-          s.id === existingSlot.id ? { ...s, status: newStatus } : s
-        )
-      );
+      // Optimistically update local state immediately using functional update
+      const updatedSlot = { ...existingSlot, status: newStatus };
+      setSlots((prevSlots) => {
+        const updated = prevSlots.map((s) =>
+          s.id === existingSlot.id ? updatedSlot : s
+        );
+        console.log(`[AdminSlots] Optimistic update - changed slot ${existingSlot.id} to ${newStatus}`, updated);
+        return updated;
+      });
 
       await updateTimeSlot(existingSlot.id, {
         status: newStatus,
@@ -103,9 +106,8 @@ useEffect(() => {
       });
 
       toast.success("Slot created and marked as unavailable");
+      await loadData();
     }
-
-    await loadData();
   };
 
   const generateWeekSlots = async () => {
