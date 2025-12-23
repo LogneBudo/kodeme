@@ -35,7 +35,7 @@ type Props = {
 };
 
 export default function SuccessScreen({ appointment, onReset }: Props) {
-  const LocationIcon = locationIcons[appointment.location_type] || MapPin;
+  const LocationIcon = locationIcons[appointment.locationDetails.type] || MapPin;
 
   return (
     <motion.div
@@ -105,9 +105,9 @@ export default function SuccessScreen({ appointment, onReset }: Props) {
             label="Location"
             value={
               <>
-                {locationLabels[appointment.location_type]}
-                {appointment.location_type === "other" &&
-                  appointment.location_details && (
+                {locationLabels[appointment.locationDetails.type]}
+                {appointment.locationDetails.type === "other" &&
+                  appointment.locationDetails.details && (
                     <span
                       style={{
                         display: "block",
@@ -117,7 +117,7 @@ export default function SuccessScreen({ appointment, onReset }: Props) {
                         fontWeight: 400,
                       }}
                     >
-                      {appointment.location_details}
+                      {appointment.locationDetails.details}
                     </span>
                   )}
               </>
@@ -207,3 +207,4 @@ function DetailRow({
     </div>
   );
 }
+

@@ -264,25 +264,52 @@ export default function LocationStep({
           <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: 500, color: "#0f172a" }}>
             {selectedLocation === "your_premises" ? "Location Details" : "Location Details"}
           </label>
-          <textarea
-            placeholder="Enter address or geo coordinates (e.g., 123 Main St, City or 40.7128,-74.0060)"
-            value={locationDetails}
-            onChange={(e) => {
-              setLocationDetails(e.target.value);
-              if (error) setError("");
-            }}
-            style={{
-              width: "100%",
-              minHeight: "80px",
-              fontSize: "16px",
-              padding: "12px 16px",
-              borderRadius: "12px",
-              border: "2px solid #e2e8f0",
-              fontFamily: "inherit",
-              resize: "vertical",
-              boxSizing: "border-box",
-            }}
-          />
+          <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
+              <textarea
+                placeholder="Enter address or geo coordinates (e.g., 123 Main St, City or 40.7128,-74.0060)"
+                value={locationDetails}
+                onChange={(e) => {
+                  setLocationDetails(e.target.value);
+                  if (error) setError("");
+                  setShowMap(false);
+                }}
+                style={{
+                  flex: 1,
+                  minHeight: "80px",
+                  fontSize: "16px",
+                  padding: "12px 16px",
+                  borderRadius: "12px",
+                  border: "2px solid #e2e8f0",
+                  fontFamily: "inherit",
+                  resize: "vertical",
+                  boxSizing: "border-box",
+                }}
+              />
+              <button
+                onClick={handleShowMap}
+                disabled={isGeocoding || !locationDetails.trim()}
+                style={{
+                  background: isGeocoding ? "#cbd5e1" : "#0f172a",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "10px 16px",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  cursor: isGeocoding || !locationDetails.trim() ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  whiteSpace: "nowrap",
+                  opacity: isGeocoding || !locationDetails.trim() ? 0.6 : 1,
+                  minHeight: "48px",
+                  justifyContent: "center",
+                }}
+              >
+                {isGeocoding ? <Loader size={14} className="animate-spin" /> : <MapPin size={14} />}
+                {isGeocoding ? "Loading..." : "View Map"}
+              </button>
+            </div>
           <p style={{ fontSize: "12px", color: "#64748b", marginTop: "8px" }}>
             {selectedLocation === "your_premises" ? "Enter your business address or GPS coordinates" : "Enter the venue address or GPS coordinates"}
           </p>

@@ -8,7 +8,7 @@ import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
 import { updateTimeSlot, createAppointment as createFirebaseAppointment } from "../api/firebaseApi";
-// 
+// import { sendBookingConfirmation } from "../api/emailApi"; // Disabled
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
 
@@ -53,9 +53,16 @@ export default function BookAppointment() {
       const updatedSlot = await updateTimeSlot(selectedSlot.id, { status: "booked" });
       console.log("Slot updated:", updatedSlot);
 
+      // Send confirmation email with ICS attachment
+      console.log("Sending confirmation email...");
+      const emailSent = await sendBookingConfirmation(appointment);
+      if (emailSent) {
+        console.log("Email sent successfully!");
+      } else {
+        console.error("Failed to send email");
+      }
 
-
-      setBookedAppointment({ ...appointment, time: selectedSlot.time, date: selectedSlot.date });
+      setBookedAppointment(appointment);
     } catch (error) {
       console.error("Booking error:", error);
     } finally {
@@ -193,8 +200,4 @@ export default function BookAppointment() {
     </div>
   );
 }
-
-
-
-
 

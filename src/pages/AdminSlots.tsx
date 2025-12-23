@@ -22,7 +22,7 @@ import {
   updateTimeSlot,
   createTimeSlot,
   bulkCreateTimeSlots,
-} from "../api/slotsApi";
+} from "../api/firebaseApi";
 
 const defaultTimeSlots = [
   "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
@@ -54,7 +54,7 @@ export default function AdminSlots() {
   });
 
   const weekAppointments = allAppointments.filter((apt) => {
-    const d = new Date(apt.date);
+    const d = new Date(apt.appointmentDate);
     return d >= weekStart && d <= weekEnd;
   });
 
@@ -77,12 +77,12 @@ useEffect(() => {
     const dateStr = format(date, "yyyy-MM-dd");
 
     if (existingSlot) {
-      // Default to "unavailable" if status is undefined
-      const currentStatus = existingSlot.status || "unavailable";
-      const newStatus = currentStatus === "available" ? "unavailable" : "available";
+      // Toggle between available and booked
+      const currentStatus = existingSlot.status || "available";
+      const newStatus = currentStatus === "available" ? "booked" : "available";
 
       // Optimistically update local state immediately using functional update
-      const updatedSlot = { ...existingSlot, status: newStatus };
+      const updatedSlot: TimeSlot = { ...existingSlot, status: newStatus as "available" | "booked" };
       setSlots((prevSlots) => {
         const updated = prevSlots.map((s) =>
           s.id === existingSlot.id ? updatedSlot : s
@@ -121,7 +121,7 @@ useEffect(() => {
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
     const existingKeys = slots.map((s) => `${s.date}-${s.time}`);
-    const newSlots: Omit<TimeSlot, "id">[] = [];
+    const newSlots: Omit<TimeSlot, "id" | "createdAt" | "updatedAt">[] = [];
 
     for (const day of days) {
       const dow = day.getDay();
@@ -135,7 +135,7 @@ useEffect(() => {
           newSlots.push({
             date: dateStr,
             time,
-            status: "unavailable",
+            status: "available",
           });
         }
       }
