@@ -12,6 +12,7 @@ export default function CalendarExport({ appointment }: CalendarExportProps) {
   const [downloaded, setDownloaded] = useState(false);
 
   const generateICS = () => {
+    if (!appointment.date || !appointment.time) return "";
     const date = parseISO(appointment.date);
     const [hours, minutes] = appointment.time.split(":");
     date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -23,13 +24,13 @@ export default function CalendarExport({ appointment }: CalendarExportProps) {
     d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
     const locationText =
-      appointment.location_type === "other" && appointment.location_details
-        ? appointment.location_details
-        : appointment.location_type === "zoom"
+      appointment.locationDetails.type === "other" && appointment.locationDetails.details
+        ? appointment.locationDetails.details
+        : appointment.locationDetails.type === "zoom"
         ? "Zoom Meeting (link TBD)"
-        : appointment.location_type === "your_premises"
+        : appointment.locationDetails.type === "your_premises"
         ? "Your Premises"
-        : appointment.location_type === "restaurant"
+        : appointment.locationDetails.type === "restaurant"
         ? "Restaurant (TBD)"
         : "To be confirmed";
 
@@ -59,10 +60,14 @@ END:VCALENDAR`;
 
   const downloadICS = () => {
     const icsContent = generateICS();
+    if (!icsContent) {
+      toast.error("Unable to generate calendar file");
+      return;
+    }
     const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `appointment-${appointment.date}-${appointment.time.replace(":", "")}.ics`;
+    link.download = `appointment-${appointment.date}-${appointment.time?.replace(":", "") || "time"}.ics`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -73,6 +78,7 @@ END:VCALENDAR`;
   };
 
   const addToGoogleCalendar = () => {
+    if (!appointment.date || !appointment.time) return;
     const date = parseISO(appointment.date);
     const [hours, minutes] = appointment.time.split(":");
     date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -84,13 +90,13 @@ END:VCALENDAR`;
       d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
     const locationText =
-      appointment.location_type === "other" && appointment.location_details
-        ? appointment.location_details
-        : appointment.location_type === "zoom"
+      appointment.locationDetails.type === "other" && appointment.locationDetails.details
+        ? appointment.locationDetails.details
+        : appointment.locationDetails.type === "zoom"
         ? "Zoom Meeting (link TBD)"
-        : appointment.location_type === "your_premises"
+        : appointment.locationDetails.type === "your_premises"
         ? "Your Premises"
-        : appointment.location_type === "restaurant"
+        : appointment.locationDetails.type === "restaurant"
         ? "Restaurant (TBD)"
         : "To be confirmed";
 
@@ -112,6 +118,7 @@ END:VCALENDAR`;
   };
 
   const addToOutlookCalendar = () => {
+    if (!appointment.date || !appointment.time) return;
     const date = parseISO(appointment.date);
     const [hours, minutes] = appointment.time.split(":");
     date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -122,13 +129,13 @@ END:VCALENDAR`;
     const formatOutlookDate = (d : Date) => d.toISOString();
 
     const locationText =
-      appointment.location_type === "other" && appointment.location_details
-        ? appointment.location_details
-        : appointment.location_type === "zoom"
+      appointment.locationDetails.type === "other" && appointment.locationDetails.details
+        ? appointment.locationDetails.details
+        : appointment.locationDetails.type === "zoom"
         ? "Zoom Meeting (link TBD)"
-        : appointment.location_type === "your_premises"
+        : appointment.locationDetails.type === "your_premises"
         ? "Your Premises"
-        : appointment.location_type === "restaurant"
+        : appointment.locationDetails.type === "restaurant"
         ? "Restaurant (TBD)"
         : "To be confirmed";
 
@@ -151,6 +158,7 @@ END:VCALENDAR`;
   };
 
   const addToOffice365Calendar = () => {
+    if (!appointment.date || !appointment.time) return;
     const date = parseISO(appointment.date);
     const [hours, minutes] = appointment.time.split(":");
     date.setHours(parseInt(hours), parseInt(minutes), 0, 0);
@@ -161,13 +169,13 @@ END:VCALENDAR`;
     const formatOutlookDate = (d : Date) => d.toISOString();
 
     const locationText =
-      appointment.location_type === "other" && appointment.location_details
-        ? appointment.location_details
-        : appointment.location_type === "zoom"
+      appointment.locationDetails.type === "other" && appointment.locationDetails.details
+        ? appointment.locationDetails.details
+        : appointment.locationDetails.type === "zoom"
         ? "Zoom Meeting (link TBD)"
-        : appointment.location_type === "your_premises"
+        : appointment.locationDetails.type === "your_premises"
         ? "Your Premises"
-        : appointment.location_type === "restaurant"
+        : appointment.locationDetails.type === "restaurant"
         ? "Restaurant (TBD)"
         : "To be confirmed";
 

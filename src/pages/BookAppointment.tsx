@@ -17,7 +17,7 @@ const steps = ["Email", "Location", "Timeframe", "Select Slot"];
 export default function BookAppointment() {
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<Appointment["location_type"]>("zoom");
+  const [selectedLocation, setSelectedLocation] = useState<Appointment["locationDetails"]["type"]>("zoom");
   const [locationDetails, setLocationDetails] = useState("");
   // Default to "asap" so users see the next 30 days of slots immediately
   const [timeframe, setTimeframe] = useState("asap");
