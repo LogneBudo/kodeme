@@ -86,18 +86,22 @@ export default function SuccessScreen({ appointment, onReset }: Props) {
       >
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {/* Date */}
-          <DetailRow
-            icon={<Calendar size={24} color="#475569" />}
-            label="Date"
-            value={format(parseISO(appointment.date), "EEEE, MMMM d, yyyy")}
-          />
+          {appointment.date && (
+            <DetailRow
+              icon={<Calendar size={24} color="#475569" />}
+              label="Date"
+              value={format(parseISO(appointment.date), "EEEE, MMMM d, yyyy")}
+            />
+          )}
 
           {/* Time */}
-          <DetailRow
-            icon={<Clock size={24} color="#475569" />}
-            label="Time"
-            value={appointment.time}
-          />
+          {appointment.time && (
+            <DetailRow
+              icon={<Clock size={24} color="#475569" />}
+              label="Time"
+              value={appointment.time}
+            />
+          )}
 
           {/* Location */}
           <DetailRow

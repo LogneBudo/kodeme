@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   MapPin,
   Video,
@@ -23,7 +23,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-type LocationType = Appointment["location_type"];
+type LocationType = Appointment["locationDetails"]["type"];
 
 type LocationStepProps = {
   selectedLocation: LocationType;

@@ -82,8 +82,8 @@ export default function SlotSelectionStep({
         const slotDate = parseISO(slot.date);
         const inRange = !isBefore(slotDate, start) && !isAfter(slotDate, end);
         
-        // Check if slot is marked as available (status defaults to "available" if not specified)
-        const isAvailable = slot.status !== "unavailable" && slot.status !== "booked";
+        // Check if slot is marked as available
+        const isAvailable = slot.status === "available";
         
         console.log(`Slot ${slot.id} (${slot.date} ${slot.time}): inRange=${inRange}, isAvailable=${isAvailable}, status=${slot.status}`);
         

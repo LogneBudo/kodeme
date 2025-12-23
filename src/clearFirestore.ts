@@ -22,8 +22,11 @@ async function clearFirestore() {
 }
 
 clearFirestore()
-  .then(() => process.exit(0))
+  .then(() => {
+    console.log("Script complete. You can now stop the process.");
+    if (typeof process !== 'undefined') process.exit(0);
+  })
   .catch((error) => {
     console.error("Error clearing database:", error);
-    process.exit(1);
+    if (typeof process !== 'undefined') process.exit(1);
   });
