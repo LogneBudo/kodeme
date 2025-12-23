@@ -12,7 +12,7 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { listTimeSlots } from "../../api/slotsApi";
+import { listTimeSlots } from "../../api/firebaseApi";
 import type { TimeSlot } from "../../types/timeSlot";
 
 type Props = {
