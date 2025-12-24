@@ -6,6 +6,7 @@ import {
   getDocs,
   getDoc,
   doc,
+  setDoc,
   query,
   where,
   orderBy,
@@ -368,5 +369,86 @@ export async function getSlotsByDate(date: string): Promise<TimeSlot[]> {
   } catch (error) {
     console.error("Error fetching slots by date:", error);
     return [];
+  }
+}
+
+// ============ USERS ============
+
+export type User = {
+  id: string;
+  email: string;
+  role: "admin" | "user";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export async function listUsers(): Promise<User[]> {
+  try {
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+
+    return snapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        email: data.email,
+        role: data.role,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      } as User;
+    });
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+}
+
+export async function addUser(uid: string, email: string, role: "admin" | "user"): Promise<User | null> {
+  try {
+    const now = Timestamp.now();
+    const userRef = doc(db, "users", uid);
+    await setDoc(userRef, {
+      email,
+      role,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      id: uid,
+      email,
+      role,
+      createdAt: now.toDate(),
+      updatedAt: now.toDate(),
+    };
+  } catch (error) {
+    console.error("Error adding user:", error);
+    return null;
+  }
+}
+
+export async function updateUserRole(userId: string, role: "admin" | "user"): Promise<boolean> {
+  try {
+    const userRef = doc(db, "users", userId);
+    await updateDoc(userRef, {
+      role,
+      updatedAt: Timestamp.now(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return false;
+  }
+}
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  try {
+    const userRef = doc(db, "users", userId);
+    await deleteDoc(userRef);
+    return true;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return false;
   }
 }

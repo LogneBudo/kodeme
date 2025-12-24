@@ -2,11 +2,15 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layout";
 import BookAppointment from "./pages/BookAppointment";
 import AdminSlots from "../src/pages/AdminSlots";
+import UserManagement from "../src/pages/UserManagement";
+import Login from "../src/pages/Login";
 
 export default function App() {
   return (
     <Routes>
-       <Route
+      <Route path="/login" element={<Login />} />
+      
+      <Route
         path="/"
         element={<Navigate to="/BookAppointment" replace />}
       />
@@ -24,6 +28,15 @@ export default function App() {
         element={
           <Layout currentPageName="AdminSlots">
             <AdminSlots />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/UserManagement"
+        element={
+          <Layout currentPageName="UserManagement">
+            <UserManagement />
           </Layout>
         }
       />

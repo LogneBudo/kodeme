@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { Calendar, Settings, Users, LogOut } from "lucide-react";
+import { Calendar, Settings, Users, LogOut, LogIn } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getCurrentUser } from "../src/api/authApi";
+import { getCurrentUser, logout } from "../src/api/authApi";
 type LayoutProps = {
   children: React.ReactNode;
   currentPageName: string;
@@ -13,15 +13,30 @@ type User = {
 
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const [user, setUser] = useState<User>(null);
+  const [loading, setLoading] = useState(true);
   
  useEffect(() => {
-  console.log("LAYOUT EFFECT RUNNING");
-  (async () => {
-    const currentUser = await getCurrentUser();
-    console.log("AUTH RESULT:", currentUser);
-    setUser(currentUser);
-  })();
+  const initializeAuth = async () => {
+    try {
+      console.log("LAYOUT: Fetching current user...");
+      const currentUser = await getCurrentUser();
+      console.log("LAYOUT: Got user:", currentUser);
+      setUser(currentUser);
+    } catch (error) {
+      console.error("LAYOUT: Error fetching user:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  initializeAuth();
 }, []);
+
+  async function handleLogout() {
+    await logout();
+    setUser(null);
+    window.location.href = "/login";
+  }
 
   const navItems = [
     { name: "BookAppointment", label: "Book Appointment", icon: Calendar, public: true },
@@ -65,7 +80,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          {navItems.map((item) => {
+          {!loading && user && navItems.map((item) => {
             if (item.adminOnly && user?.role !== "admin") return null;
 
             const Icon = item.icon;
@@ -94,9 +109,9 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
             );
           })}
 
-          {user && (
+          {!loading && user && (
             <button
-              onClick={() => console.log("logout")}
+              onClick={handleLogout}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -112,6 +127,27 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
               <LogOut size={16} />
               Logout
             </button>
+          )}
+
+          {!loading && !user && (
+            <Link
+              to="/login"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                textDecoration: "none",
+                background: "#222",
+                color: "white",
+                border: "1px solid #222",
+              }}
+            >
+              <LogIn size={16} />
+              Login
+            </Link>
           )}
         </div>
       </nav>
