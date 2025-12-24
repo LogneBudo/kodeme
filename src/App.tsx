@@ -3,6 +3,7 @@ import Layout from "./layout";
 import BookAppointment from "./pages/BookAppointment";
 import AdminSlots from "../src/pages/AdminSlots";
 import UserManagement from "../src/pages/UserManagement";
+import AdminSettings from "../src/pages/AdminSettings";
 import Login from "../src/pages/Login";
 
 export default function App() {
@@ -37,6 +38,15 @@ export default function App() {
         element={
           <Layout currentPageName="UserManagement">
             <UserManagement />
+          </Layout>
+        }
+      />
+
+      <Route
+        path="/AdminSettings"
+        element={
+          <Layout currentPageName="AdminSettings">
+            <AdminSettings />
           </Layout>
         }
       />

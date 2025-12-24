@@ -7,42 +7,77 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { Check, X, Clock, CalendarX } from "lucide-react";
+import { Check, X, Clock, CalendarX, Lock } from "lucide-react";
 import type { Appointment } from "../../types/appointment";
-import type { TimeSlot } from "../../types/timeSlot";
-
-
-const timeSlots = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00",
-];
+import type { Settings } from "../../api/firebaseApi";
 
 type WeekGridProps = {
   currentDate: Date;
-  slots: TimeSlot[];
   appointments: Appointment[];
-  onToggleSlot: (date: Date, time: string, slot: TimeSlot | null) => void;
+  onToggleSlot: (date: Date, time: string) => void;
+  settings: Settings | null;
 };
 
 export default function WeekGrid({
   currentDate,
-  slots,
   appointments,
   onToggleSlot,
+  settings,
 }: WeekGridProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const today = startOfDay(new Date());
 
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart]
-  );
+  const weekDays = useMemo(() => {
+    const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+    
+    // Filter days based on working days settings
+    if (!settings) return allDays;
+    
+    const { startDay, endDay } = settings.workingDays;
+    return allDays.filter((day) => {
+      const dow = day.getDay();
+      // Handle case where endDay < startDay (e.g., Friday to Monday)
+      return startDay <= endDay 
+        ? (dow >= startDay && dow <= endDay)
+        : (dow >= startDay || dow <= endDay);
+    });
+  }, [weekStart, settings]);
+
+  const timeSlots = useMemo(() => {
+    if (!settings) return [];
+    
+    const slots: string[] = [];
+    const { startHour, endHour } = settings.workingHours;
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      slots.push(`${String(hour).padStart(2, "0")}:00`);
+      slots.push(`${String(hour).padStart(2, "0")}:30`);
+    }
+    
+    return slots;
+  }, [settings]);
+
+  const isTimeBlocked = (date: Date, time: string): boolean => {
+    if (!settings) return false;
+    
+    return settings.blockedSlots.some((blocked) => {
+      const slotMinutes = parseInt(time.split(":")[0]) * 60 + parseInt(time.split(":")[1]);
+      const blockStartMinutes = parseInt(blocked.startTime.split(":")[0]) * 60 + parseInt(blocked.startTime.split(":")[1]);
+      const blockEndMinutes = parseInt(blocked.endTime.split(":")[0]) * 60 + parseInt(blocked.endTime.split(":")[1]);
+      const isTimeWithin = slotMinutes >= blockStartMinutes && slotMinutes < blockEndMinutes;
+      if (!isTimeWithin) return false;
+      // If blocked has a specific date, it only applies to that day; otherwise applies to all days
+      if (blocked.date) {
+        const dateStr = format(date, "yyyy-MM-dd");
+        return blocked.date === dateStr;
+      }
+      return true;
+    });
+  };
 
   const getSlotStatus = (date: Date, time: string) => {
     const dateStr = format(date, "yyyy-MM-dd");
 
-    const slot = slots.find((s) => s.date === dateStr && s.time === time);
     const appointment = appointments.find(
       (a) =>
         a.date === dateStr &&
@@ -50,20 +85,22 @@ export default function WeekGrid({
         a.status === "confirmed"
     );
 
-    const slotStatus = slot?.status || "unavailable";
+    const blocked = isTimeBlocked(date, time);
+    const isUnavailable = !!settings?.oneOffUnavailableSlots?.some(
+      (s) => s.date === dateStr && s.time === time
+    );
 
     return {
-      slot,
-      isAvailable: slotStatus === "available",
-      isBooked: !!appointment || slotStatus === "booked",
+      isAvailable: !blocked && !appointment && !isUnavailable,
+      isBooked: !!appointment,
+      isBlocked: blocked,
+      isUnavailable,
       appointment,
       isPast: isBefore(date, today),
     };
   };
 
-  // -----------------------------
   // Inline styles
-  // -----------------------------
   const container: React.CSSProperties = {
     background: "white",
     borderRadius: "16px",
@@ -73,6 +110,8 @@ export default function WeekGrid({
     boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
+    flex: 1,
+    minHeight: 0,
   };
 
   const headerRow: React.CSSProperties = {
@@ -83,15 +122,15 @@ export default function WeekGrid({
   };
 
   const headerCell: React.CSSProperties = {
-    padding: "16px",
+    padding: "12px 8px",
     textAlign: "center",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: 500,
     color: "#64748b",
   };
 
   const dayCellBase: React.CSSProperties = {
-    padding: "16px",
+    padding: "12px 8px",
     textAlign: "center",
     borderLeft: "1px solid #e2e8f0",
   };
@@ -109,37 +148,40 @@ export default function WeekGrid({
   };
 
   const timeLabelCell: React.CSSProperties = {
-    padding: "12px",
+    padding: "6px 8px",
     textAlign: "center",
-    fontSize: "14px",
+    fontSize: "12px",
     fontWeight: 500,
     color: "#64748b",
     background: "#f8fafc",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    minHeight: "40px",
   };
 
   const slotButtonBase: React.CSSProperties = {
-    padding: "8px",
+    padding: "6px 4px",
     borderLeft: "1px solid #e2e8f0",
-    minHeight: "50px",
+    minHeight: "40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     transition: "background 0.15s ease",
     cursor: "pointer",
+    fontSize: "12px",
   };
 
   const legendRow: React.CSSProperties = {
-    padding: "16px",
+    padding: "12px 16px",
     background: "#f8fafc",
     borderTop: "1px solid #e2e8f0",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "24px",
-    fontSize: "14px",
+    gap: "16px",
+    fontSize: "12px",
+    flexShrink: 0,
   };
 
   const legendItem: React.CSSProperties = {
@@ -158,9 +200,6 @@ export default function WeekGrid({
     justifyContent: "center",
   });
 
-  // -----------------------------
-  // Render
-  // -----------------------------
   return (
     <div style={container}>
       {/* Header */}
@@ -205,15 +244,27 @@ export default function WeekGrid({
             <div style={timeLabelCell}>{time}</div>
 
             {weekDays.map((day) => {
-              const { slot, isAvailable, isBooked, isPast } =
+              const { isAvailable, isBooked, isBlocked, isUnavailable, isPast } =
                 getSlotStatus(day, time);
 
               let bg = "white";
               let hover = "";
+              let isClickable = true;
 
-              if (isPast) bg = "#f1f5f9";
-              else if (isBooked) bg = "#d1fae5";
-              else if (isAvailable) {
+              if (isPast) {
+                bg = "#f1f5f9";
+                isClickable = false;
+              } else if (isBlocked) {
+                bg = "#f3f4f6";
+                isClickable = false;
+              } else if (isBooked) {
+                bg = "#d1fae5";
+                isClickable = false;
+              } else if (isUnavailable) {
+                bg = "#fee2e2";
+                hover = "#fecaca";
+                isClickable = true;
+              } else if (isAvailable) {
                 bg = "#ecfdf5";
                 hover = "#d1fae5";
               } else {
@@ -224,15 +275,15 @@ export default function WeekGrid({
               return (
                 <button
                   key={`${day.toISOString()}-${time}`}
-                  disabled={isPast}
-                  onClick={() => !isPast && onToggleSlot(day, time, slot ?? null)}
+                  disabled={!isClickable}
+                  onClick={() => isClickable && onToggleSlot(day, time)}
                   style={{
                     ...slotButtonBase,
                     background: bg,
-                    cursor: isPast ? "not-allowed" : "pointer",
+                    cursor: isClickable ? "pointer" : "not-allowed",
                   }}
                   onMouseEnter={(e) => {
-                    if (!isPast && hover) e.currentTarget.style.background = hover;
+                    if (isClickable && hover) e.currentTarget.style.background = hover;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = bg;
@@ -240,6 +291,13 @@ export default function WeekGrid({
                 >
                   {isPast ? (
                     <span style={{ color: "#cbd5e1" }}>—</span>
+                  ) : isBlocked ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <Lock size={16} color="#6b7280" />
+                      <span style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
+                        Blocked
+                      </span>
+                    </div>
                   ) : isBooked ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <CalendarX size={16} color="#059669" />
@@ -280,6 +338,13 @@ export default function WeekGrid({
             <CalendarX size={16} color="#059669" />
           </div>
           <span style={{ color: "#475569" }}>Booked</span>
+        </div>
+
+        <div style={legendItem}>
+          <div style={legendIconBox("#f3f4f6")}>
+            <Lock size={16} color="#6b7280" />
+          </div>
+          <span style={{ color: "#475569" }}>Blocked</span>
         </div>
       </div>
     </div>
