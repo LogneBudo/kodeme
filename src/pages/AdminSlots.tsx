@@ -5,151 +5,94 @@ import {
   startOfWeek,
   endOfWeek,
   format,
-  eachDayOfInterval,
 } from "date-fns";
-import { Loader2, Settings, Calendar } from "lucide-react";
+import { Loader2, Settings } from "lucide-react";
 import { toast } from "sonner";
 
 import RequireAdmin from "../components/admin/RequireAdmin";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 
-import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
 import {
-  listTimeSlots,
   listAppointments,
-  updateTimeSlot,
-  createTimeSlot,
-  bulkCreateTimeSlots,
+  getSettings,
+  updateSettings,
+  type Settings as SettingsType,
 } from "../api/firebaseApi";
-
-const defaultTimeSlots = [
-  "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
-  "15:00", "15:30", "16:00", "16:30", "17:00",
-];
 
 export default function AdminSlots() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
+  const [settings, setSettings] = useState<SettingsType | null>(null);
 
   const loadData = async () => {
-  setLoading(true);
-
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-
-  const [allSlots, allAppointments] = await Promise.all([
-    listTimeSlots(),
-    listAppointments(),
-  ]);
-
-  const weekSlots = allSlots.filter((slot) => {
-    const d = new Date(slot.date);
-    return d >= weekStart && d <= weekEnd;
-  });
-
-  const weekAppointments = allAppointments.filter((apt) => {
-    const d = new Date(apt.appointmentDate);
-    return d >= weekStart && d <= weekEnd;
-  });
-
-  setSlots(weekSlots);
-  setAppointments(weekAppointments);
-  setLoading(false);
-};
-
-useEffect(() => {
-  (async () => {
-    await loadData();
-  })();
-}, [currentDate]);
-
-  const handleToggleSlot = async (
-    date: Date,
-    time: string,
-    existingSlot: TimeSlot | null
-  ) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-
-    if (existingSlot) {
-      // Toggle between available and booked
-      const currentStatus = existingSlot.status || "available";
-      const newStatus = currentStatus === "available" ? "booked" : "available";
-
-      // Optimistically update local state immediately using functional update
-      const updatedSlot: TimeSlot = { ...existingSlot, status: newStatus as "available" | "booked" };
-      setSlots((prevSlots) => {
-        const updated = prevSlots.map((s) =>
-          s.id === existingSlot.id ? updatedSlot : s
-        );
-        console.log(`[AdminSlots] Optimistic update - changed slot ${existingSlot.id} to ${newStatus}`, updated);
-        return updated;
-      });
-
-      await updateTimeSlot(existingSlot.id, {
-        status: newStatus,
-      });
-
-      toast.success(
-        `Slot marked as ${newStatus}`
-      );
-    } else {
-      // When creating a new slot, default to "available" for single-click convenience
-      const newSlot = await createTimeSlot({
-        date: dateStr,
-        time,
-        status: "available",
-      });
-
-      // Optimistically update UI with the newly created slot
-      setSlots((prevSlots) => [...prevSlots, newSlot]);
-
-      toast.success("Slot created and marked as available");
-    }
-  };
-
-  const generateWeekSlots = async () => {
-    setGenerating(true);
-
+    setLoading(true);
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-    const days = eachDayOfInterval({ start: weekStart, end: weekEnd });
 
-    const existingKeys = slots.map((s) => `${s.date}-${s.time}`);
-    const newSlots: Omit<TimeSlot, "id" | "createdAt" | "updatedAt">[] = [];
+    const allAppointments = await listAppointments();
+    const weekAppointments = allAppointments.filter((apt) => {
+      const d = new Date(apt.appointmentDate);
+      return d >= weekStart && d <= weekEnd;
+    });
 
-    for (const day of days) {
-      const dow = day.getDay();
-      if (dow === 0 || dow === 6) continue;
+    setAppointments(weekAppointments);
+    setLoading(false);
+  };
 
-      const dateStr = format(day, "yyyy-MM-dd");
+  // Load settings when component mounts (fresh from Firestore)
+  useEffect(() => {
+    (async () => {
+      const settingsData = await getSettings();
+      setSettings(settingsData);
+    })();
+  }, []);
 
-      for (const time of defaultTimeSlots) {
-        const key = `${dateStr}-${time}`;
-        if (!existingKeys.includes(key)) {
-          newSlots.push({
-            date: dateStr,
-            time,
-            status: "available",
-          });
-        }
-      }
-    }
+  // Load appointments when date changes
+  useEffect(() => {
+    loadData();
+  }, [currentDate]);
 
-    if (newSlots.length > 0) {
-      await bulkCreateTimeSlots(newSlots);
-      toast.success(`Generated ${newSlots.length} new slots`);
-      await loadData();
+  const handleToggleSlot = async (date: Date, time: string) => {
+    if (!settings) return;
+
+    const dateStr = format(date, "yyyy-MM-dd");
+    // Toggle per-date unavailable (not touching blocked settings)
+    const isCurrentlyUnavailable = settings.oneOffUnavailableSlots?.some(
+      (s) => s.date === dateStr && s.time === time
+    );
+
+    let updatedSettings: SettingsType;
+
+    if (isCurrentlyUnavailable) {
+      // Make available again by removing from oneOffUnavailableSlots
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: (settings.oneOffUnavailableSlots || []).filter(
+          (s) => !(s.date === dateStr && s.time === time)
+        ),
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success("Slot marked as available");
     } else {
-      toast.info("All slots for this week already exist");
-    }
+      // Add a block for this specific 30-minute slot
+      const newUnavailable = {
+        date: dateStr,
+        time,
+        label: `Unavailable - ${time}`,
+      };
 
-    setGenerating(false);
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: [...(settings.oneOffUnavailableSlots || []), newUnavailable],
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success("Slot marked as unavailable");
+    }
   };
 
   const containerStyle: React.CSSProperties = {
@@ -164,15 +107,18 @@ useEffect(() => {
     width: "100%",
     padding: "32px 15px",
     boxSizing: "border-box",
-    maxHeight: "calc(100vh - 70px)",
-    overflowY: "auto",
+    height: "calc(100vh - 70px)",
+    display: "flex",
+    flexDirection: "column",
+    overflow: "hidden",
   };
 
   const headerRow: React.CSSProperties = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "32px",
+    marginBottom: "16px",
+    flexShrink: 0,
   };
 
   const titleIconBox: React.CSSProperties = {
@@ -183,20 +129,6 @@ useEffect(() => {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-  };
-
-  const primaryButton: React.CSSProperties = {
-    background: "#0f172a",
-    color: "white",
-    border: "none",
-    borderRadius: "12px",
-    height: "48px",
-    padding: "0 20px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    fontSize: "15px",
   };
 
   return (
@@ -226,26 +158,10 @@ useEffect(() => {
                   Slot Management
                 </h1>
               </div>
-              <p style={{ color: "#64748b" }}>
+              <p style={{ color: "#64748b", fontSize: "14px" }}>
                 Click on any slot to toggle its availability
               </p>
             </div>
-
-            <button
-              onClick={generateWeekSlots}
-              disabled={generating}
-              style={{
-                ...primaryButton,
-                opacity: generating ? 0.7 : 1,
-              }}
-            >
-              {generating ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <Calendar size={18} />
-              )}
-              Generate Week Slots
-            </button>
           </div>
 
           <WeekNavigator
@@ -268,9 +184,9 @@ useEffect(() => {
           ) : (
             <WeekGrid
               currentDate={currentDate}
-              slots={slots}
               appointments={appointments}
               onToggleSlot={handleToggleSlot}
+              settings={settings}
             />
           )}
         </div>

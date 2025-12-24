@@ -42,6 +42,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
     { name: "BookAppointment", label: "Book Appointment", icon: Calendar, public: true },
     { name: "AdminSlots", label: "Slots", icon: Settings, adminOnly: true },
     { name: "UserManagement", label: "Users", icon: Users, adminOnly: true },
+    { name: "AdminSettings", label: "Settings", icon: Settings, adminOnly: true },
   ];
 
   return (
