@@ -452,3 +452,94 @@ export async function deleteUser(userId: string): Promise<boolean> {
     return false;
   }
 }
+
+// ============ SETTINGS ============
+
+export type WorkingHours = {
+  startHour: number; // 0-23
+  endHour: number;   // 0-23
+};
+
+export type WorkingDays = {
+  startDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  endDay: number;   // 0=Sunday, 1=Monday, ..., 6=Saturday
+};
+
+export type BlockedSlot = {
+  _key?: string;
+  // Optional date for one-off blocks; if omitted, block applies to every day
+  date?: string; // "yyyy-MM-dd"
+  startTime: string; // "12:00"
+  endTime: string;   // "13:00"
+  label: string;     // "Lunch break"
+};
+
+export type UnavailableSlot = {
+  date: string; // "yyyy-MM-dd"
+  time: string; // "HH:mm"
+  label?: string;
+};
+
+export type Settings = {
+  id?: string;
+  workingHours: WorkingHours;
+  workingDays: WorkingDays;
+  blockedSlots: BlockedSlot[];
+  oneOffUnavailableSlots: UnavailableSlot[];
+  updatedAt?: Date;
+};
+
+const SETTINGS_DOC = "main";
+
+export async function getSettings(): Promise<Settings> {
+  try {
+    const settingsRef = doc(db, "settings", SETTINGS_DOC);
+    const settingsDoc = await getDoc(settingsRef);
+
+    if (settingsDoc.exists()) {
+      const data = settingsDoc.data();
+      return {
+        id: settingsDoc.id,
+        workingHours: data.workingHours || { startHour: 9, endHour: 17 },
+        workingDays: data.workingDays || { startDay: 1, endDay: 5 },
+        blockedSlots: data.blockedSlots || [],
+        oneOffUnavailableSlots: data.oneOffUnavailableSlots || [],
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+      };
+    } else {
+      // Return default settings if not found
+      return {
+        workingHours: { startHour: 9, endHour: 17 },
+        workingDays: { startDay: 1, endDay: 5 },
+        blockedSlots: [],
+        oneOffUnavailableSlots: [],
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    // Return default settings on error
+    return {
+      workingHours: { startHour: 9, endHour: 17 },
+      workingDays: { startDay: 1, endDay: 5 },
+      blockedSlots: [],
+      oneOffUnavailableSlots: [],
+    };
+  }
+}
+
+export async function updateSettings(settings: Settings): Promise<boolean> {
+  try {
+    const settingsRef = doc(db, "settings", SETTINGS_DOC);
+    await setDoc(settingsRef, {
+      workingHours: settings.workingHours,
+      workingDays: settings.workingDays,
+      blockedSlots: settings.blockedSlots,
+      oneOffUnavailableSlots: settings.oneOffUnavailableSlots || [],
+      updatedAt: Timestamp.now(),
+    });
+    return true;
+  } catch (error) {
+    console.error("Error updating settings:", error);
+    return false;
+  }
+}
