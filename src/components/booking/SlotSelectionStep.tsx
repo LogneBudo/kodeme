@@ -125,29 +125,29 @@ export default function SlotSelectionStep({
   }
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "700px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
         <div
           style={{
-            width: "64px",
-            height: "64px",
+            width: "clamp(48px, 12vw, 64px)",
+            height: "clamp(48px, 12vw, 64px)",
             background: "#f1f5f9",
             borderRadius: "16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 24px",
+            margin: "0 auto clamp(16px, 4vw, 24px)",
           }}
         >
           <Clock size={32} color="#475569" />
         </div>
 
-        <h2 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "8px", color: "#0f172a" }}>
+        <h2 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 600, marginBottom: "8px", color: "#0f172a", margin: "0 0 8px 0" }}>
           Choose your time slot
         </h2>
 
-        <p style={{ color: "#64748b" }}>{slots.length} slots available</p>
+        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>{slots.length} slots available</p>
       </div>
 
       {/* No slots */}
@@ -155,7 +155,7 @@ export default function SlotSelectionStep({
         <div
           style={{
             textAlign: "center",
-            padding: "48px 0",
+            padding: "32px 16px",
             background: "#f8fafc",
             borderRadius: "16px",
           }}
@@ -168,12 +168,13 @@ export default function SlotSelectionStep({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(clamp(120px, 25vw, 160px), 1fr))",
             gap: "12px",
-            marginBottom: "32px",
+            marginBottom: "20px",
             maxHeight: "400px",
             overflowY: "auto",
             padding: "4px",
+            boxSizing: "border-box",
           }}
         >
           {slots.map((slot) => {
@@ -185,7 +186,7 @@ export default function SlotSelectionStep({
                 key={slot.id}
                 onClick={() => setSelectedSlot(isSelected ? null : slot)}
                 style={{
-                  padding: "16px",
+                  padding: "clamp(12px, 3vw, 16px)",
                   borderRadius: "12px",
                   border: `2px solid ${isSelected ? "#059669" : "#e2e8f0"}`,
                   background: isSelected ? "#ecfdf5" : "white",
@@ -197,7 +198,7 @@ export default function SlotSelectionStep({
                 <p
                   style={{
                     fontWeight: 600,
-                    fontSize: "14px",
+                    fontSize: "clamp(12px, 3vw, 14px)",
                     color: isSelected ? "#047857" : "#0f172a",
                   }}
                 >

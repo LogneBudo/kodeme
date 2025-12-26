@@ -12,7 +12,7 @@ import { updateTimeSlot, createAppointment as createFirebaseAppointment } from "
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
 
-const steps = ["Email", "Location", "Timeframe", "Select Slot"];
+const steps = ["Email", "Location", "Timeframe", "Confirm Slot"];
 
 export default function BookAppointment() {
   const [currentStep, setCurrentStep] = useState(1);

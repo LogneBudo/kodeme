@@ -167,18 +167,18 @@ export default function LocationStep({
   };
 
   return (
-    <div style={{ maxWidth: "520px", margin: "0 auto" }}>
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+    <div style={{ maxWidth: "520px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
+      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
         <div
           style={{
-            width: "64px",
-            height: "64px",
+            width: "clamp(48px, 12vw, 64px)",
+            height: "clamp(48px, 12vw, 64px)",
             background: "#f1f5f9",
             borderRadius: "16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 24px",
+            margin: "0 auto clamp(16px, 4vw, 24px)",
           }}
         >
           <MapPin size={32} color="#475569" />
@@ -186,19 +186,20 @@ export default function LocationStep({
 
         <h2
           style={{
-            fontSize: "24px",
+            fontSize: "clamp(20px, 5vw, 24px)",
             fontWeight: 600,
             color: "#0f172a",
             marginBottom: "8px",
+            margin: "0 0 8px 0",
           }}
         >
           Where should we meet?
         </h2>
 
-        <p style={{ color: "#64748b" }}>Choose your preferred meeting location</p>
+        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Choose your preferred meeting location</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px", marginBottom: "24px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "12px", marginBottom: "20px" }}>
         {locations.map((loc) => {
           const Icon = loc.icon;
           const isSelected = selectedLocation === loc.id;
@@ -212,12 +213,13 @@ export default function LocationStep({
               }}
               style={{
                 ...cardBase,
+                padding: "clamp(12px, 3vw, 16px)",
                 borderColor: isSelected ? "#0f172a" : "#e2e8f0",
                 background: isSelected ? "#0f172a" : "white",
                 color: isSelected ? "white" : "#0f172a",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px", width: "100%" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", width: "100%" }}>
                 <div
                   style={{
                     width: "40px",
@@ -235,17 +237,17 @@ export default function LocationStep({
                 <div style={{ textAlign: "center" }}>
                   <p
                     style={{
-                      fontSize: "16px",
+                      fontSize: "clamp(13px, 3vw, 16px)",
                       fontWeight: 600,
                       color: isSelected ? "white" : "#0f172a",
-                      margin: "0 0 4px 0",
+                      margin: "0 0 2px 0",
                     }}
                   >
                     {loc.label}
                   </p>
                   <p
                     style={{
-                      fontSize: "12px",
+                      fontSize: "11px",
                       color: isSelected ? "rgba(255,255,255,0.7)" : "#64748b",
                       margin: 0,
                     }}

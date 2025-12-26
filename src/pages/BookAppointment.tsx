@@ -12,7 +12,7 @@ import { updateTimeSlot, createAppointment as createFirebaseAppointment } from "
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
 
-const steps = ["Email", "Location", "Timeframe", "Select Slot"];
+const steps = ["Email", "Location", "Timeframe", "Confirm Slot"];
 
 export default function BookAppointment() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -80,13 +80,13 @@ export default function BookAppointment() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f0f0", padding: "40px 0" }}>
-      <div style={{ width: "100%", padding: "0 20px" }}>
-        <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <h1 style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "10px" }}>
+    <div style={{ minHeight: "100vh", background: "#f0f0f0", padding: "20px 0" }}>
+      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box" }}>
+        <div style={{ textAlign: "center", marginBottom: "24px" }}>
+          <h1 style={{ fontSize: "clamp(24px, 8vw, 32px)", fontWeight: "bold", marginBottom: "8px", margin: "0 0 8px 0" }}>
             Book an Appointment
           </h1>
-          <p style={{ color: "#666" }}>Schedule your visit in just a few steps</p>
+          <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>Schedule your visit in just a few steps</p>
         </div>
 
         {!bookedAppointment && (
@@ -96,11 +96,11 @@ export default function BookAppointment() {
         <div
           style={{
             background: "white",
-            borderRadius: "20px",
-            padding: "40px",
+            borderRadius: "16px",
+            padding: "clamp(20px, 6vw, 40px)",
             boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-            marginTop: "20px",
-            margin: "20px auto 0",
+            marginTop: "16px",
+            margin: "16px auto 0",
             maxWidth: "600px",
             boxSizing: "border-box",
           }}
