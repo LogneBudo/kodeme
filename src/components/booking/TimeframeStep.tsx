@@ -16,33 +16,33 @@ type Props = {
 
 export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe, onNext, onBack }: Props) {
   return (
-    <div style={{ maxWidth: "500px", margin: "0 auto" }}>
+    <div style={{ maxWidth: "500px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
         <div
           style={{
-            width: "64px",
-            height: "64px",
+            width: "clamp(48px, 12vw, 64px)",
+            height: "clamp(48px, 12vw, 64px)",
             background: "#f1f5f9",
             borderRadius: "16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 24px",
+            margin: "0 auto clamp(16px, 4vw, 24px)",
           }}
         >
           <Calendar size={32} color="#475569" />
         </div>
 
-        <h2 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "8px", color: "#0f172a" }}>
+        <h2 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 600, marginBottom: "8px", color: "#0f172a", margin: "0 0 8px 0" }}>
           When would you like to book?
         </h2>
 
-        <p style={{ color: "#64748b" }}>Select your preferred timeframe</p>
+        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Select your preferred timeframe</p>
       </div>
 
       {/* Timeframe options */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "12px", marginBottom: "32px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", marginBottom: "20px" }}>
         {timeframes.map((tf) => {
           const Icon = tf.icon;
           const isSelected = selectedTimeframe === tf.id;
@@ -56,7 +56,7 @@ export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe,
               }}
               style={{
                 width: "100%",
-                padding: "16px",
+                padding: "clamp(12px, 3vw, 16px)",
                 borderRadius: "12px",
                 border: `2px solid ${isSelected ? "#0f172a" : "#e2e8f0"}`,
                 background: isSelected ? "#0f172a" : "white",
@@ -79,7 +79,7 @@ export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe,
                   justifyContent: "center",
                   background: isSelected ? "rgba(255,255,255,0.2)" : "#f1f5f9",
                   transition: "background 0.2s ease",
-                  marginBottom: "12px",
+                  marginBottom: "8px",
                 }}
               >
                 <Icon size={20} color={isSelected ? "white" : "#475569"} />
@@ -88,16 +88,16 @@ export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe,
               <div>
                 <p
                   style={{
-                    fontSize: "16px",
+                    fontSize: "clamp(13px, 3vw, 16px)",
                     fontWeight: 600,
-                    marginBottom: "4px",
+                    marginBottom: "2px",
                     color: isSelected ? "white" : "#0f172a",
-                    margin: "0 0 4px 0",
+                    margin: "0 0 2px 0",
                   }}
                 >
                   {tf.label}
                 </p>
-                <p style={{ fontSize: "12px", color: isSelected ? "rgba(255,255,255,0.7)" : "#64748b", margin: 0 }}>
+                <p style={{ fontSize: "11px", color: isSelected ? "rgba(255,255,255,0.7)" : "#64748b", margin: 0 }}>
                   {tf.description}
                 </p>
               </div>

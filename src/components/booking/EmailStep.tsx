@@ -30,33 +30,33 @@ export default function EmailStep({ email, setEmail, onNext }: Props) {
   return (
     <div style={{ maxWidth: "420px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
       {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "32px" }}>
+      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
         <div
           style={{
-            width: "64px",
-            height: "64px",
+            width: "clamp(48px, 12vw, 64px)",
+            height: "clamp(48px, 12vw, 64px)",
             background: "#f1f5f9",
             borderRadius: "16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            margin: "0 auto 24px",
+            margin: "0 auto clamp(16px, 4vw, 24px)",
           }}
         >
           <Mail size={32} color="#475569" />
         </div>
 
-        <h2 style={{ fontSize: "24px", fontWeight: 600, marginBottom: "8px", color: "#0f172a" }}>
+        <h2 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 600, marginBottom: "8px", color: "#0f172a", margin: "0 0 8px 0" }}>
           Enter your email
         </h2>
 
-        <p style={{ color: "#64748b" }}>
+        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>
           We'll send the appointment confirmation to this address
         </p>
       </div>
 
       {/* Input + Button */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
         <div>
           <input
             type="email"
@@ -69,9 +69,9 @@ export default function EmailStep({ email, setEmail, onNext }: Props) {
             onKeyDown={(e) => e.key === "Enter" && handleNext()}
             style={{
               width: "100%",
-              height: "56px",
-              fontSize: "18px",
-              padding: "0 20px",
+              height: "clamp(44px, 10vw, 56px)",
+              fontSize: "clamp(14px, 4vw, 16px)",
+              padding: "0 16px",
               borderRadius: "12px",
               border: `2px solid ${error ? "#fca5a5" : "#e2e8f0"}`,
               outline: "none",
@@ -81,7 +81,7 @@ export default function EmailStep({ email, setEmail, onNext }: Props) {
           />
 
           {error && (
-            <p style={{ color: "#ef4444", fontSize: "14px", marginTop: "6px", marginLeft: "4px" }}>
+            <p style={{ color: "#ef4444", fontSize: "12px", marginTop: "6px", marginLeft: "4px", margin: "6px 4px 0" }}>
               {error}
             </p>
           )}
@@ -91,8 +91,8 @@ export default function EmailStep({ email, setEmail, onNext }: Props) {
           onClick={handleNext}
           style={{
             width: "100%",
-            height: "56px",
-            fontSize: "18px",
+            height: "clamp(44px, 10vw, 56px)",
+            fontSize: "clamp(14px, 4vw, 16px)",
             borderRadius: "12px",
             background: "#0f172a",
             color: "white",

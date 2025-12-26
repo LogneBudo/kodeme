@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, Settings, Users, LogOut } from "lucide-react";
+import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getCurrentUser, logout } from "../src/api/authApi";
 type LayoutProps = {
@@ -14,6 +14,7 @@ type User = {
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const [user, setUser] = useState<User>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
  useEffect(() => {
   const initializeAuth = async () => {
@@ -55,7 +56,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           right: 0,
           background: "white",
           borderBottom: "1px solid #ddd",
-          padding: "0 20px",
+          padding: "0 16px",
           height: "60px",
           display: "flex",
           alignItems: "center",
@@ -63,7 +64,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           zIndex: 100,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <Link to="/BookAppointment" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}>
           <div
             style={{
               width: "32px",
@@ -73,14 +74,16 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
             <Calendar size={16} color="white" />
           </div>
-          <span style={{ fontWeight: 600 }}>Appointments</span>
-        </div>
+          <span style={{ fontWeight: 600, color: "#222", fontSize: "14px", display: "none" }} className="hide-on-mobile">Appointments</span>
+        </Link>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        {/* Desktop Navigation */}
+        <div style={{ display: "none", gap: "10px" }} className="desktop-nav">
           {!loading && user && navItems.map((item) => {
             if (item.adminOnly && user?.role !== "admin") return null;
 
@@ -102,6 +105,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
                   background: isActive ? "#222" : "transparent",
                   color: isActive ? "white" : "#444",
                   border: isActive ? "1px solid #222" : "1px solid transparent",
+                  whiteSpace: "nowrap",
                 }}
               >
                 <Icon size={16} />
@@ -109,7 +113,6 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
               </Link>
             );
           })}
-
 
           {!loading && user && (
             <button
@@ -131,9 +134,113 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
             </button>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          className="mobile-menu-btn"
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </nav>
 
-      <main style={{ paddingTop: "70px", width: "100%", boxSizing: "border-box", flex: 1 }}>{children}</main>
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: "fixed",
+          top: "60px",
+          left: 0,
+          right: 0,
+          background: "white",
+          borderBottom: "1px solid #ddd",
+          zIndex: 99,
+          display: "flex",
+          flexDirection: "column",
+          gap: "0",
+        }}>
+          {!loading && user && navItems.map((item) => {
+            if (item.adminOnly && user?.role !== "admin") return null;
+
+            const Icon = item.icon;
+            const isActive = currentPageName === item.name;
+
+            return (
+              <Link
+                key={item.name}
+                to={`/${item.name}`}
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  padding: "12px 16px",
+                  borderRadius: "0",
+                  fontSize: "14px",
+                  textDecoration: "none",
+                  background: isActive ? "#f0f0f0" : "white",
+                  color: isActive ? "#222" : "#444",
+                  border: "none",
+                  borderBottom: "1px solid #eee",
+                }}
+              >
+                <Icon size={18} />
+                {item.label}
+              </Link>
+            );
+          })}
+
+          {!loading && user && (
+            <button
+              onClick={() => {
+                handleLogout();
+                setMobileMenuOpen(false);
+              }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "12px 16px",
+                borderRadius: "0",
+                fontSize: "14px",
+                background: "white",
+                border: "none",
+                borderBottom: "1px solid #eee",
+                cursor: "pointer",
+                color: "#444",
+                textAlign: "left",
+              }}
+            >
+              <LogOut size={18} />
+              Logout
+            </button>
+          )}
+        </div>
+      )}
+
+      <main style={{ paddingTop: "60px", width: "100%", boxSizing: "border-box", flex: 1 }}>{children}</main>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .desktop-nav {
+            display: flex !important;
+          }
+          .mobile-menu-btn {
+            display: none !important;
+          }
+          .hide-on-mobile {
+            display: block !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
