@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, Settings, Users, LogOut, LogIn } from "lucide-react";
+import { Calendar, Settings, Users, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getCurrentUser, logout } from "../src/api/authApi";
 type LayoutProps = {
@@ -35,14 +35,14 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   async function handleLogout() {
     await logout();
     setUser(null);
-    window.location.href = "/login";
+    window.location.href = "/BookAppointment";
   }
 
   const navItems = [
     { name: "BookAppointment", label: "Book Appointment", icon: Calendar, public: true },
-    { name: "AdminSlots", label: "Slots", icon: Settings, adminOnly: true },
-    { name: "UserManagement", label: "Users", icon: Users, adminOnly: true },
-    { name: "AdminSettings", label: "Settings", icon: Settings, adminOnly: true },
+    { name: "admin/slots", label: "Slots", icon: Settings, adminOnly: true },
+    { name: "admin/users", label: "Users", icon: Users, adminOnly: true },
+    { name: "admin/settings", label: "Settings", icon: Settings, adminOnly: true },
   ];
 
   return (
@@ -110,6 +110,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
             );
           })}
 
+
           {!loading && user && (
             <button
               onClick={handleLogout}
@@ -128,27 +129,6 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
               <LogOut size={16} />
               Logout
             </button>
-          )}
-
-          {!loading && !user && (
-            <Link
-              to="/login"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                textDecoration: "none",
-                background: "#222",
-                color: "white",
-                border: "1px solid #222",
-              }}
-            >
-              <LogIn size={16} />
-              Login
-            </Link>
           )}
         </div>
       </nav>

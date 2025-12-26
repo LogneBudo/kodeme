@@ -5,11 +5,12 @@ import AdminSlots from "../src/pages/AdminSlots";
 import UserManagement from "../src/pages/UserManagement";
 import AdminSettings from "../src/pages/AdminSettings";
 import Login from "../src/pages/Login";
+import RequireAdmin from "./components/admin/RequireAdmin";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route path="/admin/login" element={<Login />} />
       
       <Route
         path="/"
@@ -25,29 +26,35 @@ export default function App() {
       />
 
       <Route
-        path="/AdminSlots"
+        path="/admin/slots"
         element={
-          <Layout currentPageName="AdminSlots">
-            <AdminSlots />
-          </Layout>
+          <RequireAdmin>
+            <Layout currentPageName="AdminSlots">
+              <AdminSlots />
+            </Layout>
+          </RequireAdmin>
         }
       />
 
       <Route
-        path="/UserManagement"
+        path="/admin/users"
         element={
-          <Layout currentPageName="UserManagement">
-            <UserManagement />
-          </Layout>
+          <RequireAdmin>
+            <Layout currentPageName="UserManagement">
+              <UserManagement />
+            </Layout>
+          </RequireAdmin>
         }
       />
 
       <Route
-        path="/AdminSettings"
+        path="/admin/settings"
         element={
-          <Layout currentPageName="AdminSettings">
-            <AdminSettings />
-          </Layout>
+          <RequireAdmin>
+            <Layout currentPageName="AdminSettings">
+              <AdminSettings />
+            </Layout>
+          </RequireAdmin>
         }
       />
     </Routes>

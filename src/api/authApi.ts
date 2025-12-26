@@ -116,5 +116,5 @@ export async function logout(): Promise<void> {
 }
 
 export function redirectToLogin(path: string) {
-  window.location.href = "/login?redirect=" + encodeURIComponent(path);
+  window.location.href = "/admin/login?redirect=" + encodeURIComponent(path);
 }
