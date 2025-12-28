@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+// ...existing code...
 import CalendarExport from "./CalendarExport";
 import type { Appointment } from "../../types/appointment";
 import type { LucideIcon } from "lucide-react";
@@ -35,8 +35,7 @@ type Props = {
   onReset: () => void;
 };
 
-  const [isMobile, setIsMobile] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
+// ...existing code...
 export default function SuccessScreen({ appointment, onReset }: Props) {
   const LocationIcon = locationIcons[appointment.locationDetails.type] || MapPin;
 
