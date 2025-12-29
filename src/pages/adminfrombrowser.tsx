@@ -46,6 +46,7 @@ export default function SettingsPage() {
   const [calendarConnected, setCalendarConnected] = useState(false);
   const [outlookConnected, setOutlookConnected] = useState(false);
   const [newBlockedSlot, setNewBlockedSlot] = useState<BlockedSlot>({
+    _key: Date.now().toString(),
     startTime: "12:00",
     endTime: "13:00",
     label: "Lunch",
@@ -133,7 +134,12 @@ export default function SettingsPage() {
       ],
     };
     setSettings(updated);
-    setNewBlockedSlot({ startTime: "12:00", endTime: "13:00", label: "Lunch" });
+    setNewBlockedSlot({
+      _key: Date.now().toString(),
+      startTime: "12:00",
+      endTime: "13:00",
+      label: "Lunch",
+    });
   }
 
   function handleRemoveBlockedSlot(key: string) {

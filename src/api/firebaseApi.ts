@@ -540,6 +540,11 @@ export async function getSettings(): Promise<Settings> {
       workingDays: { startDay: 1, endDay: 5 },
       blockedSlots: [],
       oneOffUnavailableSlots: [],
+      calendarSync: {
+        autoCreateEvents: false,
+        showBusyTimes: false,
+        syncCancellations: false,
+      },
     };
   }
 }
