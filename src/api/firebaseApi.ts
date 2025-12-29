@@ -466,7 +466,7 @@ export type WorkingDays = {
 };
 
 export type BlockedSlot = {
-  _key?: string;
+  _key: string;
   // Optional date for one-off blocks; if omitted, block applies to every day
   date?: string; // "yyyy-MM-dd"
   startTime: string; // "12:00"
@@ -480,6 +480,12 @@ export type UnavailableSlot = {
   label?: string;
 };
 
+export type CalendarSync = {
+  autoCreateEvents: boolean;
+  showBusyTimes: boolean;
+  syncCancellations: boolean;
+};
+
 export type Settings = {
   id?: string;
   workingHours: WorkingHours;
@@ -487,6 +493,7 @@ export type Settings = {
   blockedSlots: BlockedSlot[];
   oneOffUnavailableSlots: UnavailableSlot[];
   updatedAt?: Date;
+  calendarSync: CalendarSync;
 };
 
 const SETTINGS_DOC = "main";
@@ -505,6 +512,11 @@ export async function getSettings(): Promise<Settings> {
         blockedSlots: data.blockedSlots || [],
         oneOffUnavailableSlots: data.oneOffUnavailableSlots || [],
         updatedAt: data.updatedAt?.toDate() || new Date(),
+        calendarSync: data.calendarSync || {
+          autoCreateEvents: true,
+          showBusyTimes: false,
+          syncCancellations: true,
+        },
       };
     } else {
       // Return default settings if not found
@@ -513,6 +525,11 @@ export async function getSettings(): Promise<Settings> {
         workingDays: { startDay: 1, endDay: 5 },
         blockedSlots: [],
         oneOffUnavailableSlots: [],
+        calendarSync: {
+          autoCreateEvents: true,
+          showBusyTimes: false,
+          syncCancellations: true,
+        },
       };
     }
   } catch (error) {
@@ -535,6 +552,11 @@ export async function updateSettings(settings: Settings): Promise<boolean> {
       workingDays: settings.workingDays,
       blockedSlots: settings.blockedSlots,
       oneOffUnavailableSlots: settings.oneOffUnavailableSlots || [],
+      calendarSync: settings.calendarSync || {
+        autoCreateEvents: true,
+        showBusyTimes: false,
+        syncCancellations: true,
+      },
       updatedAt: Timestamp.now(),
     });
     return true;
