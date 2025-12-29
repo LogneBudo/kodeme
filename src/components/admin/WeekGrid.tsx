@@ -7,22 +7,26 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { Check, X, Clock, CalendarX, Lock } from "lucide-react";
+import { Check, X, Clock, CalendarX, Lock, Calendar } from "lucide-react";
+import { isTimeSlotBlocked } from "../../api/calendarApi";
 import type { Appointment } from "../../types/appointment";
 import type { Settings } from "../../api/firebaseApi";
+import type { CalendarEvent } from "../../types/calendar";
 
 type WeekGridProps = {
   currentDate: Date;
   appointments: Appointment[];
   onToggleSlot: (date: Date, time: string) => void;
   settings: Settings | null;
+  calendarEvents: CalendarEvent[];
 };
 
-export default function WeekGrid({
+function WeekGrid({
   currentDate,
   appointments,
   onToggleSlot,
   settings,
+  calendarEvents,
 }: WeekGridProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const today = startOfDay(new Date());
@@ -90,11 +94,15 @@ export default function WeekGrid({
       (s) => s.date === dateStr && s.time === time
     );
 
+    // Check if blocked by calendar event
+    const isCalendarBlocked = isTimeSlotBlocked(date, time, 30, calendarEvents);
+
     return {
-      isAvailable: !blocked && !appointment && !isUnavailable,
+      isAvailable: !blocked && !appointment && !isUnavailable && !isCalendarBlocked,
       isBooked: !!appointment,
       isBlocked: blocked,
       isUnavailable,
+      isCalendarBlocked,
       appointment,
       isPast: isBefore(date, today),
     };
@@ -244,7 +252,8 @@ export default function WeekGrid({
             <div style={timeLabelCell}>{time}</div>
 
             {weekDays.map((day) => {
-              const { isAvailable, isBooked, isBlocked, isUnavailable, isPast } =
+
+              const { isAvailable, isBooked, isBlocked, isUnavailable, isPast, isCalendarBlocked } =
                 getSlotStatus(day, time);
 
               let bg = "white";
@@ -253,6 +262,9 @@ export default function WeekGrid({
 
               if (isPast) {
                 bg = "#f1f5f9";
+                isClickable = false;
+              } else if (isCalendarBlocked) {
+                bg = "#f3f4f6";
                 isClickable = false;
               } else if (isBlocked) {
                 bg = "#f3f4f6";
@@ -291,6 +303,13 @@ export default function WeekGrid({
                 >
                   {isPast ? (
                     <span style={{ color: "#cbd5e1" }}>—</span>
+                  ) : isCalendarBlocked ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <Calendar size={16} color="#2563eb" />
+                      <span style={{ fontSize: "12px", color: "#2563eb", marginTop: "4px" }}>
+                        Calendar
+                      </span>
+                    </div>
                   ) : isBlocked ? (
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                       <Lock size={16} color="#6b7280" />
@@ -341,7 +360,13 @@ export default function WeekGrid({
         </div>
 
         <div style={legendItem}>
-          <div style={legendIconBox("#f3f4f6")}>
+          <div style={legendIconBox("#f3f4f6")}> 
+            <Calendar size={16} color="#2563eb" />
+          </div>
+          <span style={{ color: "#475569" }}>Calendar Blocked</span>
+        </div>
+        <div style={legendItem}>
+          <div style={legendIconBox("#f3f4f6")}> 
             <Lock size={16} color="#6b7280" />
           </div>
           <span style={{ color: "#475569" }}>Blocked</span>
@@ -350,3 +375,5 @@ export default function WeekGrid({
     </div>
   );
 }
+
+export default WeekGrid;

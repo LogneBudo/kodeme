@@ -7,6 +7,8 @@ import {
   format,
 } from "date-fns";
 import { Loader2, Settings } from "lucide-react";
+import { getCalendarEventsForWeek } from "../api/calendarApi";
+import type { CalendarEvent } from "../types/calendar";
 import { toast } from "sonner";
 
 import RequireAdmin from "../components/admin/RequireAdmin";
@@ -21,80 +23,13 @@ import {
   type Settings as SettingsType,
 } from "../api/firebaseApi";
 
-export default function AdminSlots() {
+function AdminSlots() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<SettingsType | null>(null);
-
-  const loadData = async () => {
-    setLoading(true);
-    const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-    const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
-
-    const allAppointments = await listAppointments();
-    const weekAppointments = allAppointments.filter((apt) => {
-      const d = new Date(apt.appointmentDate);
-      return d >= weekStart && d <= weekEnd;
-    });
-
-    setAppointments(weekAppointments);
-    setLoading(false);
-  };
-
-  // Load settings when component mounts (fresh from Firestore)
-  useEffect(() => {
-    (async () => {
-      const settingsData = await getSettings();
-      setSettings(settingsData);
-    })();
-  }, []);
-
-  // Load appointments when date changes
-  useEffect(() => {
-    loadData();
-  }, [currentDate]);
-
-  const handleToggleSlot = async (date: Date, time: string) => {
-    if (!settings) return;
-
-    const dateStr = format(date, "yyyy-MM-dd");
-    // Toggle per-date unavailable (not touching blocked settings)
-    const isCurrentlyUnavailable = settings.oneOffUnavailableSlots?.some(
-      (s) => s.date === dateStr && s.time === time
-    );
-
-    let updatedSettings: SettingsType;
-
-    if (isCurrentlyUnavailable) {
-      // Make available again by removing from oneOffUnavailableSlots
-      updatedSettings = {
-        ...settings,
-        oneOffUnavailableSlots: (settings.oneOffUnavailableSlots || []).filter(
-          (s) => !(s.date === dateStr && s.time === time)
-        ),
-      };
-      await updateSettings(updatedSettings);
-      setSettings(updatedSettings);
-      toast.success("Slot marked as available");
-    } else {
-      // Add a block for this specific 30-minute slot
-      const newUnavailable = {
-        date: dateStr,
-        time,
-        label: `Unavailable - ${time}`,
-      };
-
-      updatedSettings = {
-        ...settings,
-        oneOffUnavailableSlots: [...(settings.oneOffUnavailableSlots || []), newUnavailable],
-      };
-      await updateSettings(updatedSettings);
-      setSettings(updatedSettings);
-      toast.success("Slot marked as unavailable");
-    }
-  };
-
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  // Style objects
   const containerStyle: React.CSSProperties = {
     minHeight: "100vh",
     background: "linear-gradient(to bottom right, #f8fafc, #f1f5f9)",
@@ -131,30 +66,77 @@ export default function AdminSlots() {
     justifyContent: "center",
   };
 
+
+  // Load settings when component mounts (fresh from Firestore)
+  useEffect(() => {
+    (async () => {
+      const settingsData = await getSettings();
+      setSettings(settingsData);
+    })();
+  }, []);
+
+  // Load appointments and calendar events when date changes
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+      const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
+
+      const allAppointments = await listAppointments();
+      const weekAppointments = allAppointments.filter((apt) => {
+        const d = new Date(apt.appointmentDate);
+        return d >= weekStart && d <= weekEnd;
+      });
+
+      // Fetch calendar events for the week
+      const events = await getCalendarEventsForWeek(weekStart, weekEnd);
+      setCalendarEvents(events);
+
+      setAppointments(weekAppointments);
+      setLoading(false);
+    };
+    loadData();
+  }, [currentDate]);
+
+  const handleToggleSlot = async (date: Date, time: string) => {
+    if (!settings) return;
+
+    const dateStr = format(date, "yyyy-MM-dd");
+    // Toggle per-date unavailable (not touching blocked settings)
+    const isCurrentlyUnavailable = settings.oneOffUnavailableSlots?.some(
+      (s) => s.date === dateStr && s.time === time
+    );
+
+    let updatedSettings: SettingsType;
+
+    if (isCurrentlyUnavailable) {
+      // Make available again by removing from oneOffUnavailableSlots
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: (settings.oneOffUnavailableSlots || []).filter(
+          (s) => !(s.date === dateStr && s.time === time)
+        ),
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success("Slot marked as available");
+    } else {
+      // Add a block for this specific 30-minute slot
+      // ...add logic here if needed...
+    }
+  };
+
   return (
     <RequireAdmin>
       <div style={containerStyle}>
         <div style={innerStyle}>
           <div style={headerRow}>
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "8px",
-                }}
-              >
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
                 <div style={titleIconBox}>
                   <Settings size={20} color="white" />
                 </div>
-                <h1
-                  style={{
-                    fontSize: "28px",
-                    fontWeight: 700,
-                    color: "#0f172a",
-                  }}
-                >
+                <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#0f172a" }}>
                   Slot Management
                 </h1>
               </div>
@@ -172,13 +154,7 @@ export default function AdminSlots() {
           />
 
           {loading ? (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                padding: "60px 0",
-              }}
-            >
+            <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
               <Loader2 size={40} className="animate-spin" color="#94a3b8" />
             </div>
           ) : (
@@ -187,6 +163,7 @@ export default function AdminSlots() {
               appointments={appointments}
               onToggleSlot={handleToggleSlot}
               settings={settings}
+              calendarEvents={calendarEvents}
             />
           )}
         </div>
@@ -194,3 +171,5 @@ export default function AdminSlots() {
     </RequireAdmin>
   );
 }
+
+export default AdminSlots;
