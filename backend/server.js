@@ -14,7 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: `${__dirname}/.env` });
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Token storage file path
 const TOKEN_FILE = path.join(__dirname, ".google-tokens.json");
