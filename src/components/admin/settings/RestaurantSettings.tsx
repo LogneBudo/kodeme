@@ -64,7 +64,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
     } catch {
       setSaveStatus("Error saving");
     }
-    setTimeout(() => setSaveStatus(""), 2000);
+      setTimeout(() => setSaveStatus(""), 2000);
   };
   return (
     <div style={{ marginBottom: "32px" }}>
