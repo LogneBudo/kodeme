@@ -1,4 +1,8 @@
 import { useState } from "react";
+import zoomImg from "../assets/locations/zoom.jpg";
+import premisesImg from "../assets/locations/premises.jpg";
+import restaurantImg from "../assets/locations/restaurant.jpg";
+import otherImg from "../assets/locations/other.jpg";
 import { motion, AnimatePresence } from "framer-motion";
 
 import StepIndicator from "../components/booking/StepIndicator";
@@ -15,6 +19,12 @@ import type { Appointment } from "../types/appointment";
 const steps = ["Email", "Location", "Timeframe", "Confirm Slot"];
 
 export default function BookAppointment() {
+  const locationBackgrounds: Record<string, string> = {
+    zoom: zoomImg,
+    your_premises: premisesImg,
+    restaurant: restaurantImg,
+    other: otherImg,
+  };
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<Appointment["locationDetails"]["type"]>("zoom");
@@ -80,14 +90,28 @@ export default function BookAppointment() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f0f0f0", padding: "20px 0" }}>
-      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box" }}>
-        <div style={{ textAlign: "center", marginBottom: "24px" }}>
-          <h1 style={{ fontSize: "clamp(24px, 8vw, 32px)", fontWeight: "bold", marginBottom: "8px", margin: "0 0 8px 0" }}>
-            Book an Appointment
-          </h1>
-          <p style={{ color: "#666", fontSize: "14px", margin: 0 }}>Schedule your visit in just a few steps</p>
-        </div>
+    <div
+      style={{
+        minHeight: "100vh",
+        position: "relative",
+        padding: "20px 0",
+        transition: "background 0.3s",
+        background: "#f0f0f0"
+      }}
+    >
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 0,
+          width: "100vw",
+          height: "100vh",
+          background: `url(${locationBackgrounds[selectedLocation]}) center/cover no-repeat`,
+          opacity: 0.35,
+          pointerEvents: "none",
+        }}
+      />
+      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box", position: "relative", zIndex: 1 }}>
 
         {!bookedAppointment && (
           <StepIndicator currentStep={currentStep} steps={steps} />

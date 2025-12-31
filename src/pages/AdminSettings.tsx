@@ -1,8 +1,14 @@
 
+
 import { useState, useEffect } from "react";
+import WorkingHoursSettings from "../components/admin/settings/WorkingHoursSettings";
+import WorkingDaysSettings from "../components/admin/settings/WorkingDaysSettings";
+import BlockedSlotsSettings from "../components/admin/settings/BlockedSlotsSettings";
+import CalendarIntegrationSettings from "../components/admin/settings/CalendarIntegrationSettings";
+import RestaurantSettings from "../components/admin/settings/RestaurantSettings";
 import { useSearchParams } from "react-router-dom";
 import { getSettings, updateSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
-import { Settings as SettingsIcon, Plus, Trash2, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
+import { Settings as SettingsIcon, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
 import { toast } from "sonner";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -34,6 +40,12 @@ const SETTINGS_GROUPS = [
 		icon: CalendarSync,
 		description: "Connect and sync with your calendar",
 	},
+	{
+		id: "restaurants",
+		label: "Restaurants",
+		icon: Calendar, // Reuse icon, or replace with a restaurant icon if available
+		description: "Set city, perimeter, and manage restaurant list",
+	},
 ];
 
 export default function SettingsPage() {
@@ -52,6 +64,58 @@ export default function SettingsPage() {
 		endTime: "13:00",
 		label: "Lunch",
 	});
+
+	// City validation state
+	type CityValidationOption = { display_name: string; lat: string; lon: string };
+	const [cityValidation, setCityValidation] = useState<{
+		valid: boolean;
+		city?: string;
+		country?: string;
+		error?: string;
+		options?: CityValidationOption[];
+		selectedIdx?: number;
+	} | null>(null);
+	const [validatingCity, setValidatingCity] = useState(false);
+
+	async function handleValidateCity() {
+		setValidatingCity(true);
+		setCityValidation(null);
+		const city = settings?.restaurantCity || "";
+		if (!city.trim()) {
+			setCityValidation({ valid: false, error: "Enter a city name" });
+			setValidatingCity(false);
+			return;
+		}
+		try {
+			// Use OpenStreetMap Nominatim API for free geocoding
+			const resp = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(city)}&format=json&limit=10`);
+			const data = await resp.json();
+			if (data && data.length > 0) {
+				if (data.length === 1) {
+					setCityValidation({ valid: true, city: data[0].display_name.split(",")[0], country: data[0].display_name.split(",").pop().trim(), options: data, selectedIdx: 0 });
+				} else {
+					setCityValidation({ valid: false, options: data, selectedIdx: undefined });
+				}
+			} else {
+				setCityValidation({ valid: false, error: "City not found" });
+			}
+		} catch {
+			setCityValidation({ valid: false, error: "Validation failed" });
+		}
+		setValidatingCity(false);
+	}
+
+	function handleSelectCityOption(idx: number) {
+		if (!cityValidation?.options) return;
+		const selected = cityValidation.options[idx];
+		setCityValidation({
+			valid: true,
+			city: selected.display_name.split(",")[0],
+			country: (selected.display_name.split(",").pop() || "").trim(),
+			options: cityValidation.options,
+			selectedIdx: idx
+		});
+	}
 
 	useEffect(() => {
 		loadSettings();
@@ -309,359 +373,72 @@ export default function SettingsPage() {
 						}}>
 							{/* Working Hours Tab */}
 							{activeTab === "hours" && (
-								<div>
-									<h2 style={{ marginTop: 0, marginBottom: "24px", fontSize: "20px", fontWeight: 700 }}>
-										Working Hours
-									</h2>
-									<p style={{ marginTop: 0, marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-										Set the daily time window when you're available for appointments
-									</p>
-									<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
-										<div>
-											<label style={{
-												display: "block",
-												marginBottom: "8px",
-												fontSize: "14px",
-												fontWeight: 600,
-												color: "#222",
-											}}>
-												Start Hour
-											</label>
-											<select
-												value={settings.workingHours.startHour}
-												onChange={(e) =>
-													setSettings({
-														...settings,
-														workingHours: {
-															...settings.workingHours,
-															startHour: parseInt(e.target.value),
-														},
-													})
-												}
-												style={{
-													width: "100%",
-													padding: "10px 12px",
-													border: "1px solid #ddd",
-													borderRadius: "6px",
-													fontSize: "14px",
-													boxSizing: "border-box",
-													cursor: "pointer",
-												}}
-											>
-												{HOURS.map((h) => (
-													<option key={h} value={h}>
-														{String(h).padStart(2, "0")}:00
-													</option>
-												))}
-											</select>
-										</div>
-										<div>
-											<label style={{
-												display: "block",
-												marginBottom: "8px",
-												fontSize: "14px",
-												fontWeight: 600,
-												color: "#222",
-											}}>
-												End Hour
-											</label>
-											<select
-												value={settings.workingHours.endHour}
-												onChange={(e) =>
-													setSettings({
-														...settings,
-														workingHours: {
-															...settings.workingHours,
-															endHour: parseInt(e.target.value),
-														},
-													})
-												}
-												style={{
-													width: "100%",
-													padding: "10px 12px",
-													border: "1px solid #ddd",
-													borderRadius: "6px",
-													fontSize: "14px",
-													boxSizing: "border-box",
-													cursor: "pointer",
-												}}
-											>
-												{HOURS.map((h) => (
-													<option key={h} value={h}>
-														{String(h).padStart(2, "0")}:00
-													</option>
-												))}
-											</select>
-										</div>
-									</div>
-								</div>
+								<WorkingHoursSettings
+									workingHours={settings.workingHours}
+									setWorkingHours={hours => setSettings({ ...settings, workingHours: hours })}
+									HOURS={HOURS}
+								/>
 							)}
 							{/* Working Days Tab */}
 							{activeTab === "days" && (
-								<div>
-									<h2 style={{ marginTop: 0, marginBottom: "24px", fontSize: "20px", fontWeight: 700 }}>
-										Working Days
-									</h2>
-									<p style={{ marginTop: 0, marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-										Select the days of the week you are available for appointments
-									</p>
-									<div style={{ display: "flex", gap: "16px" }}>
-										<div>
-											<label style={{ fontSize: "14px", fontWeight: 600, color: "#222" }}>Start Day</label>
-											<select
-												value={settings.workingDays.startDay}
-												onChange={(e) =>
-													setSettings({
-														...settings,
-														workingDays: {
-															...settings.workingDays,
-															startDay: parseInt(e.target.value),
-														},
-													})
-												}
-												style={{
-													width: "100%",
-													padding: "10px 12px",
-													border: "1px solid #ddd",
-													borderRadius: "6px",
-													fontSize: "14px",
-													boxSizing: "border-box",
-													cursor: "pointer",
-												}}
-											>
-												{DAYS.map((d, i) => (
-													<option key={d} value={i}>
-														{d}
-													</option>
-												))}
-											</select>
-										</div>
-										<div>
-											<label style={{ fontSize: "14px", fontWeight: 600, color: "#222" }}>End Day</label>
-											<select
-												value={settings.workingDays.endDay}
-												onChange={(e) =>
-													setSettings({
-														...settings,
-														workingDays: {
-															...settings.workingDays,
-															endDay: parseInt(e.target.value),
-														},
-													})
-												}
-												style={{
-													width: "100%",
-													padding: "10px 12px",
-													border: "1px solid #ddd",
-													borderRadius: "6px",
-													fontSize: "14px",
-													boxSizing: "border-box",
-													cursor: "pointer",
-												}}
-											>
-												{DAYS.map((d, i) => (
-													<option key={d} value={i}>
-														{d}
-													</option>
-												))}
-											</select>
-										</div>
-									</div>
-								</div>
+								<WorkingDaysSettings
+									workingDays={settings.workingDays}
+									setWorkingDays={days => setSettings({ ...settings, workingDays: days })}
+									DAYS={DAYS}
+								/>
 							)}
 							{/* Blocked Slots Tab */}
 							{activeTab === "blocked" && (
-								<div>
-									<h2 style={{ marginTop: 0, marginBottom: "24px", fontSize: "20px", fontWeight: 700 }}>
-										Blocked Time Slots
-									</h2>
-									<p style={{ marginTop: 0, marginBottom: "20px", fontSize: "14px", color: "#666" }}>
-										Add breaks or unavailable times to prevent bookings during those periods
-									</p>
-									<div style={{ marginBottom: "20px", display: "flex", gap: "12px", alignItems: "center" }}>
-										<input
-											type="time"
-											value={newBlockedSlot.startTime}
-											onChange={(e) => setNewBlockedSlot({ ...newBlockedSlot, startTime: e.target.value })}
-											style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: "6px", fontSize: "14px" }}
-										/>
-										<span style={{ fontWeight: 600 }}>to</span>
-										<input
-											type="time"
-											value={newBlockedSlot.endTime}
-											onChange={(e) => setNewBlockedSlot({ ...newBlockedSlot, endTime: e.target.value })}
-											style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: "6px", fontSize: "14px" }}
-										/>
-										<input
-											type="text"
-											value={newBlockedSlot.label}
-											onChange={(e) => setNewBlockedSlot({ ...newBlockedSlot, label: e.target.value })}
-											placeholder="Label (e.g. Lunch)"
-											style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: "6px", fontSize: "14px", width: "160px" }}
-										/>
-										<button
-											onClick={handleAddBlockedSlot}
-											style={{ background: "#222", color: "white", border: "none", borderRadius: "6px", padding: "8px 16px", fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-										>
-											<Plus size={16} /> Add
-										</button>
-									</div>
-									<ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-										{settings.blockedSlots.map((slot) => (
-											<li key={slot._key} style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "10px" }}>
-												<span style={{ fontWeight: 500 }}>{slot.label}:</span>
-												<span>{slot.startTime} - {slot.endTime}</span>
-												<button
-													onClick={() => handleRemoveBlockedSlot(slot._key)}
-													style={{ background: "none", border: "none", color: "#e11d48", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-												>
-													<Trash2 size={16} /> Remove
-												</button>
-											</li>
-										))}
-									</ul>
-								</div>
+								<BlockedSlotsSettings
+									blockedSlots={settings.blockedSlots}
+									newBlockedSlot={newBlockedSlot}
+									setNewBlockedSlot={setNewBlockedSlot}
+									handleAddBlockedSlot={handleAddBlockedSlot}
+									handleRemoveBlockedSlot={handleRemoveBlockedSlot}
+								/>
 							)}
 							{/* Calendar Integration Tab */}
 							{activeTab === "calendar" && (
-								<div>
-									<h2 style={{ marginTop: 0, marginBottom: "18px", fontSize: "22px", fontWeight: 700 }}>
-										Calendar Integration
-									</h2>
-									<p style={{ marginTop: 0, marginBottom: "18px", fontSize: "15px", color: "#666" }}>
-										Automatically sync your bookings with your calendar and block busy times
-									</p>
-
-									{/* Connected Calendars Card */}
-									<div style={{
-										background: "#fafcff",
-										border: "1px solid #e5e7eb",
-										borderRadius: "12px",
-										padding: "28px 24px 24px 24px",
-										marginBottom: "24px",
-										display: "flex",
-										flexDirection: "column",
-										alignItems: "center",
-										justifyContent: "center",
-									}}>
-										{calendarConnected && (
-											<div style={{
-												marginBottom: "18px",
-												color: "#22c55e",
-												fontWeight: 600,
-												fontSize: "16px",
-												display: "flex",
-												alignItems: "center",
-												gap: "8px",
-											}}>
-												<span style={{fontSize: "18px"}}>✔</span> Google Calendar connected successfully!
-											</div>
-										)}
-										<div style={{ display: "flex", gap: "16px" }}>
-											<button
-												onClick={handleConnectGoogle}
-												disabled={googleConnecting || calendarConnected}
-												style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: googleConnecting || calendarConnected ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
-											>
-												<span style={{display: "flex", alignItems: "center"}}><Calendar size={16} /></span>
-												Connect Google Calendar
-											</button>
-											<button
-												onClick={handleConnectOutlook}
-												disabled={outlookConnecting || outlookConnected}
-												style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: outlookConnecting || outlookConnected ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
-											>
-												<span style={{display: "flex", alignItems: "center"}}><Calendar size={16} /></span>
-												Connect Outlook Calendar
-											</button>
-										</div>
-									</div>
-
-									{/* Sync Preferences Card */}
-									<div style={{
-										background: "#f8fafc",
-										border: "1px solid #e5e7eb",
-										borderRadius: "12px",
-										padding: "24px 24px 18px 24px",
-										marginBottom: "18px",
-									}}>
-										<div style={{ fontWeight: 600, fontSize: "16px", marginBottom: "16px" }}>Sync Preferences</div>
-										<div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-											<label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", fontSize: "15px" }}>
-												<input
-													type="checkbox"
-													checked={settings.calendarSync?.autoCreateEvents ?? true}
-													onChange={(e) => setSettings({
-														...settings,
-														calendarSync: {
-															...settings.calendarSync,
-															autoCreateEvents: e.target.checked,
-															showBusyTimes: settings.calendarSync?.showBusyTimes ?? false,
-															syncCancellations: settings.calendarSync?.syncCancellations ?? true,
-														}
-													})}
-													style={{ width: "18px", height: "18px", cursor: "pointer" }}
-												/>
-												<span style={{ color: "#222", fontWeight: 500 }}>
-													Auto-create calendar events for new bookings
-												</span>
-											</label>
-											<label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", fontSize: "15px" }}>
-												<input
-													type="checkbox"
-													checked={settings.calendarSync?.showBusyTimes ?? false}
-													onChange={(e) => setSettings({
-														...settings,
-														calendarSync: {
-															...settings.calendarSync,
-															autoCreateEvents: settings.calendarSync?.autoCreateEvents ?? true,
-															showBusyTimes: e.target.checked,
-															syncCancellations: settings.calendarSync?.syncCancellations ?? true,
-														}
-													})}
-													style={{ width: "18px", height: "18px", cursor: "pointer" }}
-												/>
-												<span style={{ color: "#222", fontWeight: 500 }}>
-													Show busy times from connected calendars
-												</span>
-											</label>
-											<label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", fontSize: "15px" }}>
-												<input
-													type="checkbox"
-													checked={settings.calendarSync?.syncCancellations ?? true}
-													onChange={(e) => setSettings({
-														...settings,
-														calendarSync: {
-															...settings.calendarSync,
-															autoCreateEvents: settings.calendarSync?.autoCreateEvents ?? true,
-															showBusyTimes: settings.calendarSync?.showBusyTimes ?? false,
-															syncCancellations: e.target.checked,
-														}
-													})}
-													style={{ width: "18px", height: "18px", cursor: "pointer" }}
-												/>
-												<span style={{ color: "#222", fontWeight: 500 }}>
-													Send booking confirmation to calendar organizer
-												</span>
-											</label>
-										</div>
-									</div>
-
-									{/* Info Box */}
-									<div style={{
-										marginTop: "0px",
-										padding: "16px",
-										background: "#eff6ff",
-										border: "1px solid #bfdbfe",
-										borderRadius: "8px",
-										fontSize: "14px",
-										color: "#1e40af",
-									}}>
-										<strong>💡 Tip:</strong> Once you connect a calendar, all your bookings will be automatically added to it. You can also block times in your calendar to prevent booking conflicts.
-									</div>
-								</div>
+								<CalendarIntegrationSettings
+									calendarSync={settings.calendarSync}
+									setCalendarSync={sync => setSettings({ ...settings, calendarSync: sync })}
+									calendarConnected={calendarConnected}
+									outlookConnected={outlookConnected}
+									googleConnecting={googleConnecting}
+									outlookConnecting={outlookConnecting}
+									handleConnectGoogle={handleConnectGoogle}
+									handleConnectOutlook={handleConnectOutlook}
+								/>
 							)}
-							{/* Save Button */}
+														{/* Restaurants Tab */}
+														{activeTab === "restaurants" && (
+															<RestaurantSettings
+																city={settings.restaurantCity || ""}
+																setCity={city => { setSettings({ ...settings, restaurantCity: city }); setCityValidation(null); }}
+																perimeter={settings.restaurantPerimeterKm || 5}
+																setPerimeter={perimeter => setSettings({ ...settings, restaurantPerimeterKm: perimeter })}
+																curatedList={(settings.restaurants || []).map(r => r.name).join(", ")}
+																setCuratedList={list => {
+																	// This just updates the names, not full objects
+																	setSettings({
+																		...settings,
+																		restaurants: list.split(",").map(name => ({ name: name.trim(), address: "", website: "", lat: 0, lng: 0 })).filter(r => r.name)
+																	});
+																}}
+																cityValidationLoading={validatingCity}
+																cityValidationError={cityValidation?.error || null}
+																cityOptions={cityValidation?.options?.map(opt => ({
+																	displayName: opt.display_name,
+																	lat: Number(opt.lat),
+																	lon: Number(opt.lon),
+																	country: (opt.display_name.split(",").pop() || "").trim(),
+																})) || []}
+																selectedCityIndex={cityValidation?.selectedIdx ?? null}
+																setSelectedCityIndex={idx => handleSelectCityOption(idx ?? 0)}
+																handleValidateCity={handleValidateCity}
+															/>
+														)}
+														{/* Save Button */}
 							<div style={{ marginTop: "28px", paddingTop: "24px", borderTop: "1px solid #e5e5e5" }}>
 								<button
 									onClick={handleSave}

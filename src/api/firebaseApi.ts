@@ -98,23 +98,27 @@ export async function createTimeSlot(
   }
 }
 
+// Fix updateTimeSlot
 export async function updateTimeSlot(
   id: string,
   patch: Partial<TimeSlot>
 ): Promise<TimeSlot | null> {
   try {
     const docRef = doc(db, "time_slots", id);
-    const updateData: any = {
-      ...patch,
+    // Remove id and createdAt from patch using destructuring
+    // Remove id and createdAt from patch using a utility function
+    const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+      const ret = { ...obj };
+      for (const key of keys) {
+        delete ret[key];
+      }
+      return ret;
+    };
+    const updateData = {
+      ...omit(patch, ["id", "createdAt"]),
       updatedAt: Timestamp.now(),
     };
-
-    // Remove id from update payload
-    delete updateData.id;
-    delete updateData.createdAt;
-
     await updateDoc(docRef, updateData);
-
     return getTimeSlot(id);
   } catch (error) {
     console.error("Error updating time slot:", error);
@@ -219,6 +223,7 @@ export async function getAppointment(id: string): Promise<Appointment | null> {
   }
 }
 
+// Fix createAppointment
 export async function createAppointment(
   data: Omit<Appointment, "id" | "createdAt" | "expiresAt">
 ): Promise<Appointment> {
@@ -227,9 +232,8 @@ export async function createAppointment(
     const now = Timestamp.now();
     const expiresAt = new Date(now.toDate());
     expiresAt.setDate(expiresAt.getDate() + 90); // 90 days from now
-
     // Build Firestore-safe payload (no undefined values)
-    const payload: any = {
+    const payload: Omit<Appointment, "id" | "createdAt" | "expiresAt"> & { createdAt: Timestamp; expiresAt: Date } = {
       slotId: data.slotId,
       email: data.email,
       locationDetails: {
@@ -238,56 +242,33 @@ export async function createAppointment(
       status: data.status,
       appointmentDate: data.appointmentDate,
       createdAt: now,
-      expiresAt: Timestamp.fromDate(expiresAt),
-    };
-
-    if (data.locationDetails?.details) {
-      payload.locationDetails.details = data.locationDetails.details;
-    }
-
-    if (data.notes) {
-      payload.notes = data.notes;
-    }
-
-    const docRef = await addDoc(aptsRef, payload);
-
-    return {
-      id: docRef.id,
-      ...data,
-      createdAt: now.toDate(),
       expiresAt,
+      notes: data.notes,
     };
+    const docRef = await addDoc(aptsRef, payload);
+    return getAppointment(docRef.id) as Promise<Appointment>;
   } catch (error) {
     console.error("Error creating appointment:", error);
     throw error;
   }
 }
 
+// Fix updateAppointment
 export async function updateAppointment(
   id: string,
   patch: Partial<Appointment>
 ): Promise<Appointment | null> {
   try {
     const docRef = doc(db, "appointments", id);
-    const updateData: any = {
+    const updateData: Partial<Omit<Appointment, 'id' | 'createdAt'>> & { updatedAt: Timestamp } = {
       updatedAt: Timestamp.now(),
     };
-
     if (patch.slotId !== undefined) updateData.slotId = patch.slotId;
     if (patch.email !== undefined) updateData.email = patch.email;
     if (patch.status !== undefined) updateData.status = patch.status;
     if (patch.appointmentDate !== undefined) updateData.appointmentDate = patch.appointmentDate;
     if (patch.notes !== undefined) updateData.notes = patch.notes;
-
-    if (patch.locationDetails) {
-      updateData.locationDetails = { type: patch.locationDetails.type };
-      if (patch.locationDetails.details) {
-        updateData.locationDetails.details = patch.locationDetails.details;
-      }
-    }
-
     await updateDoc(docRef, updateData);
-
     return getAppointment(id);
   } catch (error) {
     console.error("Error updating appointment:", error);
@@ -486,6 +467,8 @@ export type CalendarSync = {
   syncCancellations: boolean;
 };
 
+import type { Restaurant } from "../types/restaurant";
+
 export type Settings = {
   id?: string;
   workingHours: WorkingHours;
@@ -494,6 +477,11 @@ export type Settings = {
   oneOffUnavailableSlots: UnavailableSlot[];
   updatedAt?: Date;
   calendarSync: CalendarSync;
+  // Restaurant settings
+  restaurantCity?: string;
+  restaurantPerimeterKm?: number;
+  restaurants?: Restaurant[];
+  curatedList?: string;
 };
 
 const SETTINGS_DOC = "main";
@@ -517,6 +505,10 @@ export async function getSettings(): Promise<Settings> {
           showBusyTimes: false,
           syncCancellations: true,
         },
+        restaurantCity: data.restaurantCity || "",
+        restaurantPerimeterKm: data.restaurantPerimeterKm || 5,
+        restaurants: data.restaurants || [],
+        curatedList: data.curatedList || "",
       };
     } else {
       // Return default settings if not found
@@ -530,6 +522,10 @@ export async function getSettings(): Promise<Settings> {
           showBusyTimes: false,
           syncCancellations: true,
         },
+        restaurantCity: "",
+        restaurantPerimeterKm: 5,
+        restaurants: [],
+        curatedList: "",
       };
     }
   } catch (error) {
@@ -562,6 +558,10 @@ export async function updateSettings(settings: Settings): Promise<boolean> {
         showBusyTimes: false,
         syncCancellations: true,
       },
+      restaurantCity: settings.restaurantCity || "",
+      restaurantPerimeterKm: settings.restaurantPerimeterKm || 5,
+      restaurants: settings.restaurants || [],
+      curatedList: settings.curatedList || "",
       updatedAt: Timestamp.now(),
     });
     return true;

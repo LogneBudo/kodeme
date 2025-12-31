@@ -80,61 +80,78 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           >
             <Calendar size={16} color="white" />
           </div>
-          <span style={{ fontWeight: 600, color: "#222", fontSize: "14px", display: "none" }} className="hide-on-mobile">Appointments</span>
         </Link>
 
-        {/* Desktop Navigation */}
-        <div style={{ display: "none", gap: "10px" }} className="desktop-nav">
-          {!loading && user && navItems.map((item) => {
-            if (item.adminOnly && user?.role !== "admin") return null;
+        {/* Centered Title/Sub for all users */}
+        {!loading && (
+          <div style={{ position: "absolute", left: 0, right: 0, top: 0, height: "60px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", pointerEvents: "none", zIndex: 1 }}>
+            <span style={{ fontWeight: 700, fontSize: "18px", color: "#222", letterSpacing: "-0.5px" }}>Book an Appointment</span>
+            <span style={{ color: "#666", fontSize: "13px", marginTop: "2px" }}>Schedule your visit in just a few steps</span>
+          </div>
+        )}
 
-            const Icon = item.icon;
-            const isActive = currentPageName === item.name;
-
-            return (
-              <Link
-                key={item.name}
-                to={`/${item.name}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 12px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  textDecoration: "none",
-                  background: isActive ? "#222" : "transparent",
-                  color: isActive ? "white" : "#444",
-                  border: isActive ? "1px solid #222" : "1px solid transparent",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <Icon size={16} />
-                {item.label}
-              </Link>
-            );
-          })}
-
-          {!loading && user && (
-            <button
-              onClick={handleLogout}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "8px 12px",
-                borderRadius: "6px",
-                fontSize: "14px",
-                background: "transparent",
-                border: "1px solid #ddd",
-                cursor: "pointer",
-              }}
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
-          )}
-        </div>
+        {/* Desktop Navigation for admin only, as dropdown */}
+        {!loading && user && user.role === "admin" && (
+          <div style={{ display: "none", gap: "10px", position: "relative" }} className="desktop-nav">
+            <div style={{ position: "relative" }}>
+              <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", background: "#222", color: "white", border: "1px solid #222", cursor: "pointer" }} onClick={() => setMobileMenuOpen((open) => !open)}>
+                <Menu size={16} />
+                Admin Menu
+              </button>
+              {mobileMenuOpen && (
+                <div style={{ position: "absolute", top: "110%", right: 0, background: "white", border: "1px solid #ddd", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", minWidth: "180px", zIndex: 10 }}>
+                  {navItems.filter(item => item.adminOnly).map(item => {
+                    const Icon = item.icon;
+                    const isActive = currentPageName === item.name;
+                    return (
+                      <Link
+                        key={item.name}
+                        to={`/${item.name}`}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          padding: "10px 16px",
+                          borderRadius: "6px",
+                          fontSize: "14px",
+                          textDecoration: "none",
+                          background: isActive ? "#f0f0f0" : "white",
+                          color: isActive ? "#222" : "#444",
+                          border: "none",
+                        }}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Icon size={16} />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "10px 16px",
+                      borderRadius: "6px",
+                      fontSize: "14px",
+                      background: "white",
+                      border: "none",
+                      cursor: "pointer",
+                      color: "#444",
+                    }}
+                  >
+                    <LogOut size={16} />
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Mobile Menu Button */}
         <button
