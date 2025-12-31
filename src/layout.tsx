@@ -41,6 +41,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
 
   const navItems = [
     { name: "BookAppointment", label: "Book Appointment", icon: Calendar, public: true },
+    { name: "admin/appointments", label: "Appointments", icon: Calendar, adminOnly: true },
     { name: "admin/slots", label: "Slots", icon: Settings, adminOnly: true },
     { name: "admin/users", label: "Users", icon: Users, adminOnly: true },
     { name: "admin/settings", label: "Settings", icon: Settings, adminOnly: true },

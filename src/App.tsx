@@ -6,6 +6,7 @@ import UserManagement from "../src/pages/UserManagement";
 import AdminSettings from "../src/pages/AdminSettings";
 import Login from "../src/pages/Login";
 import RequireAdmin from "./components/admin/RequireAdmin";
+import AdminAppointments from "../src/pages/AdminAppointments";
 
 export default function App() {
   return (
@@ -53,6 +54,17 @@ export default function App() {
           <RequireAdmin>
             <Layout currentPageName="AdminSettings">
               <AdminSettings />
+            </Layout>
+          </RequireAdmin>
+        }
+      />
+      // Add AdminAppointments route
+      <Route
+        path="/admin/appointments"
+        element={
+          <RequireAdmin>
+            <Layout currentPageName="AdminAppointments">
+              <AdminAppointments />
             </Layout>
           </RequireAdmin>
         }

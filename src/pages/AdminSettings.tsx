@@ -539,6 +539,10 @@ export default function SettingsPage() {
 										borderRadius: "12px",
 										padding: "28px 24px 24px 24px",
 										marginBottom: "24px",
+										display: "flex",
+										flexDirection: "column",
+										alignItems: "center",
+										justifyContent: "center",
 									}}>
 										{calendarConnected && (
 											<div style={{
