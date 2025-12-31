@@ -1,4 +1,8 @@
 import { useState } from "react";
+import zoomImg from "../../assets/locations/zoom.jpg";
+import premisesImg from "../../assets/locations/premises.jpg";
+import restaurantImg from "../../assets/locations/restaurant.jpg";
+import otherImg from "../../assets/locations/other.jpg";
 import {
   MapPin,
   Video,
@@ -16,7 +20,6 @@ import type { LucideIcon } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default leaflet marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
   iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
@@ -24,6 +27,7 @@ L.Icon.Default.mergeOptions({
 });
 
 type LocationType = Appointment["locationDetails"]["type"];
+
 
 type LocationStepProps = {
   selectedLocation: LocationType;
@@ -34,16 +38,19 @@ type LocationStepProps = {
   onBack: () => void;
 };
 
-const locations: {
+type LocationOption = {
   id: LocationType;
   label: string;
   icon: LucideIcon;
   description: string;
-}[] = [
-  { id: "zoom", label: "Zoom Meeting", icon: Video, description: "Online video call" },
-  { id: "your_premises", label: "Your Premises", icon: Building, description: "At your office/location" },
-  { id: "restaurant", label: "Restaurant", icon: UtensilsCrossed, description: "Meet at a restaurant" },
-  { id: "other", label: "Other Location", icon: MapPinned, description: "Specify custom location" },
+  image: string;
+};
+
+const locations: LocationOption[] = [
+  { id: "zoom", label: "Video Meeting", icon: Video, description: "Online Teams or Zoom video call", image: zoomImg },
+  { id: "your_premises", label: "Your Premises", icon: Building, description: "At your office/location", image: premisesImg },
+  { id: "restaurant", label: "At a Restaurant", icon: UtensilsCrossed, description: "Meet at a restaurant", image: restaurantImg },
+  { id: "other", label: "Other Location", icon: MapPinned, description: "Specify custom location", image: otherImg },
 ];
 
 export default function LocationStep({
@@ -203,7 +210,6 @@ export default function LocationStep({
         {locations.map((loc) => {
           const Icon = loc.icon;
           const isSelected = selectedLocation === loc.id;
-
           return (
             <button
               key={loc.id}
@@ -217,9 +223,21 @@ export default function LocationStep({
                 borderColor: isSelected ? "#0f172a" : "#e2e8f0",
                 background: isSelected ? "#0f172a" : "white",
                 color: isSelected ? "white" : "#0f172a",
+                boxShadow: isSelected ? "0 0 0 3px #0f172a33" : undefined,
+                position: "relative",
+                overflow: "hidden",
               }}
             >
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", width: "100%" }}>
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "8px",
+                width: "100%",
+                background: isSelected ? "rgba(15,23,42,0.7)" : "rgba(255,255,255,0.7)",
+                borderRadius: "12px",
+                padding: "8px 0",
+              }}>
                 <div
                   style={{
                     width: "40px",
@@ -233,7 +251,6 @@ export default function LocationStep({
                 >
                   <Icon size={20} color={isSelected ? "white" : "#475569"} />
                 </div>
-
                 <div style={{ textAlign: "center" }}>
                   <p
                     style={{
@@ -241,6 +258,7 @@ export default function LocationStep({
                       fontWeight: 600,
                       color: isSelected ? "white" : "#0f172a",
                       margin: "0 0 2px 0",
+                      textShadow: isSelected ? "0 1px 4px #0f172a99" : undefined,
                     }}
                   >
                     {loc.label}
@@ -250,6 +268,7 @@ export default function LocationStep({
                       fontSize: "11px",
                       color: isSelected ? "rgba(255,255,255,0.7)" : "#64748b",
                       margin: 0,
+                      textShadow: isSelected ? "0 1px 4px #0f172a99" : undefined,
                     }}
                   >
                     {loc.description}
@@ -268,7 +287,7 @@ export default function LocationStep({
           </label>
           <div style={{ display: "flex", gap: "8px", alignItems: "flex-start" }}>
               <textarea
-                placeholder="Enter address or geo coordinates (e.g., 123 Main St, City or 40.7128,-74.0060)"
+                placeholder="Enter address or geo coordinates"
                 value={locationDetails}
                 onChange={(e) => {
                   setLocationDetails(e.target.value);
@@ -313,7 +332,7 @@ export default function LocationStep({
               </button>
             </div>
           <p style={{ fontSize: "12px", color: "#64748b", marginTop: "8px" }}>
-            {selectedLocation === "your_premises" ? "Enter your business address or GPS coordinates" : "Enter the venue address or GPS coordinates"}
+            {selectedLocation === "your_premises" ? "Enter your business address or GPS coordinates" : "e.g., 123 Main St, City or 40.7128,-74.0060"}
           </p>
         </div>
       )}
