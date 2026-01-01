@@ -10,6 +10,7 @@ import { useSearchParams } from "react-router-dom";
 import { getSettings, updateSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
 import { Settings as SettingsIcon, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
 import { toast } from "sonner";
+import styles from "./AdminSettings.module.css";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -320,45 +321,44 @@ export default function SettingsPage() {
 
 	if (loading) {
 		return (
-			<div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-				Loading settings...
+			<div className={styles.page}>
+				<div className={styles.loading}>
+					Loading settings...
+				</div>
 			</div>
 		);
 	}
 
 	if (!settings) {
 		return (
-			<div style={{ padding: "20px", textAlign: "center", color: "#666" }}>
-				Error loading settings
+			<div className={styles.page}>
+				<div className={styles.loading}>
+					Error loading settings
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div style={{ minHeight: "100vh", background: "#fafafa" }}>
-			{/* Header */}
-			<div style={{
-				background: "white",
-				borderBottom: "1px solid #e5e5e5",
-				padding: "24px 0 0 0",
-				boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-			}}>
-				<div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-					<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-						<SettingsIcon size={28} />
-						<div>
-							<h1 style={{ margin: 0, fontSize: "24px", fontWeight: 700 }}>Settings</h1>
-							<p style={{ margin: "4px 0 0 0", fontSize: "14px", color: "#666" }}>
-								Manage your booking preferences and availability
-							</p>
+		<div className={styles.page}>
+			<div className={styles.content}>
+				{/* Header */}
+				<div className={styles.header}>
+					<div className={styles.titleGroup}>
+						<div className={styles.titleRow}>
+							<div className={styles.titleIcon}>
+								<SettingsIcon size={20} color="white" />
+							</div>
+							<h1 className={styles.title}>Settings</h1>
 						</div>
+						<p className={styles.subtitle}>
+							Manage your booking preferences and availability
+						</p>
 					</div>
 				</div>
-			</div>
 
 			{/* Main Content */}
-			<div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 0" }}>
-				<div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "32px" }}>
+			<div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "32px" }}>
 					{/* Sidebar Navigation */}
 					<div>
 						<div style={{
