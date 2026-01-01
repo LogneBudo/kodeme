@@ -7,9 +7,8 @@ into CSS modules for consistency. Consider adding shared spacing/typography toke
 
 2) Centralize slot/time helpers: 
 
-the slot generation and status logic in WeekGrid.tsx and the day toggle logic in
-AdminSlots.tsx should live in a shared utility/hook 
-(e.g., useWeekSlots(settings, appointments, events)) to keep UI components lean.
+DONE: slot generation, status lookup, and day/slot toggle logic now live in
+useWeekSlots, shared by AdminSlots and WeekGrid to keep UI components lean.
 
 3) Add robust error handling for data fetches: 
 
