@@ -19,6 +19,8 @@ type WeekGridProps = {
   onToggleDay: (date: Date) => void;
   settings: Settings | null;
   calendarEvents: CalendarEvent[];
+  pendingSlotKey?: string | null;
+  pendingDayKey?: string | null;
 };
 
 function WeekGrid({
@@ -28,9 +30,26 @@ function WeekGrid({
   onToggleDay,
   settings,
   calendarEvents,
+  pendingSlotKey,
+  pendingDayKey,
 }: WeekGridProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const today = startOfDay(new Date());
+
+  const getDayCounts = (day: Date) => {
+    if (!settings) return { booked: 0, blocked: 0, unavailable: 0 };
+    const dateStr = format(day, "yyyy-MM-dd");
+    const booked = appointments.filter(
+      (a) => a.date === dateStr || a.appointmentDate === dateStr
+    ).length;
+    const blocked = (settings.blockedSlots || []).filter(
+      (b) => !b.date || b.date === dateStr
+    ).length;
+    const unavailable = (settings.oneOffUnavailableSlots || []).filter(
+      (s) => s.date === dateStr
+    ).length;
+    return { booked, blocked, unavailable };
+  };
 
   const isDayFullyUnavailable = (day: Date): boolean => {
     if (!settings) return false;
@@ -133,13 +152,16 @@ function WeekGrid({
           <table style={{ borderCollapse: "collapse", width: "auto" }}>
           <thead>
             <tr>
-              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "18px", fontWeight: "500", color: "#64748b" }}>
+              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "18px", fontWeight: "500", color: "#64748b", position: "sticky", top: 0, left: 0, zIndex: 3 }}>
                 Time
               </th>
               {weekDays.map((day) => {
                 const isToday = isSameDay(day, new Date());
                 const isPastDay = isBefore(day, today);
                 const isDayUnavailable = isDayFullyUnavailable(day);
+                const isDayPending = pendingDayKey === format(day, "yyyy-MM-dd");
+                const counts = getDayCounts(day);
+                const headerLabel = `${format(day, "EEE, MMM d")} — ${counts.booked} booked, ${counts.blocked} blocked, ${counts.unavailable} unavailable`;
 
                 return (
                   <th
@@ -155,7 +177,13 @@ function WeekGrid({
                       textAlign: "center",
                       fontSize: "22px",
                       fontWeight: "500",
+                      position: "sticky",
+                      top: 0,
+                      zIndex: 2,
+                      cursor: "default",
                     }}
+                    title={headerLabel}
+                    aria-label={headerLabel}
                   >
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "2px" }}>
                       <div style={{ fontSize: "10px", opacity: 0.7 }}>{format(day, "EEE")}</div>
@@ -163,6 +191,7 @@ function WeekGrid({
                       {!isPastDay && (
                         <button
                           onClick={() => onToggleDay(day)}
+                          disabled={isDayPending}
                           style={{
                             padding: "2px 4px",
                             fontSize: "9px",
@@ -174,9 +203,10 @@ function WeekGrid({
                             color: "white",
                             transition: "opacity 0.15s",
                             marginTop: "2px",
+                            opacity: isDayPending ? 0.6 : 1,
                           }}
                         >
-                          {isDayUnavailable ? "Enable" : "Disable"}
+                            {isDayPending ? "…" : isDayUnavailable ? "Enable" : "Disable"}
                         </button>
                       )}
                     </div>
@@ -200,6 +230,9 @@ function WeekGrid({
                     fontSize: "18px",
                     fontWeight: "500",
                     color: "#64748b",
+                    position: "sticky",
+                    left: 0,
+                    zIndex: 1,
                   }}
                 >
                   {time}
@@ -207,6 +240,8 @@ function WeekGrid({
                 {weekDays.map((day) => {
                   const status = getSlotStatus(day, time);
                   const isDisabled = status.isPast || status.isBlocked || status.isCalendarBlocked || status.isBooked;
+                  const slotKey = `${format(day, "yyyy-MM-dd")}-${time}`;
+                  const isPending = pendingSlotKey === slotKey;
                   
                   let bgColor = "#ecfdf5";
                   if (status.isPast) bgColor = "#f1f5f9";
@@ -214,6 +249,15 @@ function WeekGrid({
                   else if (status.isBlocked) bgColor = "#f3f4f6";
                   else if (status.isBooked) bgColor = "#d1fae5";
                   else if (status.isUnavailable) bgColor = "#fee2e2";
+
+                  const statusLabel = (() => {
+                    if (status.isPast) return "Past";
+                    if (status.isCalendarBlocked) return "Calendar blocked";
+                    if (status.isBlocked) return "Blocked";
+                    if (status.isBooked) return "Booked";
+                    if (status.isUnavailable) return "Unavailable";
+                    return "Available";
+                  })();
 
                   return (
                     <td
@@ -232,19 +276,32 @@ function WeekGrid({
                     >
                       <button
                         onClick={() => !isDisabled && onToggleSlot(day, time)}
-                        disabled={isDisabled}
+                        disabled={isDisabled || isPending}
                         style={{
                           width: "100%",
                           height: "100%",
                           border: "none",
                           background: "transparent",
-                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          cursor: isDisabled || isPending ? "not-allowed" : "pointer",
                           fontSize: "14px",
                           fontWeight: "500",
                         }}
-                        title={`${format(day, "EEE, MMM d")} at ${time}`}
+                        title={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " (updating...)" : ""}`}
+                        aria-label={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " updating" : ""}`}
                       >
-                        {status.isPast ? "—" : status.isCalendarBlocked ? "X" : status.isBlocked ? "X" : status.isBooked ? "✓" : status.isUnavailable ? "✕" : "✓"}
+                        {isPending
+                          ? "…"
+                          : status.isPast
+                          ? "—"
+                          : status.isCalendarBlocked
+                          ? "X"
+                          : status.isBlocked
+                          ? "X"
+                          : status.isBooked
+                          ? "✓"
+                          : status.isUnavailable
+                          ? "✕"
+                          : "✓"}
                       </button>
                     </td>
                   );

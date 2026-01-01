@@ -31,13 +31,15 @@ function AdminSlots() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [pendingSlotKey, setPendingSlotKey] = useState<string | null>(null);
+  const [pendingDayKey, setPendingDayKey] = useState<string | null>(null);
   
   // Check if we can go to previous week (current week is the limit)
   const today = startOfDay(new Date());
   const currentWeekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const todayWeekStart = startOfWeek(today, { weekStartsOn: 1 });
   const canGoPrevious = isBefore(todayWeekStart, currentWeekStart);
-  
+
   // Style objects
   const containerStyle: React.CSSProperties = {
     height: "100vh",
@@ -74,7 +76,6 @@ function AdminSlots() {
     alignItems: "center",
     justifyContent: "center",
   };
-
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -115,10 +116,13 @@ function AdminSlots() {
     loadData();
   }, [currentDate]);
 
+
   const handleToggleSlot = async (date: Date, time: string) => {
     if (!settings) return;
 
     const dateStr = format(date, "yyyy-MM-dd");
+    const slotKey = `${dateStr}-${time}`;
+    setPendingSlotKey(slotKey);
     // Toggle per-date unavailable (not touching blocked settings)
     const isCurrentlyUnavailable = settings.oneOffUnavailableSlots?.some(
       (s) => s.date === dateStr && s.time === time
@@ -150,12 +154,14 @@ function AdminSlots() {
       setSettings(updatedSettings);
       toast.success("Slot marked as unavailable");
     }
+    setPendingSlotKey(null);
   };
 
   const handleToggleDay = async (date: Date) => {
     if (!settings) return;
 
     const dateStr = format(date, "yyyy-MM-dd");
+    setPendingDayKey(dateStr);
     
     // Generate all time slots for the day
     const { startHour, endHour } = settings.workingHours;
@@ -204,6 +210,7 @@ function AdminSlots() {
       setSettings(updatedSettings);
       toast.success(`All slots blocked for ${dayName}`);
     }
+    setPendingDayKey(null);
   };
 
   return (
@@ -246,6 +253,8 @@ function AdminSlots() {
               onToggleDay={handleToggleDay}
               settings={settings}
               calendarEvents={calendarEvents}
+              pendingSlotKey={pendingSlotKey}
+              pendingDayKey={pendingDayKey}
             />
           )}
         </div>
