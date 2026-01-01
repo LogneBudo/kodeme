@@ -1,16 +1,5 @@
-import { useMemo } from "react";
-import {
-  format,
-  addDays,
-  startOfWeek,
-  isSameDay,
-  isBefore,
-  startOfDay,
-} from "date-fns";
-import { isTimeSlotBlocked } from "../../api/calendarApi";
-import type { Appointment } from "../../types/appointment";
-import type { Settings } from "../../api/firebaseApi";
-import type { CalendarEvent } from "../../types/calendar";
+import { format, isSameDay } from "date-fns";
+import type { SlotStatus } from "../../hooks/useWeekSlots";
 import styles from "./WeekGrid.module.css";
 
 const classNames = (
@@ -18,135 +7,30 @@ const classNames = (
 ) => classes.filter(Boolean).join(" ");
 
 type WeekGridProps = {
-  currentDate: Date;
-  appointments: Appointment[];
+  weekDays: Date[];
+  timeSlots: string[];
+  getDayCounts: (day: Date) => { booked: number; blocked: number; unavailable: number };
+  isDayFullyUnavailable: (day: Date) => boolean;
+  isPastDay: (day: Date) => boolean;
+  getSlotStatus: (date: Date, time: string) => SlotStatus;
   onToggleSlot: (date: Date, time: string) => void;
   onToggleDay: (date: Date) => void;
-  settings: Settings | null;
-  calendarEvents: CalendarEvent[];
   pendingSlotKey?: string | null;
   pendingDayKey?: string | null;
 };
 
 function WeekGrid({
-  currentDate,
-  appointments,
+  weekDays,
+  timeSlots,
+  getDayCounts,
+  isDayFullyUnavailable,
+  isPastDay,
+  getSlotStatus,
   onToggleSlot,
   onToggleDay,
-  settings,
-  calendarEvents,
   pendingSlotKey,
   pendingDayKey,
 }: WeekGridProps) {
-  const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
-  const today = startOfDay(new Date());
-
-  const getDayCounts = (day: Date) => {
-    if (!settings) return { booked: 0, blocked: 0, unavailable: 0 };
-    const dateStr = format(day, "yyyy-MM-dd");
-    const booked = appointments.filter(
-      (a) => a.date === dateStr || a.appointmentDate === dateStr
-    ).length;
-    const blocked = (settings.blockedSlots || []).filter(
-      (b) => !b.date || b.date === dateStr
-    ).length;
-    const unavailable = (settings.oneOffUnavailableSlots || []).filter(
-      (s) => s.date === dateStr
-    ).length;
-    return { booked, blocked, unavailable };
-  };
-
-  const isDayFullyUnavailable = (day: Date): boolean => {
-    if (!settings) return false;
-    
-    const dateStr = format(day, "yyyy-MM-dd");
-    const { startHour, endHour } = settings.workingHours;
-    const daySlots: string[] = [];
-    
-    for (let hour = startHour; hour < endHour; hour++) {
-      daySlots.push(`${String(hour).padStart(2, "0")}:00`);
-      daySlots.push(`${String(hour).padStart(2, "0")}:30`);
-    }
-    
-    return daySlots.every((time) =>
-      settings.oneOffUnavailableSlots?.some(
-        (s) => s.date === dateStr && s.time === time
-      )
-    );
-  };
-
-  const weekDays = useMemo(() => {
-    const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-    
-    if (!settings) return allDays;
-    
-    const { startDay, endDay } = settings.workingDays;
-    return allDays.filter((day) => {
-      const dow = day.getDay();
-      return startDay <= endDay 
-        ? (dow >= startDay && dow <= endDay)
-        : (dow >= startDay || dow <= endDay);
-    });
-  }, [weekStart, settings]);
-
-  const timeSlots = useMemo(() => {
-    if (!settings) return [];
-    
-    const slots: string[] = [];
-    const { startHour, endHour } = settings.workingHours;
-    
-    for (let hour = startHour; hour < endHour; hour++) {
-      slots.push(`${String(hour).padStart(2, "0")}:00`);
-      slots.push(`${String(hour).padStart(2, "0")}:30`);
-    }
-    
-    return slots;
-  }, [settings]);
-
-  const isTimeBlocked = (date: Date, time: string): boolean => {
-    if (!settings) return false;
-    
-    return settings.blockedSlots.some((blocked) => {
-      const slotMinutes = parseInt(time.split(":")[0]) * 60 + parseInt(time.split(":")[1]);
-      const blockStartMinutes = parseInt(blocked.startTime.split(":")[0]) * 60 + parseInt(blocked.startTime.split(":")[1]);
-      const blockEndMinutes = parseInt(blocked.endTime.split(":")[0]) * 60 + parseInt(blocked.endTime.split(":")[1]);
-      const isTimeWithin = slotMinutes >= blockStartMinutes && slotMinutes < blockEndMinutes;
-      if (!isTimeWithin) return false;
-      if (blocked.date) {
-        const dateStr = format(date, "yyyy-MM-dd");
-        return blocked.date === dateStr;
-      }
-      return true;
-    });
-  };
-
-  const getSlotStatus = (date: Date, time: string) => {
-    const dateStr = format(date, "yyyy-MM-dd");
-
-    const appointment = appointments.find(
-      (a) =>
-        a.date === dateStr &&
-        a.time === time &&
-        a.status === "confirmed"
-    );
-
-    const blocked = isTimeBlocked(date, time);
-    const isUnavailable = !!settings?.oneOffUnavailableSlots?.some(
-      (s) => s.date === dateStr && s.time === time
-    );
-
-    const isCalendarBlocked = isTimeSlotBlocked(date, time, 30, calendarEvents);
-
-    return {
-      isAvailable: !blocked && !appointment && !isUnavailable && !isCalendarBlocked,
-      isBooked: !!appointment,
-      isBlocked: blocked,
-      isUnavailable,
-      isCalendarBlocked,
-      appointment,
-      isPast: isBefore(date, today),
-    };
-  };
 
   return (
     <div className={styles.container}>
@@ -160,7 +44,7 @@ function WeekGrid({
               </th>
               {weekDays.map((day) => {
                 const isToday = isSameDay(day, new Date());
-                const isPastDay = isBefore(day, today);
+                const pastDay = isPastDay(day);
                 const isDayUnavailable = isDayFullyUnavailable(day);
                 const isDayPending = pendingDayKey === format(day, "yyyy-MM-dd");
                 const counts = getDayCounts(day);
@@ -176,7 +60,7 @@ function WeekGrid({
                     <div className={styles.dayHeaderContent}>
                       <div className={styles.dayHeaderDow}>{format(day, "EEE")}</div>
                       <div className={styles.dayHeaderDate}>{format(day, "d")}</div>
-                      {!isPastDay && (
+                      {!pastDay && (
                         <button
                           onClick={() => onToggleDay(day)}
                           disabled={isDayPending}
