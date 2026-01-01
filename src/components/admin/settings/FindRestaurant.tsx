@@ -129,6 +129,7 @@ const FindRestaurant: React.FC<FindRestaurantProps> = ({ city, selectedRestauran
             lat: f.geometry.coordinates[1],
             lng: f.geometry.coordinates[0],
             address: f.properties.formatted || "",
+            website: "",
           }));
           setRestaurants(results);
         } else {

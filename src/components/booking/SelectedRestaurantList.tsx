@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { MapPin, Copy, Check } from "lucide-react";
 import type { Restaurant } from "../../types/restaurant";
 
 
@@ -20,28 +21,33 @@ const SelectedRestaurantList: React.FC<SelectedRestaurantListProps> = ({ restaur
           <div>
             <strong>{restaurant.name}</strong>
             <div>{restaurant.address}</div>
-            <button
-              style={{
-                margin: '8px 0',
-                padding: '4px 10px',
-                borderRadius: 6,
-                border: '1px solid #d1d5db',
-                background: copiedIdx === idx ? '#22c55e' : '#f3f4f6',
-                color: copiedIdx === idx ? '#fff' : '#2563eb',
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontSize: 13,
-                transition: 'background 0.2s, color 0.2s',
-              }}
-              onClick={() => {
-                navigator.clipboard.writeText(`${restaurant.lat},${restaurant.lng}`);
-                setCopiedIdx(idx);
-                setTimeout(() => setCopiedIdx(null), 1500);
-              }}
-              title="Copy geo coordinates to clipboard"
-            >
-              {copiedIdx === idx ? 'Copied!' : 'Copy geo coordinates'}
-            </button>
+            <div style={{ display: 'flex', gap: '8px', margin: '8px 0', alignItems: 'center' }}>
+              <MapPin size={20} color="#666" aria-label="Location" />
+              <button
+                style={{
+                  padding: '4px 8px',
+                  borderRadius: 6,
+                  border: '1px solid #d1d5db',
+                  background: copiedIdx === idx ? '#22c55e' : '#f3f4f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 0.2s, color 0.2s',
+                }}
+                onClick={() => {
+                  navigator.clipboard.writeText(`${restaurant.lat},${restaurant.lng}`);
+                  setCopiedIdx(idx);
+                  setTimeout(() => setCopiedIdx(null), 1500);
+                }}
+                title="Copy geo coordinates to clipboard"
+              >
+                {copiedIdx === idx ? (
+                  <Check size={18} color="#fff" />
+                ) : (
+                  <Copy size={18} color="#2563eb" />
+                )}
+              </button>
+            </div>
             {restaurant.website && (
               <div>
                 <a href={restaurant.website} target="_blank" rel="noopener noreferrer">Website</a>
