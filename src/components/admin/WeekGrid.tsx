@@ -1,5 +1,6 @@
 import { format, isSameDay } from "date-fns";
 import type { SlotStatus } from "../../hooks/useWeekSlots";
+import { slotStateClassMap, slotStateDisplay } from "../../constants/slotStates";
 import styles from "./WeekGrid.module.css";
 
 const classNames = (
@@ -90,27 +91,14 @@ function WeekGrid({
                   const isDisabled = status.isPast || status.isBlocked || status.isCalendarBlocked || status.isBooked;
                   const slotKey = `${format(day, "yyyy-MM-dd")}-${time}`;
                   const isPending = pendingSlotKey === slotKey;
-
-                  const statusLabel = (() => {
-                    if (status.isPast) return "Past";
-                    if (status.isCalendarBlocked) return "Calendar blocked";
-                    if (status.isBlocked) return "Blocked";
-                    if (status.isBooked) return "Booked";
-                    if (status.isUnavailable) return "Unavailable";
-                    return "Available";
-                  })();
+                  const statusMeta = slotStateDisplay[status.state];
 
                   return (
                     <td
                       key={`${day.toISOString()}-${time}`}
                       className={classNames(
                         styles.slotCell,
-                        status.isPast && styles.slotPast,
-                        status.isCalendarBlocked && styles.slotCalendarBlocked,
-                        status.isBlocked && styles.slotBlocked,
-                        status.isBooked && styles.slotBooked,
-                        status.isUnavailable && styles.slotUnavailable,
-                        !status.isPast && !status.isCalendarBlocked && !status.isBlocked && !status.isBooked && !status.isUnavailable && styles.slotAvailable,
+                        styles[slotStateClassMap[status.state] as keyof typeof styles],
                         isDisabled && styles.slotDisabled
                       )}
                     >
@@ -118,22 +106,10 @@ function WeekGrid({
                         onClick={() => !isDisabled && onToggleSlot(day, time)}
                         disabled={isDisabled || isPending}
                         className={classNames(styles.slotButton, isPending && styles.pending)}
-                        title={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " (updating...)" : ""}`}
-                        aria-label={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " updating" : ""}`}
+                        title={`${format(day, "EEE, MMM d")} at ${time} — ${statusMeta.label}${isPending ? " (updating...)" : ""}`}
+                        aria-label={`${format(day, "EEE, MMM d")} at ${time} — ${statusMeta.label}${isPending ? " updating" : ""}`}
                       >
-                        {isPending
-                          ? "…"
-                          : status.isPast
-                          ? "—"
-                          : status.isCalendarBlocked
-                          ? "X"
-                          : status.isBlocked
-                          ? "X"
-                          : status.isBooked
-                          ? "✓"
-                          : status.isUnavailable
-                          ? "✕"
-                          : "✓"}
+                        {isPending ? "…" : statusMeta.icon}
                       </button>
                     </td>
                   );

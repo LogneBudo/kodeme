@@ -23,6 +23,5 @@ locking via a layout provider or a reusable hook (so other pages don’t fight o
 
 5) Formalize state/status types: 
 
-define enums/constants for slot states and colors and reuse them across WeekGrid.tsx 
-and related components, reducing string comparisons and making future visual changes 
-a one-liner.
+DONE: Added SlotState constants + display/class maps reused by useWeekSlots and
+WeekGrid for labels/icons/colors, so status tweaks are now single-source.
