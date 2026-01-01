@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import zoomImg from "../assets/locations/zoom.jpg";
 import premisesImg from "../assets/locations/premises.jpg";
 import restaurantImg from "../assets/locations/restaurant.jpg";
@@ -11,10 +11,11 @@ import SlotSelectionStep from "../components/booking/SlotSelectionStep";
 import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
-import { updateTimeSlot, createAppointment as createFirebaseAppointment } from "../api/firebaseApi";
+import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings } from "../api/firebaseApi";
 // 
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
+import type { Restaurant } from "../types/restaurant";
 
 const steps = ["Email", "Location", "Timeframe", "Confirm Slot"];
 
@@ -34,6 +35,21 @@ export default function BookAppointment() {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [bookedAppointment, setBookedAppointment] = useState<Appointment | null>(null);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loadingRestaurants, setLoadingRestaurants] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const settings = await getSettings();
+        setRestaurants(settings.restaurants || []);
+      } catch (err) {
+        console.error("Failed to load restaurants", err);
+      } finally {
+        setLoadingRestaurants(false);
+      }
+    })();
+  }, []);
 
   // ---------------------------------------------------------
   // Use Firebase API for appointment creation
@@ -50,7 +66,7 @@ export default function BookAppointment() {
         slotId: selectedSlot.id,
         locationDetails: {
           type: selectedLocation,
-          details: selectedLocation === "other" ? locationDetails : undefined,
+          details: selectedLocation === "zoom" ? undefined : (locationDetails || undefined),
         },
         status: "confirmed",
         appointmentDate: selectedSlot.date,
@@ -170,6 +186,8 @@ export default function BookAppointment() {
                   setSelectedLocation={setSelectedLocation}
                   locationDetails={locationDetails}
                   setLocationDetails={setLocationDetails}
+                  restaurants={restaurants}
+                  restaurantsLoading={loadingRestaurants}
                   onNext={() => setCurrentStep(3)}
                   onBack={() => setCurrentStep(1)}
                 />

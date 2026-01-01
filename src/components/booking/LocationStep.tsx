@@ -17,6 +17,7 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import type { Appointment } from "../../types/appointment";
 import type { LucideIcon } from "lucide-react";
+import type { Restaurant } from "../../types/restaurant";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default leaflet marker icon
@@ -34,6 +35,8 @@ type LocationStepProps = {
   setSelectedLocation: (loc: LocationType) => void;
   locationDetails: string;
   setLocationDetails: (value: string) => void;
+  restaurants: Restaurant[];
+  restaurantsLoading?: boolean;
   onNext: () => void;
   onBack: () => void;
 };
@@ -58,6 +61,8 @@ export default function LocationStep({
   setSelectedLocation,
   locationDetails,
   setLocationDetails,
+  restaurants,
+  restaurantsLoading,
   onNext,
   onBack,
 }: LocationStepProps) {
@@ -66,6 +71,13 @@ export default function LocationStep({
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [satelliteView, setSatelliteView] = useState(false);
+
+  const hasRestaurants = (restaurants || []).length > 0;
+
+  const formatRestaurant = (r: Restaurant) => {
+    const trimmedAddress = r.address?.trim();
+    return trimmedAddress ? `${r.name} — ${trimmedAddress}` : r.name;
+  };
 
   // Geocode address to coordinates using Nominatim (free OpenStreetMap service)
   const geocodeAddress = async (address: string) => {
@@ -120,6 +132,12 @@ export default function LocationStep({
     if (!selectedLocation) {
       setError("Please select a location");
       return;
+    }
+    if (selectedLocation === "restaurant") {
+      if (!locationDetails.trim()) {
+        setError(hasRestaurants ? "Please choose a restaurant" : "No restaurants available. Please choose another location type");
+        return;
+      }
     }
     if ((selectedLocation === "other" || selectedLocation === "your_premises") && !locationDetails.trim()) {
       setError("Please specify the location details (address or geo coordinates)");
@@ -215,6 +233,12 @@ export default function LocationStep({
               key={loc.id}
               onClick={() => {
                 setSelectedLocation(loc.id);
+                if (loc.id === "restaurant") {
+                  setShowMap(false);
+                  if (selectedLocation !== "restaurant") setLocationDetails("");
+                } else if (selectedLocation === "restaurant") {
+                  setLocationDetails("");
+                }
                 if (error) setError("");
               }}
               style={{
@@ -279,6 +303,62 @@ export default function LocationStep({
           );
         })}
       </div>
+
+      {selectedLocation === "restaurant" && (
+        <div style={{ marginBottom: "24px", padding: "12px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "#f8fafc" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+            <UtensilsCrossed size={16} color="#0f172a" />
+            <span style={{ fontWeight: 600, color: "#0f172a" }}>Choose a restaurant</span>
+          </div>
+          {restaurantsLoading ? (
+            <div style={{ fontSize: "14px", color: "#64748b" }}>Loading restaurants...</div>
+          ) : hasRestaurants ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {restaurants.map((r, idx) => {
+                const value = formatRestaurant(r);
+                const isChosen = locationDetails === value;
+                return (
+                  <label
+                    key={`${r.name}-${idx}`}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      gap: "10px",
+                      padding: "10px 12px",
+                      borderRadius: "10px",
+                      border: isChosen ? "2px solid #0f172a" : "1px solid #e2e8f0",
+                      background: isChosen ? "#0f172a08" : "white",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="restaurant-choice"
+                      checked={isChosen}
+                      onChange={() => {
+                        setLocationDetails(value);
+                        if (error) setError("");
+                      }}
+                      style={{ marginTop: "4px" }}
+                    />
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ fontWeight: 600, fontSize: "15px", color: "#0f172a" }}>{r.name}</span>
+                      {r.address && <span style={{ fontSize: "13px", color: "#475569" }}>{r.address}</span>}
+                      {r.website && (
+                        <a href={r.website} target="_blank" rel="noreferrer" style={{ fontSize: "12px", color: "#0ea5e9" }}>
+                          Visit website
+                        </a>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ fontSize: "14px", color: "#64748b" }}>No restaurants available. Please choose another location type.</div>
+          )}
+        </div>
+      )}
 
       {(selectedLocation === "other" || selectedLocation === "your_premises") && (
         <div style={{ marginBottom: "24px" }}>
