@@ -92,7 +92,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
 
         {/* Desktop Navigation for admin only, as dropdown */}
         {!loading && user && user.role === "admin" && (
-          <div style={{ display: "none", gap: "10px", position: "relative" }} className="desktop-nav">
+          <div style={{ display: "none", gap: "10px", alignItems: "center" }} className="desktop-nav">
             <div style={{ position: "relative" }}>
               <button style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 12px", borderRadius: "6px", fontSize: "14px", background: "#222", color: "white", border: "1px solid #222", cursor: "pointer" }} onClick={() => setMobileMenuOpen((open) => !open)}>
                 <Menu size={16} />
@@ -126,30 +126,27 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
                       </Link>
                     );
                   })}
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 16px",
-                      borderRadius: "6px",
-                      fontSize: "14px",
-                      background: "white",
-                      border: "none",
-                      cursor: "pointer",
-                      color: "#444",
-                    }}
-                  >
-                    <LogOut size={16} />
-                    Logout
-                  </button>
                 </div>
               )}
             </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 12px",
+                borderRadius: "6px",
+                fontSize: "14px",
+                background: "white",
+                border: "1px solid #ddd",
+                cursor: "pointer",
+                color: "#444",
+              }}
+            >
+              <LogOut size={16} />
+              Logout
+            </button>
           </div>
         )}
 
