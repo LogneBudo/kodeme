@@ -16,7 +16,7 @@ import RequireAdmin from "../components/admin/RequireAdmin";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
-import { useScrollLock } from "../hooks/useScrollLock";
+import { useScrollLock } from "../hooks/useScrollLock.js";
 
 import type { Appointment } from "../types/appointment";
 import {
