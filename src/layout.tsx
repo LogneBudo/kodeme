@@ -48,7 +48,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   ];
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f5", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
+    <div style={{ height: "100vh", background: "#f5f5f5", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <nav
         style={{
           position: "fixed",
