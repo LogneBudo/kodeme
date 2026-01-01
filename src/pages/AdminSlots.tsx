@@ -10,6 +10,7 @@ import {
 import { Loader2, Settings } from "lucide-react";
 import { getCalendarEventsForWeek } from "../api/calendarApi";
 import type { CalendarEvent } from "../types/calendar";
+import { toast } from "sonner";
 
 import RequireAdmin from "../components/admin/RequireAdmin";
 import WeekNavigator from "../components/admin/WeekNavigator";
@@ -66,33 +67,59 @@ function AdminSlots() {
 
   // Load settings when component mounts (fresh from Firestore)
   useEffect(() => {
+    let isMounted = true;
     (async () => {
-      const settingsData = await getSettings();
-      setSettings(settingsData);
+      try {
+        const settingsData = await getSettings();
+        if (!isMounted) return;
+        setSettings(settingsData);
+      } catch (error) {
+        console.error("Failed to load settings", error);
+        if (!isMounted) return;
+        setSettings(null);
+        toast.error("Failed to load settings");
+      }
     })();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Load appointments and calendar events when date changes
   useEffect(() => {
+    let isMounted = true;
     const loadData = async () => {
       setLoading(true);
       const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
       const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
 
-      const allAppointments = await listAppointments();
-      const weekAppointments = allAppointments.filter((apt) => {
-        const d = new Date(apt.appointmentDate);
-        return d >= weekStart && d <= weekEnd;
-      });
+      try {
+        const allAppointments = await listAppointments();
+        const weekAppointments = allAppointments.filter((apt) => {
+          const d = new Date(apt.appointmentDate);
+          return d >= weekStart && d <= weekEnd;
+        });
 
-      // Fetch calendar events for the week
-      const events = await getCalendarEventsForWeek(weekStart, weekEnd);
-      setCalendarEvents(events);
+        const events = await getCalendarEventsForWeek(weekStart, weekEnd);
 
-      setAppointments(weekAppointments);
-      setLoading(false);
+        if (!isMounted) return;
+        setCalendarEvents(events);
+        setAppointments(weekAppointments);
+      } catch (error) {
+        console.error("Failed to load appointments or calendar events", error);
+        if (isMounted) {
+          toast.error("Failed to load appointments or calendar events");
+          setCalendarEvents([]);
+          setAppointments([]);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
     };
     loadData();
+    return () => {
+      isMounted = false;
+    };
   }, [currentDate]);
 
 
