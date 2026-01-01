@@ -12,6 +12,7 @@ import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
 import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings } from "../api/firebaseApi";
+import styles from "./BookAppointment.module.css";
 // 
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
@@ -106,45 +107,31 @@ export default function BookAppointment() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        position: "relative",
-        padding: "20px 0",
-        transition: "background 0.3s",
-        background: "#f0f0f0"
-      }}
-    >
-      <div
+    <>
+      <div className={styles.background}
         style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 0,
-          width: "100vw",
-          height: "100vh",
           background: `linear-gradient(to bottom, rgba(240, 240, 240, 0.95) 0%, rgba(240, 240, 240, 0.6) 50%, rgba(240, 240, 240, 0.1) 100%), url(${locationBackgrounds[selectedLocation]}) center/cover no-repeat`,
-          pointerEvents: "none",
         }}
       />
-      <div style={{ width: "100%", padding: "0 16px", boxSizing: "border-box", position: "relative", zIndex: 1 }}>
+      <div className={styles.page}>
+        <div className={styles.content}>
+          {!bookedAppointment && (
+            <StepIndicator currentStep={currentStep} steps={steps} />
+          )}
 
-        {!bookedAppointment && (
-          <StepIndicator currentStep={currentStep} steps={steps} />
-        )}
-
-        <div
-          style={{
-            background: "white",
-            borderRadius: "16px",
-            padding: "clamp(20px, 6vw, 40px)",
-            boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-            marginTop: "16px",
-            margin: "16px auto 0",
-            maxWidth: "600px",
-            boxSizing: "border-box",
-          }}
-        >
-          <AnimatePresence mode="wait" custom={currentStep}>
+          <div
+            style={{
+              background: "white",
+              borderRadius: "16px",
+              padding: "clamp(20px, 6vw, 40px)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
+              marginTop: "16px",
+              margin: "16px auto 0",
+              maxWidth: "600px",
+              boxSizing: "border-box",
+            }}
+          >
+            <AnimatePresence mode="wait" custom={currentStep}>
             {bookedAppointment ? (
               <motion.div
                 key="success"
@@ -228,10 +215,11 @@ export default function BookAppointment() {
                 />
               </motion.div>
             )}
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
