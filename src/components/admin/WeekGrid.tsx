@@ -11,6 +11,11 @@ import { isTimeSlotBlocked } from "../../api/calendarApi";
 import type { Appointment } from "../../types/appointment";
 import type { Settings } from "../../api/firebaseApi";
 import type { CalendarEvent } from "../../types/calendar";
+import styles from "./WeekGrid.module.css";
+
+const classNames = (
+  ...classes: Array<string | false | null | undefined>
+) => classes.filter(Boolean).join(" ");
 
 type WeekGridProps = {
   currentDate: Date;
@@ -144,15 +149,13 @@ function WeekGrid({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-      {/* Week Grid */}
-      <div style={{ backgroundColor: "white", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0", width: "fit-content", maxHeight: "450px", display: "flex", flexDirection: "column" }}>
-        {/* Grid Wrapper */}
-        <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
-          <table style={{ borderCollapse: "collapse", width: "auto" }}>
+    <div className={styles.container}>
+      <div className={styles.gridCard}>
+        <div className={styles.tableScroll}>
+          <table className={styles.gridTable}>
           <thead>
             <tr>
-              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "18px", fontWeight: "500", color: "#64748b", position: "sticky", top: 0, left: 0, zIndex: 3 }}>
+              <th className={styles.timeHeader}>
                 Time
               </th>
               {weekDays.map((day) => {
@@ -166,45 +169,22 @@ function WeekGrid({
                 return (
                   <th
                     key={day.toISOString()}
-                    style={{
-                      width: "64px",
-                      height: "48px",
-                      backgroundColor: isToday ? "#0f172a" : "#f8fafc",
-                      borderRight: "1px solid #e2e8f0",
-                      borderBottom: "1px solid #e2e8f0",
-                      color: isToday ? "white" : "#0f172a",
-                      padding: "0",
-                      textAlign: "center",
-                      fontSize: "22px",
-                      fontWeight: "500",
-                      position: "sticky",
-                      top: 0,
-                      zIndex: 2,
-                      cursor: "default",
-                    }}
+                    className={classNames(styles.dayHeader, isToday && styles.dayHeaderToday)}
                     title={headerLabel}
                     aria-label={headerLabel}
                   >
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "2px" }}>
-                      <div style={{ fontSize: "10px", opacity: 0.7 }}>{format(day, "EEE")}</div>
-                      <div style={{ fontSize: "12px", fontWeight: "bold" }}>{format(day, "d")}</div>
+                    <div className={styles.dayHeaderContent}>
+                      <div className={styles.dayHeaderDow}>{format(day, "EEE")}</div>
+                      <div className={styles.dayHeaderDate}>{format(day, "d")}</div>
                       {!isPastDay && (
                         <button
                           onClick={() => onToggleDay(day)}
                           disabled={isDayPending}
-                          style={{
-                            padding: "2px 4px",
-                            fontSize: "9px",
-                            fontWeight: "600",
-                            borderRadius: "2px",
-                            border: "none",
-                            cursor: "pointer",
-                            background: isDayUnavailable ? "#10b981" : "#ef4444",
-                            color: "white",
-                            transition: "opacity 0.15s",
-                            marginTop: "2px",
-                            opacity: isDayPending ? 0.6 : 1,
-                          }}
+                          className={classNames(
+                            styles.dayToggle,
+                            isDayUnavailable ? styles.dayToggleEnable : styles.dayToggleDisable,
+                            isDayPending && styles.pending
+                          )}
                         >
                             {isDayPending ? "…" : isDayUnavailable ? "Enable" : "Disable"}
                         </button>
@@ -218,23 +198,7 @@ function WeekGrid({
           <tbody>
             {timeSlots.map((time) => (
               <tr key={time}>
-                <td
-                  style={{
-                    width: "64px",
-                    height: "40px",
-                    backgroundColor: "#f8fafc",
-                    borderRight: "1px solid #e2e8f0",
-                    borderBottom: "1px solid #e2e8f0",
-                    padding: "0",
-                    textAlign: "center",
-                    fontSize: "18px",
-                    fontWeight: "500",
-                    color: "#64748b",
-                    position: "sticky",
-                    left: 0,
-                    zIndex: 1,
-                  }}
-                >
+                <td className={styles.timeCell}>
                   {time}
                 </td>
                 {weekDays.map((day) => {
@@ -242,13 +206,6 @@ function WeekGrid({
                   const isDisabled = status.isPast || status.isBlocked || status.isCalendarBlocked || status.isBooked;
                   const slotKey = `${format(day, "yyyy-MM-dd")}-${time}`;
                   const isPending = pendingSlotKey === slotKey;
-                  
-                  let bgColor = "#ecfdf5";
-                  if (status.isPast) bgColor = "#f1f5f9";
-                  else if (status.isCalendarBlocked) bgColor = "#dbeafe";
-                  else if (status.isBlocked) bgColor = "#f3f4f6";
-                  else if (status.isBooked) bgColor = "#d1fae5";
-                  else if (status.isUnavailable) bgColor = "#fee2e2";
 
                   const statusLabel = (() => {
                     if (status.isPast) return "Past";
@@ -262,30 +219,21 @@ function WeekGrid({
                   return (
                     <td
                       key={`${day.toISOString()}-${time}`}
-                      style={{
-                        width: "64px",
-                        height: "40px",
-                        backgroundColor: bgColor,
-                        borderRight: "1px solid #e2e8f0",
-                        borderBottom: "1px solid #e2e8f0",
-                        padding: "0",
-                        textAlign: "center",
-                        cursor: isDisabled ? "not-allowed" : "pointer",
-                        opacity: isDisabled ? "0.5" : "1",
-                      }}
+                      className={classNames(
+                        styles.slotCell,
+                        status.isPast && styles.slotPast,
+                        status.isCalendarBlocked && styles.slotCalendarBlocked,
+                        status.isBlocked && styles.slotBlocked,
+                        status.isBooked && styles.slotBooked,
+                        status.isUnavailable && styles.slotUnavailable,
+                        !status.isPast && !status.isCalendarBlocked && !status.isBlocked && !status.isBooked && !status.isUnavailable && styles.slotAvailable,
+                        isDisabled && styles.slotDisabled
+                      )}
                     >
                       <button
                         onClick={() => !isDisabled && onToggleSlot(day, time)}
                         disabled={isDisabled || isPending}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          border: "none",
-                          background: "transparent",
-                          cursor: isDisabled || isPending ? "not-allowed" : "pointer",
-                          fontSize: "14px",
-                          fontWeight: "500",
-                        }}
+                        className={classNames(styles.slotButton, isPending && styles.pending)}
                         title={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " (updating...)" : ""}`}
                         aria-label={`${format(day, "EEE, MMM d")} at ${time} — ${statusLabel}${isPending ? " updating" : ""}`}
                       >

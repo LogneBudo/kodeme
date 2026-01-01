@@ -24,6 +24,7 @@ import {
   updateSettings,
   type Settings as SettingsType,
 } from "../api/firebaseApi";
+import styles from "./AdminSlots.module.css";
 
 function AdminSlots() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -39,43 +40,6 @@ function AdminSlots() {
   const currentWeekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const todayWeekStart = startOfWeek(today, { weekStartsOn: 1 });
   const canGoPrevious = isBefore(todayWeekStart, currentWeekStart);
-
-  // Style objects
-  const containerStyle: React.CSSProperties = {
-    height: "100vh",
-    background: "linear-gradient(to bottom right, #f8fafc, #f1f5f9)",
-    width: "100%",
-    boxSizing: "border-box",
-    overflow: "hidden",
-  };
-
-  const innerStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "32px 15px",
-    boxSizing: "border-box",
-    height: "calc(100vh - 70px)",
-    display: "flex",
-    flexDirection: "column",
-    overflow: "hidden",
-  };
-
-  const headerRow: React.CSSProperties = {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "8px",
-    flexShrink: 0,
-  };
-
-  const titleIconBox: React.CSSProperties = {
-    width: "40px",
-    height: "40px",
-    background: "#0f172a",
-    borderRadius: "12px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
 
   // Hide body scrollbar when component mounts
   useEffect(() => {
@@ -215,19 +179,19 @@ function AdminSlots() {
 
   return (
     <RequireAdmin>
-      <div style={containerStyle}>
-        <div style={innerStyle}>
-          <div style={headerRow}>
-            <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-                <div style={titleIconBox}>
+      <div className={styles.page}>
+        <div className={styles.content}>
+          <div className={styles.header}>
+            <div className={styles.titleGroup}>
+              <div className={styles.titleRow}>
+                <div className={styles.titleIcon}>
                   <Settings size={20} color="white" />
                 </div>
-                <h1 style={{ fontSize: "28px", fontWeight: 700, color: "#0f172a" }}>
+                <h1 className={styles.title}>
                   Slot Management
                 </h1>
               </div>
-              <p style={{ color: "#64748b", fontSize: "16px" }}>
+              <p className={styles.subtitle}>
                   Click on any slot to toggle its availability
               </p>
             </div>
@@ -242,7 +206,7 @@ function AdminSlots() {
           />
 
           {loading ? (
-            <div style={{ display: "flex", justifyContent: "center", padding: "60px 0" }}>
+            <div className={styles.loading}>
               <Loader2 size={40} className="animate-spin" color="#94a3b8" />
             </div>
           ) : (

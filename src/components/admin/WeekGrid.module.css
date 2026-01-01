@@ -1,0 +1,183 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.gridCard {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  width: fit-content;
+  max-height: 450px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableScroll {
+  overflow: auto;
+  flex: 1;
+}
+
+.gridTable {
+  border-collapse: collapse;
+  width: auto;
+}
+
+.timeHeader {
+  width: 64px;
+  height: 48px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #64748b;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 3;
+}
+
+.dayHeader {
+  width: 64px;
+  height: 48px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  color: #0f172a;
+  padding: 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  cursor: default;
+}
+
+.dayHeaderToday {
+  background-color: #0f172a;
+  color: white;
+}
+
+.dayHeaderContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 2px;
+}
+
+.dayHeaderDow {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.dayHeaderDate {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dayToggle {
+  padding: 2px 4px;
+  font-size: 9px;
+  font-weight: 600;
+  border-radius: 2px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  transition: opacity 0.15s ease, transform 0.1s ease;
+  margin-top: 2px;
+}
+
+.dayToggleDisable {
+  background: #ef4444;
+}
+
+.dayToggleEnable {
+  background: #10b981;
+}
+
+.dayToggle:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.pending {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.timeCell {
+  width: 64px;
+  height: 40px;
+  background-color: #f8fafc;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #64748b;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.slotCell {
+  width: 64px;
+  height: 40px;
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+}
+
+.slotAvailable {
+  background: #ecfdf5;
+}
+
+.slotUnavailable {
+  background: #fee2e2;
+}
+
+.slotBooked {
+  background: #d1fae5;
+}
+
+.slotBlocked {
+  background: #f3f4f6;
+}
+
+.slotCalendarBlocked {
+  background: #dbeafe;
+}
+
+.slotPast {
+  background: #f1f5f9;
+}
+
+.slotDisabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.slotButton {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.slotButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}

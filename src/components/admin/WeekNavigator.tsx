@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { format, startOfWeek, endOfWeek } from "date-fns";
-import React from "react";
+import styles from "./WeekNavigator.module.css";
 
 type WeekNavigatorProps = {
   currentDate: Date;
@@ -20,78 +20,26 @@ export default function WeekNavigator({
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
 
-  const containerStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: "22px",
-    flexDirection: "column",
-    gap: "16px",
-  };
-
-  const buttonRow: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-  };
-
-  const iconButton: React.CSSProperties = {
-    width: "40px",
-    height: "40px",
-    borderRadius: "12px",
-    border: "1px solid #cbd5e1",
-    background: "white",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  };
-
-  const iconButtonDisabled: React.CSSProperties = {
-    ...iconButton,
-    opacity: 0.4,
-    cursor: "not-allowed",
-  };
-
-  const textButton: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    padding: "0 14px",
-    height: "40px",
-    borderRadius: "12px",
-    border: "1px solid #cbd5e1",
-    background: "white",
-    cursor: "pointer",
-    fontSize: "14px",
-  };
-
-  const titleStyle: React.CSSProperties = {
-    fontSize: "20px",
-    fontWeight: 600,
-    color: "#0f172a",
-  };
-
   return (
-    <div style={containerStyle}>
-      <h2 style={titleStyle}>
+    <div className={styles.container}>
+      <h2 className={styles.title}>
         {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
       </h2>
       
-      <div style={buttonRow}>
+      <div className={styles.buttonRow}>
         <button 
           onClick={onPrevWeek} 
-          style={canGoPrevious ? iconButton : iconButtonDisabled}
+          className={`${styles.iconButton} ${!canGoPrevious ? styles.disabled : ""}`}
           disabled={!canGoPrevious}
         >
           <ChevronLeft size={20} color="#0f172a" />
         </button>
 
-        <button onClick={onNextWeek} style={iconButton}>
+        <button onClick={onNextWeek} className={styles.iconButton}>
           <ChevronRight size={20} color="#0f172a" />
         </button>
 
-        <button onClick={onToday} style={textButton}>
+        <button onClick={onToday} className={styles.textButton}>
           <Calendar size={16} color="#0f172a" />
           Today
         </button>

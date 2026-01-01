@@ -1,0 +1,29 @@
+Architecture – Top 5
+
+1) Extract inline styles to a shared theme: 
+
+DONE: moved the large style objects in AdminSlots.tsx, WeekNavigator.tsx, and WeekGrid.tsx
+into CSS modules for consistency. Consider adding shared spacing/typography tokens next.
+
+2) Centralize slot/time helpers: 
+
+the slot generation and status logic in WeekGrid.tsx and the day toggle logic in
+AdminSlots.tsx should live in a shared utility/hook 
+(e.g., useWeekSlots(settings, appointments, events)) to keep UI components lean.
+
+3) Add robust error handling for data fetches: 
+
+getSettings, listAppointments, and getCalendarEventsForWeek in AdminSlots.tsx run 
+without try/catch; surface toast errors and fallbacks so the grid doesn’t silently fail.
+
+4) Avoid direct DOM mutation for layout:
+
+instead of setting document.body.style.overflow in AdminSlots.tsx, manage scroll 
+locking via a layout provider or a reusable hook (so other pages don’t fight over 
+*body styles).
+
+5) Formalize state/status types: 
+
+define enums/constants for slot states and colors and reuse them across WeekGrid.tsx 
+and related components, reducing string comparisons and making future visual changes 
+a one-liner.
