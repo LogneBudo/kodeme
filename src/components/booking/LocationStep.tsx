@@ -18,6 +18,8 @@ import L from "leaflet";
 import type { Appointment } from "../../types/appointment";
 import type { LucideIcon } from "lucide-react";
 import type { Restaurant } from "../../types/restaurant";
+import { useMapillaryImages } from "../../hooks/useMapillaryImages";
+import MapillaryGallery from "./MapillaryGallery";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default leaflet marker icon
@@ -72,6 +74,9 @@ export default function LocationStep({
   const [showMap, setShowMap] = useState(false);
   const [satelliteView, setSatelliteView] = useState(false);
   const restaurantSectionRef = useRef<HTMLDivElement | null>(null);
+  
+  // Mapillary images hook
+  const { images: mapillaryImages, loading: mapillaryLoading, error: mapillaryError, fetchImages: fetchMapillaryImages, getThumbnailUrl } = useMapillaryImages();
 
   const hasRestaurants = (restaurants || []).length > 0;
 
@@ -87,10 +92,10 @@ export default function LocationStep({
   }, [selectedLocation]);
 
   // Geocode address to coordinates using Nominatim (free OpenStreetMap service)
-  const geocodeAddress = async (address: string) => {
+  const geocodeAddress = async (address: string): Promise<[number, number] | null> => {
     if (!address.trim()) {
       setCoords(null);
-      return;
+      return null;
     }
 
     // Check if it looks like coordinates (number,number format)
@@ -99,8 +104,9 @@ export default function LocationStep({
       const lat = parseFloat(coordMatch[1]);
       const lon = parseFloat(coordMatch[2]);
       if (lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-        setCoords([lat, lon]);
-        return;
+        const newCoords: [number, number] = [lat, lon];
+        setCoords(newCoords);
+        return newCoords;
       }
     }
 
@@ -113,13 +119,17 @@ export default function LocationStep({
       const data = await response.json();
       
       if (data.length > 0) {
-        setCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
+        const newCoords: [number, number] = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        setCoords(newCoords);
+        return newCoords;
       } else {
         setCoords(null);
+        return null;
       }
     } catch (err) {
       console.error("Geocoding error:", err);
       setCoords(null);
+      return null;
     } finally {
       setIsGeocoding(false);
     }
@@ -131,9 +141,20 @@ export default function LocationStep({
       setError("Please enter a location first");
       return;
     }
-    await geocodeAddress(locationDetails);
-    setShowMap(true);
+    const newCoords = await geocodeAddress(locationDetails);
+    if (newCoords) {
+      setShowMap(true);
+    } else {
+      setError("Could not find location. Please try a different address.");
+    }
   };
+
+  // Fetch Mapillary images when coordinates change
+  useEffect(() => {
+    if (coords && showMap) {
+      fetchMapillaryImages(coords[0], coords[1], 1000); // 1km radius
+    }
+  }, [coords, showMap, fetchMapillaryImages]);
 
   const handleNext = () => {
     if (!selectedLocation) {
@@ -491,6 +512,17 @@ export default function LocationStep({
             </MapContainer>
           </div>
         </div>
+      )}
+
+      {/* Mapillary Street View Gallery */}
+      {showMap && coords && (
+        <MapillaryGallery
+          images={mapillaryImages}
+          loading={mapillaryLoading}
+          error={mapillaryError}
+          getThumbnailUrl={getThumbnailUrl}
+          maxImages={12}
+        />
       )}
 
       {error && (
