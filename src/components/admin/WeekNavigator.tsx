@@ -7,6 +7,7 @@ type WeekNavigatorProps = {
   onPrevWeek: () => void;
   onNextWeek: () => void;
   onToday: () => void;
+  canGoPrevious: boolean;
 };
 
 export default function WeekNavigator({
@@ -14,6 +15,7 @@ export default function WeekNavigator({
   onPrevWeek,
   onNextWeek,
   onToday,
+  canGoPrevious,
 }: WeekNavigatorProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -21,8 +23,10 @@ export default function WeekNavigator({
   const containerStyle: React.CSSProperties = {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: "32px",
+    justifyContent: "center",
+    marginBottom: "22px",
+    flexDirection: "column",
+    gap: "16px",
   };
 
   const buttonRow: React.CSSProperties = {
@@ -41,6 +45,12 @@ export default function WeekNavigator({
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+  };
+
+  const iconButtonDisabled: React.CSSProperties = {
+    ...iconButton,
+    opacity: 0.4,
+    cursor: "not-allowed",
   };
 
   const textButton: React.CSSProperties = {
@@ -64,8 +74,16 @@ export default function WeekNavigator({
 
   return (
     <div style={containerStyle}>
+      <h2 style={titleStyle}>
+        {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
+      </h2>
+      
       <div style={buttonRow}>
-        <button onClick={onPrevWeek} style={iconButton}>
+        <button 
+          onClick={onPrevWeek} 
+          style={canGoPrevious ? iconButton : iconButtonDisabled}
+          disabled={!canGoPrevious}
+        >
           <ChevronLeft size={20} color="#0f172a" />
         </button>
 
@@ -78,10 +96,6 @@ export default function WeekNavigator({
           Today
         </button>
       </div>
-
-      <h2 style={titleStyle}>
-        {format(weekStart, "MMM d")} – {format(weekEnd, "MMM d, yyyy")}
-      </h2>
     </div>
   );
 }

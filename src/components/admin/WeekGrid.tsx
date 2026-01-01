@@ -7,7 +7,6 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { Check, X, Clock, CalendarX, Lock, Calendar } from "lucide-react";
 import { isTimeSlotBlocked } from "../../api/calendarApi";
 import type { Appointment } from "../../types/appointment";
 import type { Settings } from "../../api/firebaseApi";
@@ -55,13 +54,11 @@ function WeekGrid({
   const weekDays = useMemo(() => {
     const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     
-    // Filter days based on working days settings
     if (!settings) return allDays;
     
     const { startDay, endDay } = settings.workingDays;
     return allDays.filter((day) => {
       const dow = day.getDay();
-      // Handle case where endDay < startDay (e.g., Friday to Monday)
       return startDay <= endDay 
         ? (dow >= startDay && dow <= endDay)
         : (dow >= startDay || dow <= endDay);
@@ -91,7 +88,6 @@ function WeekGrid({
       const blockEndMinutes = parseInt(blocked.endTime.split(":")[0]) * 60 + parseInt(blocked.endTime.split(":")[1]);
       const isTimeWithin = slotMinutes >= blockStartMinutes && slotMinutes < blockEndMinutes;
       if (!isTimeWithin) return false;
-      // If blocked has a specific date, it only applies to that day; otherwise applies to all days
       if (blocked.date) {
         const dateStr = format(date, "yyyy-MM-dd");
         return blocked.date === dateStr;
@@ -115,7 +111,6 @@ function WeekGrid({
       (s) => s.date === dateStr && s.time === time
     );
 
-    // Check if blocked by calendar event
     const isCalendarBlocked = isTimeSlotBlocked(date, time, 30, calendarEvents);
 
     return {
@@ -129,305 +124,159 @@ function WeekGrid({
     };
   };
 
-  // Inline styles
-  const container: React.CSSProperties = {
-    background: "white",
-    borderRadius: "16px",
-    boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
-    overflow: "hidden",
-    width: "auto",
-    minWidth: "600px",
-    maxWidth: "90vw",
-    boxSizing: "border-box",
-    display: "flex",
-    flexDirection: "column",
-    minHeight: 0,
-    margin: "0 auto",
-  };
-
-  const headerRow: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: `96px repeat(${weekDays.length}, minmax(70px, 1fr))`,
-    borderBottom: "1px solid #e2e8f0",
-    background: "#f8fafc",
-  };
-
-  const headerCell: React.CSSProperties = {
-    padding: "8px 4px",
-    textAlign: "center",
-    fontSize: "13px",
-    fontWeight: 500,
-    color: "#64748b",
-    width: "100px",
-  };
-
-  const dayCellBase: React.CSSProperties = {
-    padding: "8px 4px",
-    textAlign: "center",
-    borderLeft: "1px solid #e2e8f0",
-    maxWidth: "95px",
-  };
-
-  const timeGridContainer: React.CSSProperties = {
-    maxHeight: "calc(100vh - 400px)",
-    overflowY: "auto",
-    overflowX: "hidden",
-  };
-
-  const timeRow: React.CSSProperties = {
-    display: "grid",
-    gridTemplateColumns: `100px repeat(${weekDays.length}, minmax(70px, 1fr))`,
-    borderBottom: "1px solid #e2e8f0",
-  };
-
-  const timeLabelCell: React.CSSProperties = {
-    padding: "6px 8px",
-    textAlign: "center",
-    fontSize: "12px",
-    fontWeight: 500,
-    color: "#64748b",
-    background: "#f8fafc",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "40px",
-    width: "100px",
-  };
-
-  const slotButtonBase: React.CSSProperties = {
-    padding: "4px 2px",
-    borderLeft: "1px solid #e2e8f0",
-    minHeight: "40px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    transition: "background 0.15s ease",
-    cursor: "pointer",
-    fontSize: "12px",
-  };
-
-  const legendRow: React.CSSProperties = {
-    padding: "12px 16px",
-    background: "#f8fafc",
-    borderTop: "1px solid #e2e8f0",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "16px",
-    fontSize: "12px",
-    flexShrink: 0,
-  };
-
-  const legendItem: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  };
-
-  const legendIconBox = (bg: string): React.CSSProperties => ({
-    width: "24px",
-    height: "24px",
-    borderRadius: "6px",
-    background: bg,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  });
-
   return (
-    <div style={container}>
-      {/* Header */}
-      <div style={headerRow}>
-        <div style={headerCell}>
-          <Clock size={30} />
-        </div>
-
-        {weekDays.map((day) => {
-          const isToday = isSameDay(day, new Date());
-          const isPastDay = isBefore(day, today);
-          const isDayUnavailable = isDayFullyUnavailable(day);
-
-          return (
-            <div
-              key={day.toISOString()}
-              style={{
-                ...dayCellBase,
-                background: isToday ? "#0f172a" : undefined,
-                color: isToday ? "white" : "#0f172a",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-            >
-              <div>
-                <div
-                  style={{
-                    fontSize: "12px",
-                    opacity: isToday ? 0.8 : 0.6,
-                    fontWeight: 500,
-                  }}
-                >
-                  {format(day, "EEE")}
-                </div>
-                <div style={{ fontSize: "18px", fontWeight: 700 }}>
-                  {format(day, "d")}
-                </div>
-              </div>
-              
-              {!isPastDay && (
-                <button
-                  onClick={() => onToggleDay(day)}
-                  style={{
-                    padding: "4px 8px",
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    borderRadius: "4px",
-                    border: "none",
-                    cursor: "pointer",
-                    background: isDayUnavailable ? "#10b981" : "#ef4444",
-                    color: "white",
-                    transition: "opacity 0.15s ease",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = "0.8";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
-                >
-                  {isDayUnavailable ? "Enable" : "Disable"}
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Time Grid */}
-      <div style={timeGridContainer}>
-        {timeSlots.map((time) => (
-          <div key={time} style={timeRow}>
-            <div style={timeLabelCell}>{time}</div>
-
-            {weekDays.map((day) => {
-
-              const { isAvailable, isBooked, isBlocked, isUnavailable, isPast, isCalendarBlocked } =
-                getSlotStatus(day, time);
-
-              let bg = "white";
-              let hover = "";
-              let isClickable = true;
-
-              if (isPast) {
-                bg = "#f1f5f9";
-                isClickable = false;
-              } else if (isCalendarBlocked) {
-                bg = "#f3f4f6";
-                isClickable = false;
-              } else if (isBlocked) {
-                bg = "#f3f4f6";
-                isClickable = false;
-              } else if (isBooked) {
-                bg = "#d1fae5";
-                isClickable = false;
-              } else if (isUnavailable) {
-                bg = "#fee2e2";
-                hover = "#fecaca";
-                isClickable = true;
-              } else if (isAvailable) {
-                bg = "#ecfdf5";
-                hover = "#d1fae5";
-              } else {
-                bg = "#fee2e2";
-                hover = "#fecaca";
-              }
-
-              return (
-                <button
-                  key={`${day.toISOString()}-${time}`}
-                  disabled={!isClickable}
-                  onClick={() => isClickable && onToggleSlot(day, time)}
-                  style={{
-                    ...slotButtonBase,
-                    background: bg,
-                    cursor: isClickable ? "pointer" : "not-allowed",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (isClickable && hover) e.currentTarget.style.background = hover;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = bg;
-                  }}
-                >
-                  {isPast ? (
-                    <span style={{ color: "#cbd5e1" }}>—</span>
-                  ) : isCalendarBlocked ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <Calendar size={16} color="#2563eb" />
-                      <span style={{ fontSize: "12px", color: "#2563eb", marginTop: "4px" }}>
-                        Calendar
-                      </span>
-                    </div>
-                  ) : isBlocked ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <Lock size={16} color="#6b7280" />
-                      <span style={{ fontSize: "12px", color: "#6b7280", marginTop: "4px" }}>
-                        Blocked
-                      </span>
-                    </div>
-                  ) : isBooked ? (
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <CalendarX size={16} color="#059669" />
-                      <span style={{ fontSize: "12px", color: "#047857", marginTop: "4px" }}>
-                        Booked
-                      </span>
-                    </div>
-                  ) : isAvailable ? (
-                    <Check size={20} color="#10b981" />
-                  ) : (
-                    <X size={20} color="#f87171" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
       {/* Legend */}
-      <div style={legendRow}>
-        <div style={legendItem}>
-          <div style={legendIconBox("#ecfdf5")}>
-            <Check size={16} color="#10b981" />
-          </div>
+      <div style={{ padding: "12px 16px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: "16px", fontSize: "14px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#d1fae5" }}></div>
           <span style={{ color: "#475569" }}>Available</span>
         </div>
-
-        <div style={legendItem}>
-          <div style={legendIconBox("#fee2e2")}>
-            <X size={16} color="#f87171" />
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#fee2e2" }}></div>
           <span style={{ color: "#475569" }}>Unavailable</span>
         </div>
-
-        <div style={legendItem}>
-          <div style={legendIconBox("#d1fae5")}>
-            <CalendarX size={16} color="#059669" />
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#d1fae5" }}></div>
           <span style={{ color: "#475569" }}>Booked</span>
         </div>
-
-        <div style={legendItem}>
-          <div style={legendIconBox("#f3f4f6")}> 
-            <Calendar size={16} color="#2563eb" />
-          </div>
-          <span style={{ color: "#475569" }}>Calendar Blocked</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#dbeafe" }}></div>
+          <span style={{ color: "#475569" }}>Calendar</span>
         </div>
-        <div style={legendItem}>
-          <div style={legendIconBox("#f3f4f6")}> 
-            <Lock size={16} color="#6b7280" />
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#f3f4f6" }}></div>
           <span style={{ color: "#475569" }}>Blocked</span>
+        </div>
+      </div>
+
+      {/* Week Grid */}
+      <div style={{ backgroundColor: "white", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0", width: "fit-content", maxHeight: "450px", display: "flex", flexDirection: "column" }}>
+        {/* Grid Wrapper */}
+        <div style={{ overflowX: "auto", overflowY: "auto", flex: 1 }}>
+          <table style={{ borderCollapse: "collapse", width: "auto" }}>
+          <thead>
+            <tr>
+              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "12px", fontWeight: "500", color: "#64748b" }}>
+                Time
+              </th>
+              {weekDays.map((day) => {
+                const isToday = isSameDay(day, new Date());
+                const isPastDay = isBefore(day, today);
+                const isDayUnavailable = isDayFullyUnavailable(day);
+
+                return (
+                  <th
+                    key={day.toISOString()}
+                    style={{
+                      width: "64px",
+                      height: "48px",
+                      backgroundColor: isToday ? "#0f172a" : "#f8fafc",
+                      borderRight: "1px solid #e2e8f0",
+                      borderBottom: "1px solid #e2e8f0",
+                      color: isToday ? "white" : "#0f172a",
+                      padding: "0",
+                      textAlign: "center",
+                      fontSize: "11px",
+                      fontWeight: "500",
+                    }}
+                  >
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "2px" }}>
+                      <div style={{ fontSize: "10px", opacity: 0.7 }}>{format(day, "EEE")}</div>
+                      <div style={{ fontSize: "14px", fontWeight: "bold" }}>{format(day, "d")}</div>
+                      {!isPastDay && (
+                        <button
+                          onClick={() => onToggleDay(day)}
+                          style={{
+                            padding: "2px 4px",
+                            fontSize: "9px",
+                            fontWeight: "600",
+                            borderRadius: "2px",
+                            border: "none",
+                            cursor: "pointer",
+                            background: isDayUnavailable ? "#10b981" : "#ef4444",
+                            color: "white",
+                            transition: "opacity 0.15s",
+                            marginTop: "2px",
+                          }}
+                        >
+                          {isDayUnavailable ? "En" : "Dis"}
+                        </button>
+                      )}
+                    </div>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {timeSlots.map((time) => (
+              <tr key={time}>
+                <td
+                  style={{
+                    width: "64px",
+                    height: "40px",
+                    backgroundColor: "#f8fafc",
+                    borderRight: "1px solid #e2e8f0",
+                    borderBottom: "1px solid #e2e8f0",
+                    padding: "0",
+                    textAlign: "center",
+                    fontSize: "11px",
+                    fontWeight: "500",
+                    color: "#64748b",
+                  }}
+                >
+                  {time}
+                </td>
+                {weekDays.map((day) => {
+                  const status = getSlotStatus(day, time);
+                  const isDisabled = status.isPast || status.isBlocked || status.isCalendarBlocked || status.isBooked;
+                  
+                  let bgColor = "#ecfdf5";
+                  if (status.isPast) bgColor = "#f1f5f9";
+                  else if (status.isCalendarBlocked) bgColor = "#dbeafe";
+                  else if (status.isBlocked) bgColor = "#f3f4f6";
+                  else if (status.isBooked) bgColor = "#d1fae5";
+                  else if (status.isUnavailable) bgColor = "#fee2e2";
+
+                  return (
+                    <td
+                      key={`${day.toISOString()}-${time}`}
+                      style={{
+                        width: "64px",
+                        height: "40px",
+                        backgroundColor: bgColor,
+                        borderRight: "1px solid #e2e8f0",
+                        borderBottom: "1px solid #e2e8f0",
+                        padding: "0",
+                        textAlign: "center",
+                        cursor: isDisabled ? "not-allowed" : "pointer",
+                        opacity: isDisabled ? "0.5" : "1",
+                      }}
+                    >
+                      <button
+                        onClick={() => !isDisabled && onToggleSlot(day, time)}
+                        disabled={isDisabled}
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          border: "none",
+                          background: "transparent",
+                          cursor: isDisabled ? "not-allowed" : "pointer",
+                          fontSize: "14px",
+                          fontWeight: "500",
+                        }}
+                        title={`${format(day, "EEE, MMM d")} at ${time}`}
+                      >
+                        {status.isPast ? "—" : status.isCalendarBlocked ? "📅" : status.isBlocked ? "🔒" : status.isBooked ? "✓" : status.isUnavailable ? "✕" : "✓"}
+                      </button>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
         </div>
       </div>
     </div>

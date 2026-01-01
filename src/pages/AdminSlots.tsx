@@ -5,6 +5,8 @@ import {
   startOfWeek,
   endOfWeek,
   format,
+  isBefore,
+  startOfDay,
 } from "date-fns";
 import { Loader2, Settings } from "lucide-react";
 import { getCalendarEventsForWeek } from "../api/calendarApi";
@@ -29,9 +31,16 @@ function AdminSlots() {
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<SettingsType | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  
+  // Check if we can go to previous week (current week is the limit)
+  const today = startOfDay(new Date());
+  const currentWeekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
+  const todayWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const canGoPrevious = isBefore(todayWeekStart, currentWeekStart);
+  
   // Style objects
   const containerStyle: React.CSSProperties = {
-    minHeight: "100vh",
+    height: "100vh",
     background: "linear-gradient(to bottom right, #f8fafc, #f1f5f9)",
     width: "100%",
     boxSizing: "border-box",
@@ -52,7 +61,7 @@ function AdminSlots() {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: "16px",
+    marginBottom: "8px",
     flexShrink: 0,
   };
 
@@ -66,6 +75,14 @@ function AdminSlots() {
     justifyContent: "center",
   };
 
+
+  // Hide body scrollbar when component mounts
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   // Load settings when component mounts (fresh from Firestore)
   useEffect(() => {
@@ -195,7 +212,7 @@ function AdminSlots() {
         <div style={innerStyle}>
           <div style={headerRow}>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "8px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
                 <div style={titleIconBox}>
                   <Settings size={20} color="white" />
                 </div>
@@ -203,8 +220,8 @@ function AdminSlots() {
                   Slot Management
                 </h1>
               </div>
-              <p style={{ color: "#64748b", fontSize: "14px" }}>
-                Click on any slot to toggle its availability
+              <p style={{ color: "#64748b", fontSize: "16px" }}>
+                  Click on any slot to toggle its availability
               </p>
             </div>
           </div>
@@ -214,6 +231,7 @@ function AdminSlots() {
             onPrevWeek={() => setCurrentDate(subWeeks(currentDate, 1))}
             onNextWeek={() => setCurrentDate(addWeeks(currentDate, 1))}
             onToday={() => setCurrentDate(new Date())}
+            canGoPrevious={canGoPrevious}
           />
 
           {loading ? (
