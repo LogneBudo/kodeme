@@ -2,8 +2,9 @@
 import { useEffect, useState } from "react";
 import { listAppointments, updateAppointment, deleteAppointment } from "../api/firebaseApi";
 import type { Appointment } from "../types/appointment";
-import { Loader2, Trash2, Edit2, Save, X } from "lucide-react";
+import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
+import styles from "./AdminAppointments.module.css";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled";
 
@@ -62,12 +63,26 @@ export default function AdminAppointments() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: "40px auto", background: "#fff", borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.07)", padding: 32 }}>
-      <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 24 }}>Appointments</h1>
+    <div className={styles.page}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.titleGroup}>
+            <div className={styles.titleRow}>
+              <div className={styles.titleIcon}>
+                <Calendar size={20} color="white" />
+              </div>
+              <h1 className={styles.title}>Appointments</h1>
+            </div>
+            <p className={styles.subtitle}>
+              View and manage all bookings
+            </p>
+          </div>
+        </div>
+
       {loading ? (
-        <div style={{ textAlign: "center", color: "#666" }}><Loader2 className="spin" /> Loading...</div>
+        <div className={styles.loading}><Loader2 className="spin" /> Loading...</div>
       ) : appointments.length === 0 ? (
-        <div style={{ textAlign: "center", color: "#666" }}>No appointments found.</div>
+        <div className={styles.loading}>No appointments found.</div>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
@@ -141,6 +156,7 @@ export default function AdminAppointments() {
           </tbody>
         </table>
       )}
+      </div>
     </div>
   );
 }

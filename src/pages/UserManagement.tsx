@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
+import styles from "./UserManagement.module.css";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -35,13 +36,21 @@ export default function UserManagement() {
   }
 
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Users size={28} />
-          <h1 style={{ margin: 0, fontSize: "24px" }}>User Management</h1>
+    <div className={styles.page}>
+      <div className={styles.content}>
+        <div className={styles.header}>
+          <div className={styles.titleGroup}>
+            <div className={styles.titleRow}>
+              <div className={styles.titleIcon}>
+                <Users size={20} color="white" />
+              </div>
+              <h1 className={styles.title}>User Management</h1>
+            </div>
+            <p className={styles.subtitle}>
+              Manage user roles and permissions
+            </p>
+          </div>
         </div>
-      </div>
 
       <div style={{
         padding: "16px",
@@ -145,6 +154,7 @@ export default function UserManagement() {
           </table>
         </div>
       )}
+      </div>
     </div>
   );
 }
