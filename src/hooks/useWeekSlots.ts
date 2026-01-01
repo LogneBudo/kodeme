@@ -67,7 +67,7 @@ export function useWeekSlots({
   }, [settings]);
 
   const buildDaySlots = useCallback(
-    (_day: Date): string[] => {
+    (): string[] => {
       if (!settings) return [];
       const { startHour, endHour } = settings.workingHours;
       const daySlots: string[] = [];
@@ -105,7 +105,7 @@ export function useWeekSlots({
       if (!settings) return false;
 
       const dateStr = format(day, "yyyy-MM-dd");
-      const daySlots = buildDaySlots(day);
+      const daySlots = buildDaySlots();
       if (!daySlots.length) return false;
 
       return daySlots.every((time) =>
@@ -233,7 +233,7 @@ export function useWeekSlots({
       const dateStr = format(date, "yyyy-MM-dd");
       setPendingDayKey(dateStr);
 
-      const daySlots = buildDaySlots(date);
+      const daySlots = buildDaySlots();
       const allUnavailable = daySlots.every((time) =>
         settings.oneOffUnavailableSlots?.some(
           (s) => s.date === dateStr && s.time === time
