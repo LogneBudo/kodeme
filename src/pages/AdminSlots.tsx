@@ -16,6 +16,7 @@ import RequireAdmin from "../components/admin/RequireAdmin";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
+import { useScrollLock } from "../hooks/useScrollLock";
 
 import type { Appointment } from "../types/appointment";
 import {
@@ -38,6 +39,8 @@ function AdminSlots() {
   const todayWeekStart = startOfWeek(today, { weekStartsOn: 1 });
   const canGoPrevious = isBefore(todayWeekStart, currentWeekStart);
 
+  useScrollLock(true);
+
   const {
     weekDays,
     timeSlots,
@@ -56,14 +59,6 @@ function AdminSlots() {
     calendarEvents,
     setSettings,
   });
-
-  // Hide body scrollbar when component mounts
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
 
   // Load settings when component mounts (fresh from Firestore)
   useEffect(() => {
