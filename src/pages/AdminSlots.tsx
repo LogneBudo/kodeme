@@ -121,8 +121,71 @@ function AdminSlots() {
       setSettings(updatedSettings);
       toast.success("Slot marked as available");
     } else {
-      // Add a block for this specific 30-minute slot
-      // ...add logic here if needed...
+      // Add to oneOffUnavailableSlots to mark as unavailable
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: [
+          ...(settings.oneOffUnavailableSlots || []),
+          { date: dateStr, time }
+        ],
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success("Slot marked as unavailable");
+    }
+  };
+
+  const handleToggleDay = async (date: Date) => {
+    if (!settings) return;
+
+    const dateStr = format(date, "yyyy-MM-dd");
+    
+    // Generate all time slots for the day
+    const { startHour, endHour } = settings.workingHours;
+    const daySlots: string[] = [];
+    for (let hour = startHour; hour < endHour; hour++) {
+      daySlots.push(`${String(hour).padStart(2, "0")}:00`);
+      daySlots.push(`${String(hour).padStart(2, "0")}:30`);
+    }
+
+    // Check if all slots are currently unavailable
+    const allUnavailable = daySlots.every((time) =>
+      settings.oneOffUnavailableSlots?.some(
+        (s) => s.date === dateStr && s.time === time
+      )
+    );
+
+    let updatedSettings: SettingsType;
+
+    const dayName = format(date, "EEEE, MMMM d");
+
+    if (allUnavailable) {
+      // Make entire day available by removing all slots for this date
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: (settings.oneOffUnavailableSlots || []).filter(
+          (s) => s.date !== dateStr
+        ),
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success(`All slots made available for ${dayName}`);
+    } else {
+      // Make entire day unavailable by adding all slots for this date
+      const existingSlots = settings.oneOffUnavailableSlots || [];
+      const newSlots = daySlots.map((time) => ({ date: dateStr, time }));
+      
+      // Remove any existing slots for this date and add all new ones
+      updatedSettings = {
+        ...settings,
+        oneOffUnavailableSlots: [
+          ...existingSlots.filter((s) => s.date !== dateStr),
+          ...newSlots
+        ],
+      };
+      await updateSettings(updatedSettings);
+      setSettings(updatedSettings);
+      toast.success(`All slots blocked for ${dayName}`);
     }
   };
 
@@ -162,6 +225,7 @@ function AdminSlots() {
               currentDate={currentDate}
               appointments={appointments}
               onToggleSlot={handleToggleSlot}
+              onToggleDay={handleToggleDay}
               settings={settings}
               calendarEvents={calendarEvents}
             />

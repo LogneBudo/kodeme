@@ -17,6 +17,7 @@ type WeekGridProps = {
   currentDate: Date;
   appointments: Appointment[];
   onToggleSlot: (date: Date, time: string) => void;
+  onToggleDay: (date: Date) => void;
   settings: Settings | null;
   calendarEvents: CalendarEvent[];
 };
@@ -25,11 +26,31 @@ function WeekGrid({
   currentDate,
   appointments,
   onToggleSlot,
+  onToggleDay,
   settings,
   calendarEvents,
 }: WeekGridProps) {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const today = startOfDay(new Date());
+
+  const isDayFullyUnavailable = (day: Date): boolean => {
+    if (!settings) return false;
+    
+    const dateStr = format(day, "yyyy-MM-dd");
+    const { startHour, endHour } = settings.workingHours;
+    const daySlots: string[] = [];
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      daySlots.push(`${String(hour).padStart(2, "0")}:00`);
+      daySlots.push(`${String(hour).padStart(2, "0")}:30`);
+    }
+    
+    return daySlots.every((time) =>
+      settings.oneOffUnavailableSlots?.some(
+        (s) => s.date === dateStr && s.time === time
+      )
+    );
+  };
 
   const weekDays = useMemo(() => {
     const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -114,44 +135,48 @@ function WeekGrid({
     borderRadius: "16px",
     boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
     overflow: "hidden",
-    width: "100%",
+    width: "auto",
+    minWidth: "600px",
+    maxWidth: "90vw",
     boxSizing: "border-box",
     display: "flex",
     flexDirection: "column",
-    flex: 1,
     minHeight: 0,
+    margin: "0 auto",
   };
 
   const headerRow: React.CSSProperties = {
     display: "grid",
-    gridTemplateColumns: "repeat(8, 1fr)",
+    gridTemplateColumns: `96px repeat(${weekDays.length}, minmax(70px, 1fr))`,
     borderBottom: "1px solid #e2e8f0",
     background: "#f8fafc",
   };
 
   const headerCell: React.CSSProperties = {
-    padding: "12px 8px",
+    padding: "8px 4px",
     textAlign: "center",
     fontSize: "13px",
     fontWeight: 500,
     color: "#64748b",
+    width: "100px",
   };
 
   const dayCellBase: React.CSSProperties = {
-    padding: "12px 8px",
+    padding: "8px 4px",
     textAlign: "center",
     borderLeft: "1px solid #e2e8f0",
+    maxWidth: "95px",
   };
 
   const timeGridContainer: React.CSSProperties = {
-    flex: 1,
+    maxHeight: "calc(100vh - 400px)",
     overflowY: "auto",
     overflowX: "hidden",
   };
 
   const timeRow: React.CSSProperties = {
     display: "grid",
-    gridTemplateColumns: "repeat(8, 1fr)",
+    gridTemplateColumns: `100px repeat(${weekDays.length}, minmax(70px, 1fr))`,
     borderBottom: "1px solid #e2e8f0",
   };
 
@@ -166,10 +191,11 @@ function WeekGrid({
     alignItems: "center",
     justifyContent: "center",
     minHeight: "40px",
+    width: "100px",
   };
 
   const slotButtonBase: React.CSSProperties = {
-    padding: "6px 4px",
+    padding: "4px 2px",
     borderLeft: "1px solid #e2e8f0",
     minHeight: "40px",
     display: "flex",
@@ -213,11 +239,13 @@ function WeekGrid({
       {/* Header */}
       <div style={headerRow}>
         <div style={headerCell}>
-          <Clock size={16} />
+          <Clock size={30} />
         </div>
 
         {weekDays.map((day) => {
           const isToday = isSameDay(day, new Date());
+          const isPastDay = isBefore(day, today);
+          const isDayUnavailable = isDayFullyUnavailable(day);
 
           return (
             <div
@@ -226,20 +254,50 @@ function WeekGrid({
                 ...dayCellBase,
                 background: isToday ? "#0f172a" : undefined,
                 color: isToday ? "white" : "#0f172a",
+                display: "flex",
+                flexDirection: "column",
+                gap: "8px",
               }}
             >
-              <div
-                style={{
-                  fontSize: "12px",
-                  opacity: isToday ? 0.8 : 0.6,
-                  fontWeight: 500,
-                }}
-              >
-                {format(day, "EEE")}
+              <div>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    opacity: isToday ? 0.8 : 0.6,
+                    fontWeight: 500,
+                  }}
+                >
+                  {format(day, "EEE")}
+                </div>
+                <div style={{ fontSize: "18px", fontWeight: 700 }}>
+                  {format(day, "d")}
+                </div>
               </div>
-              <div style={{ fontSize: "18px", fontWeight: 700 }}>
-                {format(day, "d")}
-              </div>
+              
+              {!isPastDay && (
+                <button
+                  onClick={() => onToggleDay(day)}
+                  style={{
+                    padding: "4px 8px",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    borderRadius: "4px",
+                    border: "none",
+                    cursor: "pointer",
+                    background: isDayUnavailable ? "#10b981" : "#ef4444",
+                    color: "white",
+                    transition: "opacity 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = "0.8";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = "1";
+                  }}
+                >
+                  {isDayUnavailable ? "Enable" : "Disable"}
+                </button>
+              )}
             </div>
           );
         })}
