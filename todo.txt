@@ -17,9 +17,7 @@ try/catch with toast errors, fallbacks, and mounted guards so the grid won’t s
 
 4) Avoid direct DOM mutation for layout:
 
-instead of setting document.body.style.overflow in AdminSlots.tsx, manage scroll 
-locking via a layout provider or a reusable hook (so other pages don’t fight over 
-*body styles).
+DONE: Added useScrollLock hook and wired AdminSlots to avoid direct body mutation.
 
 5) Formalize state/status types: 
 
