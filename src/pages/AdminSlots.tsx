@@ -16,7 +16,6 @@ import RequireAdmin from "../components/admin/RequireAdmin";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
-import { useScrollLock } from "../hooks/useScrollLock.js";
 
 import type { Appointment } from "../types/appointment";
 import {
@@ -38,8 +37,6 @@ function AdminSlots() {
   const currentWeekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const todayWeekStart = startOfWeek(today, { weekStartsOn: 1 });
   const canGoPrevious = isBefore(todayWeekStart, currentWeekStart);
-
-  useScrollLock(true);
 
   const {
     weekDays,
