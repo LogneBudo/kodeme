@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import zoomImg from "../../assets/locations/zoom.jpg";
 import premisesImg from "../../assets/locations/premises.jpg";
 import restaurantImg from "../../assets/locations/restaurant.jpg";
@@ -71,6 +71,7 @@ export default function LocationStep({
   const [isGeocoding, setIsGeocoding] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [satelliteView, setSatelliteView] = useState(false);
+  const restaurantSectionRef = useRef<HTMLDivElement | null>(null);
 
   const hasRestaurants = (restaurants || []).length > 0;
 
@@ -78,6 +79,12 @@ export default function LocationStep({
     const trimmedAddress = r.address?.trim();
     return trimmedAddress ? `${r.name} — ${trimmedAddress}` : r.name;
   };
+
+  useEffect(() => {
+    if (selectedLocation === "restaurant" && restaurantSectionRef.current) {
+      restaurantSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [selectedLocation]);
 
   // Geocode address to coordinates using Nominatim (free OpenStreetMap service)
   const geocodeAddress = async (address: string) => {
@@ -305,7 +312,7 @@ export default function LocationStep({
       </div>
 
       {selectedLocation === "restaurant" && (
-        <div style={{ marginBottom: "24px", padding: "12px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "#f8fafc" }}>
+        <div ref={restaurantSectionRef} style={{ marginBottom: "24px", padding: "12px", border: "1px solid #e2e8f0", borderRadius: "12px", background: "#f8fafc" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
             <UtensilsCrossed size={16} color="#0f172a" />
             <span style={{ fontWeight: 600, color: "#0f172a" }}>Choose a restaurant</span>

@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 import Layout from "./layout";
 import BookAppointment from "./pages/BookAppointment";
 import AdminSlots from "../src/pages/AdminSlots";
@@ -10,7 +11,9 @@ import AdminAppointments from "../src/pages/AdminAppointments";
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <Toaster position="bottom-right" />
+      <Routes>
       <Route path="/admin/login" element={<Login />} />
       
       <Route
@@ -70,5 +73,6 @@ export default function App() {
         }
       />
     </Routes>
+    </>
   );
 }
