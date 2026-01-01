@@ -31,15 +31,24 @@ export default function WeekNavigator({
           onClick={onPrevWeek} 
           className={`${styles.iconButton} ${!canGoPrevious ? styles.disabled : ""}`}
           disabled={!canGoPrevious}
+          aria-label="Previous week"
         >
           <ChevronLeft size={20} color="#0f172a" />
         </button>
 
-        <button onClick={onNextWeek} className={styles.iconButton}>
+        <button 
+          onClick={onNextWeek} 
+          className={styles.iconButton}
+          aria-label="Next week"
+        >
           <ChevronRight size={20} color="#0f172a" />
         </button>
 
-        <button onClick={onToday} className={styles.textButton}>
+        <button 
+          onClick={onToday} 
+          className={styles.textButton}
+          aria-label="Go to current week"
+        >
           <Calendar size={16} color="#0f172a" />
           Today
         </button>
