@@ -48,7 +48,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
   ];
 
   return (
-    <div style={{ height: "100vh", background: "#f5f5f5", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div style={{ height: "100vh", background: "#f5f5f5", width: "100%", boxSizing: "border-box", display: "flex", flexDirection: "column" }}>
       <nav
         style={{
           position: "fixed",
@@ -241,7 +241,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         </div>
       )}
 
-      <main style={{ paddingTop: "60px", width: "100%", boxSizing: "border-box", flex: 1 }}>{children}</main>
+      <main style={{ paddingTop: "60px", width: "100%", boxSizing: "border-box", flex: 1, overflowY: "auto" }}>{children}</main>
 
       <style>{`
         @media (min-width: 768px) {
