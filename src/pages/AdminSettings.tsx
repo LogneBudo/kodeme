@@ -136,7 +136,7 @@ export default function SettingsPage() {
 		const selected = cityValidation.options[idx];
 		const cityName = selected.display_name;
 		// Get country from the country field that's already parsed in options
-		const countryName = (selected as any).country || "";
+		const countryName = selected.country || "";
 		
 		setCityValidation({
 			valid: true,
@@ -510,7 +510,7 @@ export default function SettingsPage() {
 																	displayName: opt.display_name,
 																	lat: Number(opt.lat),
 																	lon: Number(opt.lon),
-																	country: (opt as any).country || "",
+																country: opt.country || "",
 																})) || []}
 																selectedCityIndex={cityValidation?.selectedIdx ?? null}
 															setSelectedCityIndex={idx => idx !== null ? handleSelectCityOption(idx) : setCityValidation(null)}
