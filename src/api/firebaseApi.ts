@@ -479,6 +479,7 @@ export type Settings = {
   calendarSync: CalendarSync;
   // Restaurant settings
   restaurantCity?: string;
+  restaurantCountry?: string;
   restaurantPerimeterKm?: number;
   restaurants?: Restaurant[];
   curatedList?: string;
@@ -506,6 +507,7 @@ export async function getSettings(): Promise<Settings> {
           syncCancellations: true,
         },
         restaurantCity: data.restaurantCity || "",
+        restaurantCountry: data.restaurantCountry || "",
         restaurantPerimeterKm: data.restaurantPerimeterKm || 5,
         restaurants: data.restaurants || [],
         curatedList: data.curatedList || "",
@@ -523,6 +525,7 @@ export async function getSettings(): Promise<Settings> {
           syncCancellations: true,
         },
         restaurantCity: "",
+        restaurantCountry: "",
         restaurantPerimeterKm: 5,
         restaurants: [],
         curatedList: "",
@@ -541,6 +544,11 @@ export async function getSettings(): Promise<Settings> {
         showBusyTimes: false,
         syncCancellations: false,
       },
+      restaurantCity: "",
+      restaurantCountry: "",
+      restaurantPerimeterKm: 5,
+      restaurants: [],
+      curatedList: "",
     };
   }
 }
@@ -559,6 +567,7 @@ export async function updateSettings(settings: Settings): Promise<boolean> {
         syncCancellations: true,
       },
       restaurantCity: settings.restaurantCity || "",
+      restaurantCountry: settings.restaurantCountry || "",
       restaurantPerimeterKm: settings.restaurantPerimeterKm || 5,
       restaurants: settings.restaurants || [],
       curatedList: settings.curatedList || "",

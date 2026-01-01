@@ -51,8 +51,10 @@ const SETTINGS_GROUPS = [
 export default function SettingsPage() {
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
+	const [lastSavedSettings, setLastSavedSettings] = useState<Settings | null>(null);
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
+	const [savedRecently, setSavedRecently] = useState(false);
 	const [activeTab, setActiveTab] = useState("hours");
 	const [googleConnecting, setGoogleConnecting] = useState(false);
 	const [outlookConnecting, setOutlookConnecting] = useState(false);
@@ -66,7 +68,7 @@ export default function SettingsPage() {
 	});
 
 	// City validation state
-	type CityValidationOption = { display_name: string; lat: string; lon: string };
+	type CityValidationOption = { display_name: string; lat: string; lon: string; country?: string };
 	const [cityValidation, setCityValidation] = useState<{
 		valid: boolean;
 		city?: string;
@@ -89,12 +91,35 @@ export default function SettingsPage() {
 		try {
 			// Use OpenStreetMap Nominatim API for free geocoding
 			const resp = await fetch(`https://nominatim.openstreetmap.org/search?city=${encodeURIComponent(city)}&format=json&limit=10`);
-			const data = await resp.json();
+			const data = await resp.json() as { display_name: string; lat: string; lon: string }[];
 			if (data && data.length > 0) {
 				if (data.length === 1) {
-					setCityValidation({ valid: true, city: data[0].display_name.split(",")[0], country: data[0].display_name.split(",").pop().trim(), options: data, selectedIdx: 0 });
+					const firstResult = data[0];
+					const cityName = firstResult.display_name.split(",")[0].trim();
+					const countryName = firstResult.display_name.split(",").pop()?.trim() || "";
+					// Create options with just city name (country will be added separately in the display)
+					const cleanedOptions = data.map((d: { display_name: string; lat: string; lon: string }) => ({
+						display_name: d.display_name.split(",")[0].trim(),
+						lat: d.lat,
+						lon: d.lon,
+						country: d.display_name.split(",").pop()?.trim() || ""
+					}));
+					setCityValidation({ 
+						valid: true, 
+						city: cityName, 
+						country: countryName, 
+						options: cleanedOptions, 
+						selectedIdx: 0 
+					});
 				} else {
-					setCityValidation({ valid: false, options: data, selectedIdx: undefined });
+					// Create options with just city name (country will be added separately in the display)
+					const cleanedOptions = data.map((d: { display_name: string; lat: string; lon: string }) => ({
+						display_name: d.display_name.split(",")[0].trim(),
+						lat: d.lat,
+						lon: d.lon,
+						country: d.display_name.split(",").pop()?.trim() || ""
+					}));
+					setCityValidation({ valid: false, options: cleanedOptions, selectedIdx: undefined });
 				}
 			} else {
 				setCityValidation({ valid: false, error: "City not found" });
@@ -108,13 +133,25 @@ export default function SettingsPage() {
 	function handleSelectCityOption(idx: number) {
 		if (!cityValidation?.options) return;
 		const selected = cityValidation.options[idx];
+		const cityName = selected.display_name;
+		// Get country from the country field that's already parsed in options
+		const countryName = (selected as any).country || "";
+		
 		setCityValidation({
 			valid: true,
-			city: selected.display_name.split(",")[0],
-			country: (selected.display_name.split(",").pop() || "").trim(),
+			city: cityName,
+			country: countryName,
 			options: cityValidation.options,
 			selectedIdx: idx
 		});
+		// Also save to settings
+		if (settings) {
+			setSettings({
+				...settings,
+				restaurantCity: cityName,
+				restaurantCountry: countryName
+			});
+		}
 	}
 
 	useEffect(() => {
@@ -145,7 +182,29 @@ export default function SettingsPage() {
 	async function loadSettings() {
 		setLoading(true);
 		const data = await getSettings();
+		console.log("Loaded settings from Firestore:", data);
 		setSettings(data);
+		setLastSavedSettings(data);
+		// If a city is already saved, populate the cityValidation state
+		if (data.restaurantCity) {
+			console.log("Setting city validation with:", {
+				city: data.restaurantCity,
+				country: data.restaurantCountry
+			});
+			setCityValidation({
+				valid: true,
+				city: data.restaurantCity,
+				country: data.restaurantCountry || "",
+				// Add the saved city as an option so the badge displays correctly
+				options: [{
+					display_name: data.restaurantCity,
+					lat: "0",
+					lon: "0",
+					country: data.restaurantCountry || ""
+				}],
+				selectedIdx: 0
+			});
+		}
 		setLoading(false);
 	}
 
@@ -166,14 +225,28 @@ export default function SettingsPage() {
 	async function handleSave() {
 		if (!settings) return;
 		setSaving(true);
+		setSavedRecently(false);
+		console.log("Saving settings:", settings);
 		const success = await updateSettings(settings);
 		setSaving(false);
 		if (success) {
 			toast.success("Settings saved successfully!");
+			setSavedRecently(true);
+			setLastSavedSettings(JSON.parse(JSON.stringify(settings)));
+			setTimeout(() => setSavedRecently(false), 2000);
 		} else {
 			toast.error("Failed to save settings");
 		}
 	}
+
+	// Check if there are unsaved changes
+	const hasUnsavedChanges = settings && lastSavedSettings && (
+		settings.restaurantCity !== lastSavedSettings.restaurantCity ||
+		settings.restaurantCountry !== lastSavedSettings.restaurantCountry ||
+		settings.restaurantPerimeterKm !== lastSavedSettings.restaurantPerimeterKm ||
+		JSON.stringify(settings.restaurants) !== JSON.stringify(lastSavedSettings.restaurants) ||
+		settings.curatedList !== lastSavedSettings.curatedList
+	);
 
 	function handleAddBlockedSlot() {
 		if (!settings) return;
@@ -414,9 +487,11 @@ export default function SettingsPage() {
 														{activeTab === "restaurants" && (
 															<RestaurantSettings
 																city={settings.restaurantCity || ""}
-																setCity={city => { setSettings({ ...settings, restaurantCity: city }); setCityValidation(null); }}
+																setCity={city => setSettings({ ...settings, restaurantCity: city })}
 																perimeter={settings.restaurantPerimeterKm || 5}
 																setPerimeter={perimeter => setSettings({ ...settings, restaurantPerimeterKm: perimeter })}
+																restaurants={settings.restaurants || []}
+																setRestaurants={restaurants => setSettings({ ...settings, restaurants })}
 																curatedList={(settings.restaurants || []).map(r => r.name).join(", ")}
 																setCuratedList={list => {
 																	// This just updates the names, not full objects
@@ -431,46 +506,63 @@ export default function SettingsPage() {
 																	displayName: opt.display_name,
 																	lat: Number(opt.lat),
 																	lon: Number(opt.lon),
-																	country: (opt.display_name.split(",").pop() || "").trim(),
+																	country: (opt as any).country || "",
 																})) || []}
 																selectedCityIndex={cityValidation?.selectedIdx ?? null}
-																setSelectedCityIndex={idx => handleSelectCityOption(idx ?? 0)}
+															setSelectedCityIndex={idx => idx !== null ? handleSelectCityOption(idx) : setCityValidation(null)}
 																handleValidateCity={handleValidateCity}
+																country={settings.restaurantCountry || ""}
 															/>
 														)}
 														{/* Save Button */}
 							<div style={{ marginTop: "28px", paddingTop: "24px", borderTop: "1px solid #e5e5e5" }}>
-								<button
-									onClick={handleSave}
-									disabled={saving}
-									style={{
-										display: "flex",
-										alignItems: "center",
-										gap: "8px",
-										padding: "12px 24px",
-										background: saving ? "#999" : "#222",
-										color: "white",
-										border: "none",
-										borderRadius: "6px",
-										fontSize: "14px",
-										fontWeight: 600,
-										cursor: saving ? "not-allowed" : "pointer",
-										transition: "background 0.2s",
-									}}
-									onMouseEnter={(e) => {
-										if (!saving) {
-											(e.currentTarget as HTMLElement).style.background = "#404040";
-										}
-									}}
-									onMouseLeave={(e) => {
-										if (!saving) {
-											(e.currentTarget as HTMLElement).style.background = "#222";
-										}
-									}}
-								>
-									<Save size={16} />
-									{saving ? "Saving..." : "Save Settings"}
-								</button>
+								<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+									<button
+										onClick={handleSave}
+										disabled={saving || !hasUnsavedChanges}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: "8px",
+											padding: "12px 24px",
+											background: saving || !hasUnsavedChanges ? "#999" : "#222",
+											color: "white",
+											border: "none",
+											borderRadius: "6px",
+											fontSize: "14px",
+											fontWeight: 600,
+											cursor: saving || !hasUnsavedChanges ? "not-allowed" : "pointer",
+											transition: "background 0.2s",
+										}}
+										onMouseEnter={(e) => {
+											if (!saving && hasUnsavedChanges) {
+												(e.currentTarget as HTMLElement).style.background = "#404040";
+											}
+										}}
+										onMouseLeave={(e) => {
+											if (!saving && hasUnsavedChanges) {
+												(e.currentTarget as HTMLElement).style.background = "#222";
+											} else if (!hasUnsavedChanges) {
+												(e.currentTarget as HTMLElement).style.background = "#999";
+											}
+										}}
+									>
+										<Save size={16} />
+										{saving ? "Saving..." : "Save Settings"}
+									</button>
+									{savedRecently && (
+										<span style={{ 
+											color: "#22c55e", 
+											fontWeight: 600, 
+											fontSize: "14px",
+											display: "flex",
+											alignItems: "center",
+											gap: "4px"
+										}}>
+											✓ Saved!
+										</span>
+									)}
+								</div>
 								<p style={{
 									marginTop: "12px",
 									fontSize: "13px",
