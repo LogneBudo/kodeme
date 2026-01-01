@@ -17,7 +17,7 @@ const CuratedRestaurantList: React.FC<CuratedRestaurantListProps> = ({
         onChange={e => setCuratedList(e.target.value)}
         placeholder="e.g. Sushi Place, Pizza House, Vegan Bistro"
         rows={2}
-        style={{ width: "100%", padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "15px" }}
+        style={{ width: "80%", maxWidth: "640px", padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "15px" }}
       />
     </div>
   );

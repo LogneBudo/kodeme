@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import FindRestaurant from "./FindRestaurant";
 import CuratedRestaurantList from "./CuratedRestaurantList";
 import type { Restaurant } from "../../../types/restaurant";
@@ -46,14 +46,15 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   handleValidateCity,
   country,
 }) => {
-  const [showMichelin, setShowMichelin] = useState(false);
-
   return (
-    <div style={{ marginBottom: "32px" }}>
-      <h2 style={{ marginTop: 0, marginBottom: "18px", fontSize: "22px", fontWeight: 700 }}>
-        Restaurant Settings
-      </h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: "18px", maxWidth: 420 }}>
+    <div style={{ marginBottom: "32px", display: "flex", flexDirection: "column", gap: "20px" }}>
+      <h2 style={{ marginTop: 0, marginBottom: 0, fontSize: "22px", fontWeight: 700 }}>Restaurant Settings</h2>
+
+      {/* Section 1: City & perimeter */}
+      <div style={{ padding: "16px", border: "1px solid #e5e7eb", borderRadius: "10px", background: "#fff", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <span style={{ fontWeight: 700, fontSize: "15px" }}>City & perimeter</span>
+        </div>
         <div>
           <label style={{ fontWeight: 600, fontSize: "15px" }}>City</label>
           {selectedCityIndex !== null && (cityOptions.length > 0 || city) ? (
@@ -68,15 +69,12 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                 border: "1px solid #22c55e"
               }}>
                 {(() => {
-                  // Get country from cityOptions or fall back to country prop
                   const displayCountry = (cityOptions.length > 0 && selectedCityIndex !== null && selectedCityIndex < cityOptions.length)
                     ? cityOptions[selectedCityIndex].country || country
                     : country;
-                  
                   const displayCity = (cityOptions.length > 0 && selectedCityIndex !== null && selectedCityIndex < cityOptions.length)
                     ? cityOptions[selectedCityIndex].displayName
                     : city;
-                  
                   return displayCountry && displayCountry.trim() 
                     ? `${displayCity}, ${displayCountry}` 
                     : displayCity;
@@ -142,8 +140,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
             </>
           )}
         </div>
-        <div>
-          <label style={{ fontWeight: 600, fontSize: "15px" }}>Perimeter (in kilometers)</label>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <label style={{ fontWeight: 600, fontSize: "15px", minWidth: 120 }}>Perimeter (km)</label>
           <input
             type="number"
             value={perimeter}
@@ -151,26 +149,27 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
             min={100}
             max={10000}
             step={100}
-            style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "15px", width: 120, marginLeft: "8px" }}
+            style={{ padding: "8px 12px", border: "1px solid #e5e7eb", borderRadius: "6px", fontSize: "15px", width: 140 }}
           />
         </div>
-        <CuratedRestaurantList curatedList={curatedList} setCuratedList={setCuratedList} />
       </div>
-      <div style={{ marginTop: 24 }}>
-        <label style={{ fontWeight: 500, fontSize: 15, marginRight: 12 }}>
-          <input
-            type="checkbox"
-            checked={showMichelin}
-            onChange={e => setShowMichelin(e.target.checked)}
-            style={{ marginRight: 8 }}
-          />
-          Show only Michelin starred restaurants
-        </label>
+
+      {/* Section 2: Map and restaurant list */}
+      <div style={{ padding: "16px", border: "1px solid #e5e7eb", borderRadius: "10px", background: "#fff", display: "flex", flexDirection: "column", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ fontWeight: 700, fontSize: "15px" }}>Map & restaurant list</span>
+        </div>
         <FindRestaurant
           city={city}
           selectedRestaurants={restaurants}
           setSelectedRestaurants={setRestaurants}
         />
+      </div>
+
+      {/* Section 3: Curated list */}
+      <div style={{ padding: "16px", border: "1px solid #e5e7eb", borderRadius: "10px", background: "#fff", display: "flex", flexDirection: "column", gap: "10px" }}>
+        <span style={{ fontWeight: 700, fontSize: "15px" }}>Curated restaurant list</span>
+        <CuratedRestaurantList curatedList={curatedList} setCuratedList={setCuratedList} />
       </div>
     </div>
   );

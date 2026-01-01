@@ -492,12 +492,16 @@ export default function SettingsPage() {
 																setPerimeter={perimeter => setSettings({ ...settings, restaurantPerimeterKm: perimeter })}
 																restaurants={settings.restaurants || []}
 																setRestaurants={restaurants => setSettings({ ...settings, restaurants })}
-																curatedList={(settings.restaurants || []).map(r => r.name).join(", ")}
+																curatedList={settings.curatedList || ""}
 																setCuratedList={list => {
-																	// This just updates the names, not full objects
+																	const parsed = list
+																		.split(",")
+																		.map(name => ({ name: name.trim(), address: "", website: "", lat: 0, lng: 0 }))
+																		.filter(r => r.name);
 																	setSettings({
 																		...settings,
-																		restaurants: list.split(",").map(name => ({ name: name.trim(), address: "", website: "", lat: 0, lng: 0 })).filter(r => r.name)
+																		curatedList: list,
+																		restaurants: parsed
 																	});
 																}}
 																cityValidationLoading={validatingCity}
