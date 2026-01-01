@@ -3,6 +3,7 @@ import { addDays, format, isBefore, startOfDay, startOfWeek } from "date-fns";
 import { toast } from "sonner";
 import { isTimeSlotBlocked } from "../api/calendarApi";
 import { updateSettings, type Settings } from "../api/firebaseApi";
+import { SlotState } from "../constants/slotStates";
 import type { Appointment } from "../types/appointment";
 import type { CalendarEvent } from "../types/calendar";
 
@@ -14,6 +15,7 @@ export type SlotStatus = {
   isCalendarBlocked: boolean;
   appointment?: Appointment;
   isPast: boolean;
+  state: SlotState;
 };
 
 type UseWeekSlotsParams = {
@@ -166,6 +168,15 @@ export function useWeekSlots({
         calendarEvents
       );
 
+      const state: SlotState = (() => {
+        if (isBefore(date, today)) return SlotState.Past;
+        if (isCalendarBlocked) return SlotState.CalendarBlocked;
+        if (blocked) return SlotState.Blocked;
+        if (appointment) return SlotState.Booked;
+        if (isUnavailable) return SlotState.Unavailable;
+        return SlotState.Available;
+      })();
+
       return {
         isAvailable: !blocked && !appointment && !isUnavailable && !isCalendarBlocked,
         isBooked: !!appointment,
@@ -174,6 +185,7 @@ export function useWeekSlots({
         isCalendarBlocked,
         appointment,
         isPast: isBefore(date, today),
+        state,
       };
     },
     [appointments, calendarEvents, isTimeBlocked, settings, today]
