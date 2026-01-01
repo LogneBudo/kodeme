@@ -122,8 +122,7 @@ export default function BookAppointment() {
           zIndex: 0,
           width: "100vw",
           height: "100vh",
-          background: `url(${locationBackgrounds[selectedLocation]}) center/cover no-repeat`,
-          opacity: 0.35,
+          background: `linear-gradient(to bottom, rgba(240, 240, 240, 0.95) 0%, rgba(240, 240, 240, 0.6) 50%, rgba(240, 240, 240, 0.1) 100%), url(${locationBackgrounds[selectedLocation]}) center/cover no-repeat`,
           pointerEvents: "none",
         }}
       />

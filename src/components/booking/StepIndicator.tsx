@@ -37,7 +37,7 @@ export default function StepIndicator({ currentStep, steps }: StepIndicatorProps
           fontSize: "clamp(10px, 2.5vw, 12px)",
           marginTop: "4px",
           fontWeight: 500,
-          color: isActive ? "#111827" : "#9ca3af",
+          color: isCompleted ? "#10b981" : isActive ? "#111827" : "#64748b",
           transition: "color 0.3s ease",
           whiteSpace: "nowrap",
         };
@@ -47,7 +47,7 @@ export default function StepIndicator({ currentStep, steps }: StepIndicatorProps
           height: "2px",
           margin: "0 clamp(2px, 1vw, 8px)",
           marginTop: "-24px",
-          background: isCompleted ? "#10b981" : "#e5e7eb",
+          background: isCompleted ? "#10b981" : "#bec0c2ff",
           transition: "background 0.3s ease",
           flexShrink: 0,
         };
