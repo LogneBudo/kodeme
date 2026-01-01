@@ -125,31 +125,7 @@ function WeekGrid({
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-      {/* Legend */}
-      <div style={{ padding: "12px 16px", backgroundColor: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", display: "flex", flexWrap: "wrap", gap: "16px", fontSize: "14px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#d1fae5" }}></div>
-          <span style={{ color: "#475569" }}>Available</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#fee2e2" }}></div>
-          <span style={{ color: "#475569" }}>Unavailable</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#d1fae5" }}></div>
-          <span style={{ color: "#475569" }}>Booked</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#dbeafe" }}></div>
-          <span style={{ color: "#475569" }}>Calendar</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div style={{ width: "12px", height: "12px", borderRadius: "2px", backgroundColor: "#f3f4f6" }}></div>
-          <span style={{ color: "#475569" }}>Blocked</span>
-        </div>
-      </div>
-
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
       {/* Week Grid */}
       <div style={{ backgroundColor: "white", borderRadius: "8px", overflow: "hidden", border: "1px solid #e2e8f0", width: "fit-content", maxHeight: "450px", display: "flex", flexDirection: "column" }}>
         {/* Grid Wrapper */}
@@ -157,7 +133,7 @@ function WeekGrid({
           <table style={{ borderCollapse: "collapse", width: "auto" }}>
           <thead>
             <tr>
-              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "12px", fontWeight: "500", color: "#64748b" }}>
+              <th style={{ width: "64px", height: "48px", backgroundColor: "#f8fafc", borderRight: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", padding: "0", textAlign: "center", fontSize: "18px", fontWeight: "500", color: "#64748b" }}>
                 Time
               </th>
               {weekDays.map((day) => {
@@ -177,13 +153,13 @@ function WeekGrid({
                       color: isToday ? "white" : "#0f172a",
                       padding: "0",
                       textAlign: "center",
-                      fontSize: "11px",
+                      fontSize: "22px",
                       fontWeight: "500",
                     }}
                   >
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: "2px" }}>
                       <div style={{ fontSize: "10px", opacity: 0.7 }}>{format(day, "EEE")}</div>
-                      <div style={{ fontSize: "14px", fontWeight: "bold" }}>{format(day, "d")}</div>
+                      <div style={{ fontSize: "12px", fontWeight: "bold" }}>{format(day, "d")}</div>
                       {!isPastDay && (
                         <button
                           onClick={() => onToggleDay(day)}
@@ -200,7 +176,7 @@ function WeekGrid({
                             marginTop: "2px",
                           }}
                         >
-                          {isDayUnavailable ? "En" : "Dis"}
+                          {isDayUnavailable ? "Enable" : "Disable"}
                         </button>
                       )}
                     </div>
@@ -221,7 +197,7 @@ function WeekGrid({
                     borderBottom: "1px solid #e2e8f0",
                     padding: "0",
                     textAlign: "center",
-                    fontSize: "11px",
+                    fontSize: "18px",
                     fontWeight: "500",
                     color: "#64748b",
                   }}
@@ -268,7 +244,7 @@ function WeekGrid({
                         }}
                         title={`${format(day, "EEE, MMM d")} at ${time}`}
                       >
-                        {status.isPast ? "—" : status.isCalendarBlocked ? "📅" : status.isBlocked ? "🔒" : status.isBooked ? "✓" : status.isUnavailable ? "✕" : "✓"}
+                        {status.isPast ? "—" : status.isCalendarBlocked ? "X" : status.isBlocked ? "X" : status.isBooked ? "✓" : status.isUnavailable ? "✕" : "✓"}
                       </button>
                     </td>
                   );
