@@ -30,6 +30,11 @@
   background: #f1f5f9;
 }
 
+.iconButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
 .disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -52,6 +57,11 @@
 
 .textButton:hover {
   background: #f1f5f9;
+}
+
+.textButton:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
 }
 
 .title {
