@@ -261,6 +261,15 @@ export default function LocationStep({
               key={loc.id}
               onClick={() => {
                 setSelectedLocation(loc.id);
+                // Scroll to top for these location types
+                if (loc.id === "other" || loc.id === "your_premises" || loc.id === "zoom") {
+                  const scrollContainer = document.querySelector('[class*="page"]');
+                  if (scrollContainer) {
+                    scrollContainer.scrollTo({ top: 0, behavior: "smooth" });
+                  } else {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }
                 if (loc.id === "restaurant") {
                   setShowMap(false);
                   if (selectedLocation !== "restaurant") setLocationDetails("");
