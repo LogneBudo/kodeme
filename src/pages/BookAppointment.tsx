@@ -28,13 +28,6 @@ export default function BookAppointment() {
     other: otherImg,
   };
 
-  const locationOverlays: Record<string, string> = {
-    zoom: "rgba(59, 130, 246, 0.75)", // Blue tint for video calls
-    your_premises: "rgba(16, 185, 129, 0.75)", // Green tint for offices
-    restaurant: "rgba(249, 115, 22, 0.75)", // Orange tint for restaurants
-    other: "rgba(139, 92, 246, 0.75)", // Purple tint for other locations
-  };
-
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<Appointment["locationDetails"]["type"]>("zoom");
