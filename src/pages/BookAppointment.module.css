@@ -1,12 +1,12 @@
 .page {
   height: calc(100vh - 60px);
-  background: #f0f0f0;
+  background: transparent;
   width: 100%;
   box-sizing: border-box;
   overflow-y: scroll;
   position: relative;
   padding: 20px 0;
-  transition: background 0.3s;
+  z-index: 1;
 }
 
 /* Custom scrollbar styling */

@@ -27,6 +27,14 @@ export default function BookAppointment() {
     restaurant: restaurantImg,
     other: otherImg,
   };
+
+  const locationOverlays: Record<string, string> = {
+    zoom: "rgba(59, 130, 246, 0.75)", // Blue tint for video calls
+    your_premises: "rgba(16, 185, 129, 0.75)", // Green tint for offices
+    restaurant: "rgba(249, 115, 22, 0.75)", // Orange tint for restaurants
+    other: "rgba(139, 92, 246, 0.75)", // Purple tint for other locations
+  };
+
   const [currentStep, setCurrentStep] = useState(1);
   const [email, setEmail] = useState("");
   const [selectedLocation, setSelectedLocation] = useState<Appointment["locationDetails"]["type"]>("zoom");
@@ -108,11 +116,18 @@ export default function BookAppointment() {
 
   return (
     <>
-      <div className={styles.background}
-        style={{
-          background: `linear-gradient(to bottom, rgba(240, 240, 240, 0.95) 0%, rgba(240, 240, 240, 0.6) 50%, rgba(240, 240, 240, 0.1) 100%), url(${locationBackgrounds[selectedLocation]}) center/cover no-repeat`,
-        }}
-      />
+      {currentStep === 2 && (
+        <div className={styles.background}
+          style={{
+            backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.6) 25%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%), url(${locationBackgrounds[selectedLocation]})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            backgroundAttachment: 'fixed',
+            transition: 'background-image 0.5s ease-in-out',
+          }}
+        />
+      )}
       <div className={styles.page}>
         <div className={styles.content}>
           {!bookedAppointment && (
