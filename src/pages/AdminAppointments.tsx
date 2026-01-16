@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { listAppointments, updateAppointment, deleteAppointment } from "../api/firebaseApi";
 import type { Appointment } from "../types/appointment";
 import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";

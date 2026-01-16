@@ -17,6 +17,7 @@ import AdminPageHeader from "../components/admin/AdminPageHeader";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
+import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
 
 import type { Appointment } from "../types/appointment";
 import {
@@ -29,9 +30,14 @@ import styles from "./AdminBase.module.css";
 function AdminSlots() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState<SettingsType | null>(null);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Use the hook to load settings
+  const { data: settings } = useFirestoreQuery(
+    () => getSettings(),
+    []
+  );
   
   // Check if we can go to previous week (current week is the limit)
   const today = startOfDay(new Date());
@@ -52,31 +58,11 @@ function AdminSlots() {
     pendingDayKey,
   } = useWeekSlots({
     currentDate,
-    settings,
+    settings: settings || null,
     appointments,
     calendarEvents,
-    setSettings,
+    setSettings: () => {}, // No longer needed - settings is read-only from hook
   });
-
-  // Load settings when component mounts (fresh from Firestore)
-  useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      try {
-        const settingsData = await getSettings();
-        if (!isMounted) return;
-        setSettings(settingsData);
-      } catch (error) {
-        console.error("Failed to load settings", error);
-        if (!isMounted) return;
-        setSettings(null);
-        toast.error("Failed to load settings");
-      }
-    })();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
   // Load appointments and calendar events when date changes
   useEffect(() => {

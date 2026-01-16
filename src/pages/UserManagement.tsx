@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
