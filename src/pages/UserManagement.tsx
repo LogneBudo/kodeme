@@ -3,30 +3,22 @@ import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebas
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
+import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
 import tableStyles from "../components/admin/AdminTable.module.css";
 import baseStyles from "./AdminBase.module.css";
 import styles from "./UserManagement.module.css";
 
 export default function UserManagement() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
-  async function loadUsers() {
-    setLoading(true);
-    const data = await listUsers();
-    setUsers(data);
-    setLoading(false);
-  }
+  const { data: users = [], loading, refetch } = useFirestoreQuery(
+    () => listUsers(),
+    []
+  );
 
   async function handleToggleRole(userId: string, currentRole: "admin" | "user") {
     const newRole = currentRole === "admin" ? "user" : "admin";
     const success = await updateUserRole(userId, newRole);
     if (success) {
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      await refetch();
     }
   }
 
@@ -35,7 +27,7 @@ export default function UserManagement() {
     
     const success = await deleteUser(userId);
     if (success) {
-      setUsers(users.filter(u => u.id !== userId));
+      await refetch();
     }
   }
 

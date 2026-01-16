@@ -6,30 +6,20 @@ import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
+import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
 import tableStyles from "../components/admin/AdminTable.module.css";
 import styles from "./AdminBase.module.css";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled";
 
 export default function AdminAppointments() {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: appointments = [], loading, refetch } = useFirestoreQuery(
+    () => listAppointments(),
+    []
+  );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<AppointmentStatus>("pending");
   const [editNotes, setEditNotes] = useState<string>("");
-
-  const loadAppointments = async () => {
-    setLoading(true);
-    const data = await listAppointments();
-    setAppointments(data);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    (async () => {
-      await loadAppointments();
-    })();
-  }, []);
 
   function startEdit(apt: Appointment) {
     setEditingId(apt.id);
@@ -47,7 +37,7 @@ export default function AdminAppointments() {
     const updated = await updateAppointment(id, { status: editStatus, notes: editNotes });
     if (updated) {
       toast.success("Appointment updated");
-      setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: editStatus, notes: editNotes } : a)));
+      await refetch();
     } else {
       toast.error("Failed to update appointment");
     }
@@ -59,7 +49,7 @@ export default function AdminAppointments() {
     const ok = await deleteAppointment(id);
     if (ok) {
       toast.success("Appointment deleted");
-      setAppointments((prev) => prev.filter((a) => a.id !== id));
+      await refetch();
     } else {
       toast.error("Failed to delete appointment");
     }
