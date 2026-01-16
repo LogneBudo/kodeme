@@ -14,6 +14,8 @@ import {
 } from "date-fns";
 import { listTimeSlots } from "../../api/firebaseApi";
 import type { TimeSlot } from "../../types/timeSlot";
+import StepContainer from "./StepContainer";
+import StepButton from "./StepButton";
 
 type Props = {
   timeframe: string;
@@ -116,38 +118,21 @@ export default function SlotSelectionStep({
 
   if (loading) {
     return (
-      <div style={{ textAlign: "center", padding: "60px 0" }}>
-        <Loader2 size={40} style={{ marginBottom: "16px", animation: "spin 1s linear infinite" }} />
-        <p style={{ color: "#64748b" }}>Loading available slots...</p>
-      </div>
+      <StepContainer icon={Clock} title="Loading slots..." subtitle="">
+        <div style={{ textAlign: "center", padding: "40px 0" }}>
+          <Loader2 size={40} style={{ marginBottom: "16px", animation: "spin 1s linear infinite" }} />
+          <p style={{ color: "#64748b" }}>Loading available slots...</p>
+        </div>
+      </StepContainer>
     );
   }
 
   return (
-    <div style={{ maxWidth: "700px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
-        <div
-          style={{
-            width: "clamp(48px, 12vw, 64px)",
-            height: "clamp(48px, 12vw, 64px)",
-            background: "#f1f5f9",
-            borderRadius: "16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto clamp(16px, 4vw, 24px)",
-          }}
-        >
-          <Clock size={32} color="#475569" />
-        </div>
-
-        <h2 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 600, marginBottom: "8px", color: "#0f172a", margin: "0 0 8px 0" }}>
-          Choose your time slot
-        </h2>
-
-        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>{slots.length} slots available</p>
-      </div>
+    <StepContainer
+      icon={Clock}
+      title="Choose your time slot"
+      subtitle={`${slots.length} slots available`}
+    >
 
       {/* No slots */}
       {slots.length === 0 ? (
@@ -221,55 +206,25 @@ export default function SlotSelectionStep({
 
       {/* Buttons */}
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <button
+        <StepButton
           onClick={onBook}
           disabled={!selectedSlot || isBooking}
+          loading={isBooking}
           style={{
-            width: "100%",
             height: "64px",
-            borderRadius: "12px",
             fontSize: "20px",
-            fontWeight: 600,
             background: selectedSlot ? "#059669" : "#e2e8f0",
             color: selectedSlot ? "white" : "#94a3b8",
-            cursor: selectedSlot ? "pointer" : "not-allowed",
-            border: "none",
           }}
+          icon={!isBooking && <CalendarCheck size={24} />}
         >
-          {isBooking ? (
-            <>
-              <Loader2 size={24} style={{ marginRight: "12px", animation: "spin 1s linear infinite" }} />
-              Booking...
-            </>
-          ) : (
-            <>
-              <CalendarCheck size={24} style={{ marginRight: "12px" }} />
-              BOOK
-            </>
-          )}
-        </button>
+          {isBooking ? "Booking..." : "BOOK"}
+        </StepButton>
 
-        <button
-          onClick={onBack}
-          disabled={isBooking}
-          style={{
-            width: "100%",
-            height: "48px",
-            borderRadius: "8px",
-            background: "transparent",
-            border: "1px solid #cbd5e1",
-            color: "#64748b",
-            cursor: isBooking ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-          }}
-        >
-          <ArrowLeft size={16} />
+        <StepButton variant="ghost" onClick={onBack} disabled={isBooking} icon={<ArrowLeft size={16} />}>
           Back
-        </button>
+        </StepButton>
       </div>
-    </div>
+    </StepContainer>
   );
 }

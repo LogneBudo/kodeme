@@ -20,6 +20,8 @@ import type { LucideIcon } from "lucide-react";
 import type { Restaurant } from "../../types/restaurant";
 import { useMapillaryImages } from "../../hooks/useMapillaryImages";
 import MapillaryGallery from "./MapillaryGallery";
+import StepButton from "./StepButton";
+import StyledInput from "./StyledInput";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default leaflet marker icon
@@ -541,15 +543,13 @@ export default function LocationStep({
       )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        <button onClick={handleNext} style={buttonPrimary}>
+        <StepButton onClick={handleNext} icon={<ArrowRight size={20} />}>
           Continue
-          <ArrowRight size={20} />
-        </button>
+        </StepButton>
 
-        <button onClick={onBack} style={buttonGhost}>
-          <ArrowLeft size={18} />
+        <StepButton variant="ghost" onClick={onBack} icon={<ArrowLeft size={18} />}>
           Back
-        </button>
+        </StepButton>
       </div>
     </div>
   );

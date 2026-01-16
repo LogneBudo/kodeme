@@ -1,4 +1,6 @@
 import { Calendar, Clock, CalendarDays, CalendarRange, Zap, ArrowLeft } from "lucide-react";
+import StepContainer from "./StepContainer";
+import StepButton from "./StepButton";
 
 const timeframes = [
   { id: "asap", label: "As Early as Possible", icon: Zap, description: "Get the next available slot" },
@@ -16,31 +18,11 @@ type Props = {
 
 export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe, onNext, onBack }: Props) {
   return (
-    <div style={{ maxWidth: "500px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: "clamp(20px, 5vw, 32px)" }}>
-        <div
-          style={{
-            width: "clamp(48px, 12vw, 64px)",
-            height: "clamp(48px, 12vw, 64px)",
-            background: "#f1f5f9",
-            borderRadius: "16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto clamp(16px, 4vw, 24px)",
-          }}
-        >
-          <Calendar size={32} color="#475569" />
-        </div>
-
-        <h2 style={{ fontSize: "clamp(20px, 5vw, 24px)", fontWeight: 600, marginBottom: "8px", color: "#0f172a", margin: "0 0 8px 0" }}>
-          When would you like to book?
-        </h2>
-
-        <p style={{ color: "#64748b", fontSize: "14px", margin: 0 }}>Select your preferred timeframe</p>
-      </div>
-
+    <StepContainer
+      icon={Calendar}
+      title="When would you like to book?"
+      subtitle="Select your preferred timeframe"
+    >
       {/* Timeframe options */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "12px", marginBottom: "20px" }}>
         {timeframes.map((tf) => {
@@ -107,27 +89,9 @@ export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe,
       </div>
 
       {/* Back button */}
-      <button
-        onClick={onBack}
-        style={{
-          width: "100%",
-          height: "48px",
-          borderRadius: "8px",
-          background: "transparent",
-          border: "1px solid #cbd5e1",
-          color: "#64748b",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "8px",
-          fontSize: "14px",
-          transition: "color 0.2s ease",
-        }}
-      >
-        <ArrowLeft size={16} />
+      <StepButton variant="ghost" onClick={onBack} icon={<ArrowLeft size={16} />}>
         Back
-      </button>
-    </div>
+      </StepButton>
+    </StepContainer>
   );
 }
