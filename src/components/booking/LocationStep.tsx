@@ -21,7 +21,6 @@ import type { Restaurant } from "../../types/restaurant";
 import { useMapillaryImages } from "../../hooks/useMapillaryImages";
 import MapillaryGallery from "./MapillaryGallery";
 import StepButton from "./StepButton";
-import StyledInput from "./StyledInput";
 import "leaflet/dist/leaflet.css";
 
 // Fix for default leaflet marker icon
@@ -191,35 +190,7 @@ export default function LocationStep({
     alignItems: "center",
   };
 
-  const buttonPrimary: React.CSSProperties = {
-    width: "100%",
-    height: "56px",
-    fontSize: "18px",
-    borderRadius: "12px",
-    background: "#0f172a",
-    color: "white",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "8px",
-  };
-
-  const buttonGhost: React.CSSProperties = {
-    width: "100%",
-    height: "48px",
-    fontSize: "16px",
-    borderRadius: "10px",
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    color: "#64748b",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: "6px",
-  };
+  // Button style objects inlined where needed; removed unused constants
 
   return (
     <div style={{ maxWidth: "520px", margin: "0 auto", width: "100%", boxSizing: "border-box" }}>

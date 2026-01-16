@@ -2,7 +2,7 @@
 import { useState, useMemo } from "react";
 import { listAppointments, updateAppointment, deleteAppointment } from "../api/firebaseApi";
 import type { Appointment } from "../types/appointment";
-import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";
+import { Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
@@ -129,12 +129,18 @@ export default function AdminAppointments() {
     {
       key: "appointmentDate",
       label: "Date",
-      render: (value, apt) => apt.date || apt.appointmentDate,
+      render: (value, apt) => {
+        // prefer explicit date field if present; always return string
+        const v = (apt.date || apt.appointmentDate || value) as string | Date | undefined;
+        if (!v) return "-";
+        if (v instanceof Date) return v.toLocaleDateString();
+        return v;
+      },
     },
     {
       key: "time",
       label: "Time",
-      render: (value) => value || "-",
+      render: (value) => String(value ?? "-"),
     },
     {
       key: "email",
@@ -143,7 +149,10 @@ export default function AdminAppointments() {
     {
       key: "locationDetails",
       label: "Location",
-      render: (value, apt) => `${apt.locationDetails?.type}${apt.locationDetails?.details ? `: ${apt.locationDetails.details}` : ""}`,
+      render: (value, apt) => {
+        void value; // satisfy noUnusedParameters
+        return `${apt.locationDetails?.type}${apt.locationDetails?.details ? `: ${apt.locationDetails.details}` : ""}`;
+      },
     },
     {
       key: "status",
@@ -159,7 +168,7 @@ export default function AdminAppointments() {
             </select>
           );
         }
-        return value;
+        return String(value ?? "");
       },
     },
     {
@@ -170,7 +179,7 @@ export default function AdminAppointments() {
         if (editingId === apt.id && !isPast) {
           return <input value={editNotes} onChange={e => setEditNotes(e.target.value)} style={{ width: 120 }} />;
         }
-        return value || "";
+        return String(value ?? "");
       },
     },
   ];

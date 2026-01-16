@@ -34,7 +34,8 @@ Found 0 images
 ### Option 1: Test Mapillary API Directly
 Open browser console and run:
 ```javascript
-const MAPILLARY_TOKEN = '[REMOVED_MAPILLARY_TOKEN]';
+// Use an environment variable. Do NOT paste real tokens in docs.
+const MAPILLARY_TOKEN = '[REMOVED_MAPILLARY_TOKEN]_mapillary_token_here';
 const [lat, lon] = [37.9738, 23.7275]; // Athens, Plaka
 const radius = 0.005;
 const bbox = `${lon-radius},${lat-radius},${lon+radius},${lat+radius}`;

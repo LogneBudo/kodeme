@@ -95,17 +95,24 @@ export default function UserManagement() {
     {
       key: "role",
       label: "Role",
-      render: (value, user) => (
+      render: (value, user) => {
+        void value; // mark parameter as used to satisfy noUnusedParameters
+        return (
         <div className={`${styles.roleBadge} ${user.role === "admin" ? styles.roleBadgeAdmin : styles.roleBadgeUser}`}>
           {user.role === "admin" ? <Shield size={14} /> : <UserIcon size={14} />}
           {user.role}
         </div>
-      ),
+        );
+      },
     },
     {
       key: "createdAt",
       label: "Created",
-      render: (value) => value.toLocaleDateString(),
+      render: (value) => {
+        if (value instanceof Date) return value.toLocaleDateString();
+        const d = new Date(value as unknown as string);
+        return isNaN(d.getTime()) ? "-" : d.toLocaleDateString();
+      },
     },
   ];
 

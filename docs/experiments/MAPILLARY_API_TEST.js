@@ -1,7 +1,8 @@
 // Test script to check Mapillary API response
 // Run this in browser console to debug
 
-const MAPILLARY_TOKEN = '[REMOVED_MAPILLARY_TOKEN]';
+// Do NOT hardcode real tokens in code or docs. Use env vars.
+const MAPILLARY_TOKEN = process.env.VITE_MAPILLARY_TOKEN || '[REMOVED_MAPILLARY_TOKEN]_mapillary_token_here';
 
 // Test coordinates (Athens, Greece - Plaka area)
 const testCoords = [37.9738, 23.7275];

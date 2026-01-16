@@ -23,7 +23,6 @@ import type { Appointment } from "../types/appointment";
 import {
   listAppointments,
   getSettings,
-  type Settings as SettingsType,
 } from "../api/firebaseApi";
 import styles from "./AdminBase.module.css";
 

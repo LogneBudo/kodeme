@@ -20,11 +20,11 @@ interface AdminPageProps {
  *   <AdminAppointments />
  * </AdminPage>
  */
-export default function AdminPage({ title, pageName, children }: AdminPageProps) {
+export default function AdminPage(props: AdminPageProps) {
   return (
     <RequireAdmin>
-      <Layout currentPageName={pageName}>
-        {children}
+      <Layout currentPageName={props.pageName}>
+        {props.children}
       </Layout>
     </RequireAdmin>
   );

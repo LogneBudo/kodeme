@@ -82,7 +82,7 @@ Fallback chain in `setBackgroundFromCoords()`:
 ### .env Configuration
 ```
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here  (placeholder)
-VITE_MAPILLARY_TOKEN=[REMOVED_MAPILLARY_TOKEN]  (configured ✅)
+VITE_MAPILLARY_TOKEN=[REMOVED_MAPILLARY_TOKEN]_mapillary_token_here  (set in environment)
 ```
 
 ### Available Features (Without Google API Key)
