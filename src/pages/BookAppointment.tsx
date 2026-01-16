@@ -13,6 +13,7 @@ import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
 import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings } from "../api/firebaseApi";
 import styles from "./BookAppointment.module.css";
+import bookingStyles from "../components/booking/Booking.module.css";
 // 
 import type { TimeSlot } from "../types/timeSlot";
 import type { Appointment } from "../types/appointment";
@@ -127,18 +128,7 @@ export default function BookAppointment() {
             <StepIndicator currentStep={currentStep} steps={steps} />
           )}
 
-          <div
-            style={{
-              background: "white",
-              borderRadius: "16px",
-              padding: "clamp(20px, 6vw, 40px)",
-              boxShadow: "0 10px 30px rgba(0,0,0,0.1)",
-              marginTop: "16px",
-              margin: "16px auto 0",
-              maxWidth: "600px",
-              boxSizing: "border-box",
-            }}
-          >
+          <div className={bookingStyles.bookingCard}>
             <AnimatePresence mode="wait" custom={currentStep}>
             {bookedAppointment ? (
               <motion.div
