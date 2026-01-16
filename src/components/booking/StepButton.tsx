@@ -93,4 +93,6 @@ const StepButton = React.memo(function StepButton({
       {children}
     </button>
   );
-}
+});
+
+export default StepButton;
