@@ -10,65 +10,69 @@ import AdminPage from "./components/admin/AdminPage";
 import AdminAppointments from "../src/pages/AdminAppointments";
 import GoogleOAuthCallback from "../src/pages/GoogleOAuthCallback";
 import OutlookOAuthCallback from "../src/pages/OutlookOAuthCallback";
+import ErrorBoundary from "./components/ErrorBoundary";
+import ErrorPage from "./pages/ErrorPage";
 
 export default function App() {
   return (
     <>
       <Toaster position="bottom-right" />
-      <Routes>
-      <Route path="/admin/login" element={<Login />} />
-      
-      <Route
-        path="/"
-        element={<Navigate to="/BookAppointment" replace />}
-      />
-      <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
-      <Route path="/auth/outlook/callback" element={<OutlookOAuthCallback />} />
-      <Route
-        path="/BookAppointment"
-        element={
-          <Layout currentPageName="BookAppointment">
-            <BookAppointment />
-          </Layout>
-        }
-      />
+      <ErrorBoundary fallback={(error, reset) => <ErrorPage title="Oops! An error occurred" message={error.message} onRetry={reset} />}>
+        <Routes>
+        <Route path="/admin/login" element={<Login />} />
+        
+        <Route
+          path="/"
+          element={<Navigate to="/BookAppointment" replace />}
+        />
+        <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
+        <Route path="/auth/outlook/callback" element={<OutlookOAuthCallback />} />
+        <Route
+          path="/BookAppointment"
+          element={
+            <Layout currentPageName="BookAppointment">
+              <BookAppointment />
+            </Layout>
+          }
+        />
 
-      <Route
-        path="/admin/slots"
-        element={
-          <AdminPage title="Slot Management" pageName="AdminSlots">
-            <AdminSlots />
-          </AdminPage>
-        }
-      />
+        <Route
+          path="/admin/slots"
+          element={
+            <AdminPage title="Slot Management" pageName="AdminSlots">
+              <AdminSlots />
+            </AdminPage>
+          }
+        />
 
-      <Route
-        path="/admin/users"
-        element={
-          <AdminPage title="User Management" pageName="UserManagement">
-            <UserManagement />
-          </AdminPage>
-        }
-      />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminPage title="User Management" pageName="UserManagement">
+              <UserManagement />
+            </AdminPage>
+          }
+        />
 
-      <Route
-        path="/admin/settings"
-        element={
-          <AdminPage title="Settings" pageName="AdminSettings">
-            <AdminSettings />
-          </AdminPage>
-        }
-      />
+        <Route
+          path="/admin/settings"
+          element={
+            <AdminPage title="Settings" pageName="AdminSettings">
+              <AdminSettings />
+            </AdminPage>
+          }
+        />
 
-      <Route
-        path="/admin/appointments"
-        element={
-          <AdminPage title="Appointments" pageName="AdminAppointments">
-            <AdminAppointments />
-          </AdminPage>
-        }
-      />
-    </Routes>
+        <Route
+          path="/admin/appointments"
+          element={
+            <AdminPage title="Appointments" pageName="AdminAppointments">
+              <AdminAppointments />
+            </AdminPage>
+          }
+        />
+      </Routes>
+      </ErrorBoundary>
     </>
   );
 }
