@@ -1,29 +1,17 @@
 import { useEffect, useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
 import type { AuthUser } from "../../api/authApi";
-import { getCurrentUser, redirectToLogin } from "../../api/authApi";
+import { redirectToLogin } from "../../api/authApi";
+import { useAuth } from "../../context/AuthContext";
 
 type RequireAdminProps = {
   children: React.ReactNode;
 };
 
 export default function RequireAdmin({ children }: RequireAdminProps) {
-  const [user, setUser] = useState<AuthUser>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const [redirecting, setRedirecting] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
-      } catch {
-        redirectToLogin(window.location.pathname);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
 
   // If user is not admin after loading, redirect to login with redirect param
   useEffect(() => {

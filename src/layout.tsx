@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
-import { useState, useEffect } from "react";
-import { getCurrentUser, logout } from "../src/api/authApi";
+import { useState } from "react";
+import { useAuth } from "./context/AuthContext";
 type LayoutProps = {
   children: React.ReactNode;
   currentPageName: string;
@@ -12,30 +12,11 @@ type User = {
 } | null;
 
 export default function Layout({ children, currentPageName }: LayoutProps) {
-  const [user, setUser] = useState<User>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
- useEffect(() => {
-  const initializeAuth = async () => {
-    try {
-      console.log("LAYOUT: Fetching current user...");
-      const currentUser = await getCurrentUser();
-      console.log("LAYOUT: Got user:", currentUser);
-      setUser(currentUser);
-    } catch (error) {
-      console.error("LAYOUT: Error fetching user:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  initializeAuth();
-}, []);
 
   async function handleLogout() {
     await logout();
-    setUser(null);
     window.location.href = "/BookAppointment";
   }
 
