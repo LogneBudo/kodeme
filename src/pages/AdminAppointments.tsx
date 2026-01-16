@@ -64,6 +64,7 @@ export default function AdminAppointments() {
 
   // Filter and search appointments
   const filteredAppointments = useMemo(() => {
+    if (!appointments || !Array.isArray(appointments)) return [];
     return appointments.filter((apt) => {
       // Status filter
       if (statusFilter !== "all" && apt.status !== statusFilter) {
@@ -87,6 +88,7 @@ export default function AdminAppointments() {
   // Status counts for filter options
   const statusCounts = useMemo(() => {
     const counts = { pending: 0, confirmed: 0, cancelled: 0 };
+    if (!appointments || !Array.isArray(appointments)) return counts;
     appointments.forEach((apt) => {
       if (apt.status in counts) {
         counts[apt.status as keyof typeof counts]++;

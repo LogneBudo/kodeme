@@ -42,6 +42,7 @@ export default function UserManagement() {
 
   // Filter and search users
   const filteredUsers = useMemo(() => {
+    if (!users || !Array.isArray(users)) return [];
     return users.filter((user) => {
       // Role filter
       if (roleFilter !== "all" && user.role !== roleFilter) {
@@ -61,6 +62,7 @@ export default function UserManagement() {
   // Role counts for filter options
   const roleCounts = useMemo(() => {
     const counts = { admin: 0, user: 0 };
+    if (!users || !Array.isArray(users)) return counts;
     users.forEach((user) => {
       if (user.role in counts) {
         counts[user.role as keyof typeof counts]++;
