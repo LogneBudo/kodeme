@@ -163,18 +163,20 @@ export default function SettingsPage() {
 
 	useEffect(() => {
 		loadSettings();
-		checkCalendarStatus();
+		// Note: calendar status check always returns false due to in-memory token storage in serverless
+		// Calendar connection is confirmed via OAuth redirect, not status polling
+		
 		// Check if returning from OAuth callback
 		const calendarParam = searchParams.get("calendar");
 		const providerParam = searchParams.get("provider");
 		if (calendarParam === "connected" || calendarParam === "callback_received") {
-			// Re-check calendar status from backend to confirm connection
-			setTimeout(() => checkCalendarStatus(), 500);
 			if (providerParam === "outlook") {
 				toast.success("Outlook Calendar connected!");
+				setOutlookConnected(true);
 				setOutlookConnecting(false);
 			} else {
 				toast.success("Google Calendar connected!");
+				setCalendarConnected(true);
 				setGoogleConnecting(false);
 			}
 			setActiveTab("calendar");
