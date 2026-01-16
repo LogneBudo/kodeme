@@ -19,8 +19,7 @@ export default function AdminAppointments() {
   );
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<AppointmentStatus>("pending");
-  const [editNotes, setEditNotes] = useState<string>("");
-
+  const [editNotes, setEditNotes] = useState<string>("");  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   function startEdit(apt: Appointment) {
     setEditingId(apt.id);
     setEditStatus(apt.status as AppointmentStatus);
@@ -34,6 +33,7 @@ export default function AdminAppointments() {
   }
 
   async function saveEdit(id: string) {
+    setActionLoading((prev) => ({ ...prev, [`save-${id}`]: true }));
     const updated = await updateAppointment(id, { status: editStatus, notes: editNotes });
     if (updated) {
       toast.success("Appointment updated");
@@ -41,11 +41,13 @@ export default function AdminAppointments() {
     } else {
       toast.error("Failed to update appointment");
     }
+    setActionLoading((prev) => ({ ...prev, [`save-${id}`]: false }));
     cancelEdit();
   }
 
   async function handleDelete(id: string) {
     if (!window.confirm("Delete this appointment?")) return;
+    setActionLoading((prev) => ({ ...prev, [`delete-${id}`]: true }));
     const ok = await deleteAppointment(id);
     if (ok) {
       toast.success("Appointment deleted");
@@ -53,6 +55,7 @@ export default function AdminAppointments() {
     } else {
       toast.error("Failed to delete appointment");
     }
+    setActionLoading((prev) => ({ ...prev, [`delete-${id}`]: false }));
   }
 
   // Helper to determine if appointment is in the past
@@ -117,13 +120,26 @@ export default function AdminAppointments() {
   // Render action buttons for each row
   function renderActions(apt: Appointment) {
     const isPast = isAppointmentPast(apt);
+    const isSaveLoading = actionLoading[`save-${apt.id}`];
+    const isDeleteLoading = actionLoading[`delete-${apt.id}`];
+    const isAnyLoading = isSaveLoading || isDeleteLoading;
+
     if (editingId === apt.id && !isPast) {
       return (
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => saveEdit(apt.id)} className={tableStyles.actionButtonSuccess}>
+          <button 
+            onClick={() => saveEdit(apt.id)} 
+            className={tableStyles.actionButtonSuccess}
+            disabled={isAnyLoading}
+          >
             <Save size={16} />
+            {isSaveLoading && " Saving..."}
           </button>
-          <button onClick={cancelEdit} className={tableStyles.actionButtonCancel}>
+          <button 
+            onClick={cancelEdit} 
+            className={tableStyles.actionButtonCancel}
+            disabled={isAnyLoading}
+          >
             <X size={16} />
           </button>
         </div>
@@ -132,7 +148,7 @@ export default function AdminAppointments() {
     return (
       <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
         <button
-          disabled={isPast}
+          disabled={isPast || isAnyLoading}
           onClick={() => startEdit(apt)}
           className={tableStyles.actionButton}
           style={{ background: "#2563eb", color: "white", border: "none" }}
@@ -140,12 +156,13 @@ export default function AdminAppointments() {
           <Edit2 size={16} />
         </button>
         <button
-          disabled={isPast}
+          disabled={isPast || isAnyLoading}
           onClick={() => handleDelete(apt.id)}
           className={tableStyles.actionButton}
           style={{ background: "#e11d48", color: "white", border: "none" }}
         >
           <Trash2 size={16} />
+          {isDeleteLoading && " Deleting..."}
         </button>
       </div>
     );

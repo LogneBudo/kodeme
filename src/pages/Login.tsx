@@ -2,6 +2,7 @@ import { useState } from "react";
 import { login } from "../api/authApi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Calendar, LogIn } from "lucide-react";
+import { validateEmail } from "../utils/validation";
 import styles from "./Login.module.css";
 
 export default function Login() {
@@ -15,6 +16,20 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || "Invalid email");
+      return;
+    }
+
+    // Validate password
+    if (!password.trim()) {
+      setError("Password is required");
+      return;
+    }
+
     setLoading(true);
 
     const result = await login(email, password);

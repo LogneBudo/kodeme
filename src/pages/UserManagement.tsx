@@ -13,22 +13,27 @@ export default function UserManagement() {
     () => listUsers(),
     []
   );
+  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
 
   async function handleToggleRole(userId: string, currentRole: "admin" | "user") {
+    setActionLoading((prev) => ({ ...prev, [userId]: true }));
     const newRole = currentRole === "admin" ? "user" : "admin";
     const success = await updateUserRole(userId, newRole);
     if (success) {
       await refetch();
     }
+    setActionLoading((prev) => ({ ...prev, [userId]: false }));
   }
 
   async function handleDeleteUser(userId: string) {
     if (!confirm("Are you sure you want to delete this user's role record?")) return;
     
+    setActionLoading((prev) => ({ ...prev, [`delete-${userId}`]: true }));
     const success = await deleteUser(userId);
     if (success) {
       await refetch();
     }
+    setActionLoading((prev) => ({ ...prev, [`delete-${userId}`]: false }));
   }
 
   // Column definitions for AdminTable
@@ -56,20 +61,26 @@ export default function UserManagement() {
 
   // Render action buttons for each row
   function renderActions(user: User) {
+    const isToggleLoading = actionLoading[user.id];
+    const isDeleteLoading = actionLoading[`delete-${user.id}`];
+    const isAnyLoading = isToggleLoading || isDeleteLoading;
+
     return (
       <div className={styles.actionContainer}>
         <button
           onClick={() => handleToggleRole(user.id, user.role)}
           className={tableStyles.actionButton}
+          disabled={isAnyLoading}
         >
-          Make {user.role === "admin" ? "User" : "Admin"}
+          {isToggleLoading ? "Updating..." : `Make ${user.role === "admin" ? "User" : "Admin"}`}
         </button>
         <button
           onClick={() => handleDeleteUser(user.id)}
           className={`${tableStyles.actionButton} ${tableStyles.actionButtonDanger}`}
+          disabled={isAnyLoading}
         >
           <Trash2 size={14} />
-          Delete
+          {isDeleteLoading ? "Deleting..." : "Delete"}
         </button>
       </div>
     );
