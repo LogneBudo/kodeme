@@ -4,10 +4,11 @@
   border-radius: 16px;
   padding: clamp(20px, 6vw, 40px);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  max-width: 520px;
+  max-width: 600px;
   width: 100%;
   position: relative;
   box-sizing: border-box;
+  margin: 16px auto 0;
 }
 
 /* Button Styles */
