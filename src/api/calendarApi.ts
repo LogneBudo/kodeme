@@ -11,9 +11,6 @@ export async function getCalendarEventsForWeek(
   endDate: Date
 ): Promise<CalendarEvent[]> {
   try {
-    // TODO: Implement actual OAuth2 calls to Google Calendar and Outlook Calendar APIs
-    // For now, return empty array - this will be populated once calendar auth is integrated
-    
     const response = await fetch(`${API_BASE}/api/calendar/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -23,8 +20,13 @@ export async function getCalendarEventsForWeek(
       }),
     });
 
+    // If calendar not connected (401), return empty array silently
+    if (response.status === 401) {
+      return [];
+    }
+
     if (!response.ok) {
-      console.error("Failed to fetch calendar events");
+      console.error("Failed to fetch calendar events:", response.status);
       return [];
     }
 

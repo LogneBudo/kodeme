@@ -97,10 +97,15 @@ function AdminSlots() {
         if (!isMounted) return;
         setCalendarEvents(events);
         setAppointments(weekAppointments);
+        
+        // Notify if calendar integration might need reconnection
+        if (events.length === 0) {
+          // Silently fail - calendar may not be connected or no events exist
+        }
       } catch (error) {
         console.error("Failed to load appointments or calendar events", error);
         if (isMounted) {
-          toast.error("Failed to load appointments or calendar events");
+          toast.error("Failed to load appointments. Calendar events may be unavailable if not connected.");
           setCalendarEvents([]);
           setAppointments([]);
         }
