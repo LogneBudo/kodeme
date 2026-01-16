@@ -75,12 +75,11 @@ export default function BookAppointment() {
         appointmentDate: selectedSlot.date,
       });
 
-      console.log("Appointment created:", appointment);
-      console.log("Marking slot as booked:", selectedSlot.id);
+
 
       // Mark the slot as booked
       const updatedSlot = await updateTimeSlot(selectedSlot.id, { status: "booked" });
-      console.log("Slot updated:", updatedSlot);
+
 
 
 

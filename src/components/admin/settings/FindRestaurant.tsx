@@ -56,26 +56,24 @@ async function fetchMapillaryImage(lat: number, lng: number): Promise<string | n
   if (!MAPILLARY_TOKEN) return null;
   try {
     const url = `https://graph.mapillary.com/images?fields=id,thumb_2048_url,thumb_1024_url&limit=1&closeto=${lng},${lat}&access_token=${MAPILLARY_TOKEN}`;
-    console.log('Fetching Mapillary from:', url);
     const res = await fetch(url);
-    console.log('Mapillary response status:', res.status);
     if (!res.ok) {
       const errorText = await res.text();
-      console.warn('Mapillary API error:', res.status, errorText);
+
       return null;
     }
     const json = await res.json();
-    console.log('Mapillary response data:', json);
+
     const item = json?.data?.[0];
     if (!item) {
-      console.log('No Mapillary images found at', lat, lng);
+
       return null;
     }
     const thumb = item?.thumb_2048_url || item?.thumb_1024_url;
-    console.log('Mapillary thumb URL:', thumb);
+
     return thumb || null;
   } catch (e) {
-    console.error('Mapillary fetch failed:', e);
+    // Mapillary fetch failed silently
     return null;
   }
 }

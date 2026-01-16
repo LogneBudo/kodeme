@@ -189,7 +189,7 @@ export default function SettingsPage() {
 	async function loadSettings() {
 		setLoading(true);
 		const data = await getSettings();
-		console.log("Loaded settings from Firestore:", data);
+
 		setSettings(data);
 		setSavedHash(hashSettings(data));
 		// If a city is already saved, populate the cityValidation state
@@ -233,7 +233,7 @@ export default function SettingsPage() {
 		if (!settings) return;
 		setSaving(true);
 		setSavedRecently(false);
-		console.log("Saving settings:", settings);
+
 		const success = await updateSettings(settings);
 		setSaving(false);
 		if (success) {

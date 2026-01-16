@@ -74,8 +74,7 @@ export default function SlotSelectionStep({
     
     try {
       const allSlots = await listTimeSlots();
-      console.log("All slots from API:", allSlots);
-      console.log("Date range:", { start, end });
+
 
       const availableSlots = allSlots.filter((slot) => {
         // Check if slot is within the requested date range
@@ -85,12 +84,12 @@ export default function SlotSelectionStep({
         // Check if slot is marked as available
         const isAvailable = slot.status === "available";
         
-        console.log(`Slot ${slot.id} (${slot.date} ${slot.time}): inRange=${inRange}, isAvailable=${isAvailable}, status=${slot.status}`);
+
         
         return inRange && isAvailable;
       });
 
-      console.log("Filtered available slots:", availableSlots);
+
 
       availableSlots.sort((a, b) => {
         const dateCompare = a.date.localeCompare(b.date);

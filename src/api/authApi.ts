@@ -14,7 +14,6 @@ let authInitialized = false;
 
 // Listen to auth state changes and update cache
 onAuthStateChanged(auth, async (user) => {
-  console.log("onAuthStateChanged fired, user:", user?.email);
   
   if (user) {
     try {
@@ -31,7 +30,7 @@ onAuthStateChanged(auth, async (user) => {
             email: user.email || "",
             role: userData.role || "user",
           };
-          console.log("User found in Firestore with role:", userData.role);
+
         } else {
           // User not in Firestore yet, default to user role
           cachedUser = {
@@ -39,7 +38,7 @@ onAuthStateChanged(auth, async (user) => {
             email: user.email || "",
             role: "user",
           };
-          console.log("User not in Firestore yet, defaulting to 'user' role");
+
           
           // Try to create the document (but don't block if it fails)
           try {
@@ -50,13 +49,13 @@ onAuthStateChanged(auth, async (user) => {
               createdAt: now,
               updatedAt: now,
             });
-            console.log("User document created in Firestore");
+
           } catch (createError) {
-            console.warn("Could not create user document (permission issue):", createError);
+
           }
         }
       } catch (firestoreError) {
-        console.warn("Firestore access issue:", firestoreError);
+
         // Still set user even if Firestore fails
         cachedUser = {
           uid: user.uid,
@@ -74,12 +73,11 @@ onAuthStateChanged(auth, async (user) => {
       };
     }
   } else {
-    console.log("User logged out");
+
     cachedUser = null;
   }
   
   authInitialized = true;
-  console.log("authInitialized set to true, cachedUser:", cachedUser?.email);
 });
 
 export async function getCurrentUser(): Promise<AuthUser> {
