@@ -11,7 +11,7 @@ import SlotSelectionStep from "../components/booking/SlotSelectionStep";
 import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
-import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings, createAppointmentWithSlot } from "../api/firebaseApi";
+import { getSettings, createAppointmentWithSlot } from "../api/firebaseApi";
 import styles from "./BookAppointment.module.css";
 import bookingStyles from "../components/booking/Booking.module.css";
 // 
