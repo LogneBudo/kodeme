@@ -3,7 +3,10 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 export default function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const clientId = process.env.MICROSOFT_CLIENT_ID;
-    if (!clientId) return res.status(500).json({ error: "Missing MICROSOFT_CLIENT_ID" });
+    if (!clientId) {
+      console.error("Missing MICROSOFT_CLIENT_ID environment variable");
+      return res.status(500).json({ error: "Missing Microsoft client credentials in environment" });
+    }
 
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const proto = (req.headers["x-forwarded-proto"] as string) || "https";
@@ -20,7 +23,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     const url = `https://login.microsoftonline.com/common/oauth2/v2.0/authorize?${params.toString()}`;
     return res.json({ url });
   } catch (error: any) {
-    console.error("/api/auth/outlook/init error", error);
+    console.error("/api/auth/outlook/init error:", error?.message, error?.stack);
     return res.status(500).json({ error: error?.message || "Failed to start Outlook OAuth" });
   }
 }

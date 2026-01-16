@@ -14,10 +14,12 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
-      return res.status(500).json({ error: "Missing Google client credentials" });
+      console.error("Missing Google OAuth credentials:", { clientId: !!clientId, clientSecret: !!clientSecret });
+      return res.status(500).json({ error: "Missing Google client credentials in environment" });
     }
 
-    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, getRedirectUri(req));
+    const redirectUri = getRedirectUri(req);
+    const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
     const url = oauth2Client.generateAuthUrl({
       access_type: "offline",
       prompt: "consent",
@@ -28,7 +30,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     });
     return res.json({ url });
   } catch (error: any) {
-    console.error("/api/auth/google/init error", error);
+    console.error("/api/auth/google/init error:", error?.message, error?.stack);
     return res.status(500).json({ error: error?.message || "Failed to start Google OAuth" });
   }
 }
