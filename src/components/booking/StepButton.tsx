@@ -13,7 +13,7 @@ interface StepButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
  * Reusable button component for booking steps
  * Supports multiple variants for different use cases
  */
-export default function StepButton({
+const StepButton = React.memo(function StepButton({
   variant = "primary",
   size = "md",
   icon,

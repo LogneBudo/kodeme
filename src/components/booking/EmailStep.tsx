@@ -1,4 +1,5 @@
 import { useState } from "react";
+import React from "react";
 import { Mail, ArrowRight } from "lucide-react";
 import StepContainer from "./StepContainer";
 import StyledInput from "./StyledInput";
@@ -11,7 +12,7 @@ type Props = {
   onNext: () => void;
 };
 
-export default function EmailStep({ email, setEmail, onNext }: Props) {
+const EmailStep = React.memo(function EmailStep({ email, setEmail, onNext }: Props) {
   const [error, setError] = useState("");
 
   const handleNext = () => {
@@ -52,4 +53,6 @@ export default function EmailStep({ email, setEmail, onNext }: Props) {
       </div>
     </StepContainer>
   );
-}
+});
+
+export default EmailStep;

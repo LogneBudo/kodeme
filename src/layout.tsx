@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "./context/AuthContext";
 import layoutStyles from "./layout.module.css";
 type LayoutProps = {
@@ -24,6 +24,12 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
     { name: "admin/users", label: "Users", icon: Users, adminOnly: true },
     { name: "admin/settings", label: "Settings", icon: Settings, adminOnly: true },
   ];
+
+  // Memoize filtered admin items to avoid re-computing on every render
+  const adminNavItems = useMemo(
+    () => navItems.filter(item => item.adminOnly),
+    [] // navItems is constant, so empty deps
+  );
 
   return (
     <div className={layoutStyles.layoutWrapper}>
@@ -52,7 +58,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
               </button>
               {mobileMenuOpen && (
                 <div className={layoutStyles.adminDropdownMenu}>
-                  {navItems.filter(item => item.adminOnly).map(item => {
+                  {adminNavItems.map(item => {
                     const Icon = item.icon;
                     const isActive = currentPageName === item.name;
                     return (

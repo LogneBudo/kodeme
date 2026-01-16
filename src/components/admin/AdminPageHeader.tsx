@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import React from "react";
 import styles from "../pages/AdminBase.module.css";
 
 interface AdminPageHeaderProps {
@@ -7,7 +8,7 @@ interface AdminPageHeaderProps {
   subtitle: string;
 }
 
-export default function AdminPageHeader({ icon: Icon, title, subtitle }: AdminPageHeaderProps) {
+const AdminPageHeader = React.memo(function AdminPageHeader({ icon: Icon, title, subtitle }: AdminPageHeaderProps) {
   return (
     <div className={styles.header}>
       <div className={styles.titleGroup}>
@@ -21,4 +22,6 @@ export default function AdminPageHeader({ icon: Icon, title, subtitle }: AdminPa
       </div>
     </div>
   );
-}
+});
+
+export default AdminPageHeader;

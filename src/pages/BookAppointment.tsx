@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import zoomImg from "../assets/locations/zoom.jpg";
 import premisesImg from "../assets/locations/premises.jpg";
 import restaurantImg from "../assets/locations/restaurant.jpg";
@@ -59,7 +59,7 @@ export default function BookAppointment() {
   // Use Firebase API for appointment creation
   // ---------------------------------------------------------
 
-  const handleBook = async () => {
+  const handleBook = useCallback(async () => {
     if (!selectedSlot) return;
 
     setIsBooking(true);
@@ -83,9 +83,9 @@ export default function BookAppointment() {
     } finally {
       setIsBooking(false);
     }
-  };
+  }, [selectedSlot, email, selectedLocation, locationDetails]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setCurrentStep(1);
     setEmail("");
     setSelectedLocation("other");
@@ -93,7 +93,7 @@ export default function BookAppointment() {
     setTimeframe("");
     setSelectedSlot(null);
     setBookedAppointment(null);
-  };
+  }, []);
 
   const slideVariants = {
     enter: (direction: number) => ({ x: direction > 0 ? 100 : -100, opacity: 0 }),
@@ -118,23 +118,23 @@ export default function BookAppointment() {
   };
 
   // Step transition with validation
-  const goToStep2 = () => {
+  const goToStep2 = useCallback(() => {
     if (isEmailValid()) {
       setCurrentStep(2);
     }
-  };
+  }, [email]);
 
-  const goToStep3 = () => {
+  const goToStep3 = useCallback(() => {
     if (isLocationValid()) {
       setCurrentStep(3);
     }
-  };
+  }, [selectedLocation, locationDetails]);
 
-  const goToStep4 = () => {
+  const goToStep4 = useCallback(() => {
     if (isTimeframeValid()) {
       setCurrentStep(4);
     }
-  };
+  }, [timeframe]);
 
   return (
     <>

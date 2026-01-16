@@ -1,4 +1,5 @@
 import { TableSkeletonBody } from "../skeletons/TableSkeleton";
+import { useMemo } from "react";
 
 export interface Column<T> {
   key: Extract<keyof T, string>;

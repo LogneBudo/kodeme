@@ -8,7 +8,7 @@ interface SelectedRestaurantListProps {
 }
 
 
-const SelectedRestaurantList: React.FC<SelectedRestaurantListProps> = ({ restaurants }) => {
+const SelectedRestaurantList = React.memo(function SelectedRestaurantList({ restaurants }: SelectedRestaurantListProps) {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   if (!restaurants || restaurants.length === 0) {
     return <div className="empty-restaurant-list">No restaurants selected yet.</div>;
@@ -58,6 +58,6 @@ const SelectedRestaurantList: React.FC<SelectedRestaurantListProps> = ({ restaur
       ))}
     </ul>
   );
-};
+});
 
 export default SelectedRestaurantList;

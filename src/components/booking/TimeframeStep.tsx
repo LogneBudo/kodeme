@@ -1,4 +1,5 @@
 import { Calendar, Clock, CalendarDays, CalendarRange, Zap, ArrowLeft } from "lucide-react";
+import React from "react";
 import StepContainer from "./StepContainer";
 import StepButton from "./StepButton";
 
@@ -16,7 +17,7 @@ type Props = {
   onBack: () => void;
 };
 
-export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe, onNext, onBack }: Props) {
+const TimeframeStep = React.memo(function TimeframeStep({ selectedTimeframe, setSelectedTimeframe, onNext, onBack }: Props) {
   return (
     <StepContainer
       icon={Calendar}
@@ -94,4 +95,6 @@ export default function TimeframeStep({ selectedTimeframe, setSelectedTimeframe,
       </StepButton>
     </StepContainer>
   );
-}
+});
+
+export default TimeframeStep;

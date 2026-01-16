@@ -1,3 +1,5 @@
+import React from "react";
+
 /**
  * Generic skeleton component for content placeholders
  */
@@ -7,7 +9,7 @@ interface SkeletonProps {
   height?: string;
 }
 
-export default function Skeleton({
+const Skeleton = React.memo(function Skeleton({
   lines = 3,
   width = "100%",
   height = "16px",
@@ -29,4 +31,6 @@ export default function Skeleton({
       ))}
     </div>
   );
-}
+});
+
+export default Skeleton;

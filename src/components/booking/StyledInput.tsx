@@ -10,7 +10,7 @@ interface StyledInputProps
  * Reusable styled input component with error handling
  * Used across booking steps for consistent input styling
  */
-export default function StyledInput({
+const StyledInput = React.memo(function StyledInput({
   error,
   label,
   ...props
@@ -57,4 +57,6 @@ export default function StyledInput({
       )}
     </div>
   );
-}
+});
+
+export default StyledInput;

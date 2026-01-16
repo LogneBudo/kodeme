@@ -12,7 +12,7 @@ interface StepContainerProps {
  * Reusable container for booking step layouts
  * Provides consistent styling and header with icon
  */
-export default function StepContainer({
+const StepContainer = React.memo(function StepContainer({
   icon: Icon,
   title,
   subtitle,
@@ -71,4 +71,6 @@ export default function StepContainer({
       {children}
     </div>
   );
-}
+});
+
+export default StepContainer;
