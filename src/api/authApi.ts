@@ -125,6 +125,6 @@ export async function logout(): Promise<void> {
   cachedUser = null;
 }
 
-export function redirectToLogin(path: string) {
+export function redirectToLogin(path: string): void {
   window.location.href = "/admin/login?redirect=" + encodeURIComponent(path);
 }
