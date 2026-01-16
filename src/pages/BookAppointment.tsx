@@ -107,6 +107,41 @@ export default function BookAppointment() {
     exit: (direction: number) => ({ x: direction < 0 ? 100 : -100, opacity: 0 }),
   };
 
+  // Validation functions
+  const validateEmail = (email: string) => {
+    return email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validateLocation = () => {
+    if (!selectedLocation) return false;
+    if (selectedLocation === "restaurant" && !locationDetails.trim()) return false;
+    if ((selectedLocation === "other" || selectedLocation === "your_premises") && !locationDetails.trim()) return false;
+    return true;
+  };
+
+  const validateTimeframe = () => {
+    return timeframe.trim() !== "";
+  };
+
+  // Step transition with validation
+  const goToStep2 = () => {
+    if (validateEmail(email)) {
+      setCurrentStep(2);
+    }
+  };
+
+  const goToStep3 = () => {
+    if (validateLocation()) {
+      setCurrentStep(3);
+    }
+  };
+
+  const goToStep4 = () => {
+    if (validateTimeframe()) {
+      setCurrentStep(4);
+    }
+  };
+
   return (
     <>
       {currentStep === 2 && (
@@ -151,7 +186,7 @@ export default function BookAppointment() {
                 <EmailStep
                   email={email}
                   setEmail={setEmail}
-                  onNext={() => setCurrentStep(2)}
+                  onNext={goToStep2}
                 />
               </motion.div>
             ) : currentStep === 2 ? (
@@ -171,7 +206,7 @@ export default function BookAppointment() {
                   setLocationDetails={setLocationDetails}
                   restaurants={restaurants}
                   restaurantsLoading={loadingRestaurants}
-                  onNext={() => setCurrentStep(3)}
+                  onNext={goToStep3}
                   onBack={() => setCurrentStep(1)}
                 />
               </motion.div>
@@ -188,7 +223,7 @@ export default function BookAppointment() {
                 <TimeframeStep
                   selectedTimeframe={timeframe}
                   setSelectedTimeframe={setTimeframe}
-                  onNext={() => setCurrentStep(4)}
+                  onNext={goToStep4}
                   onBack={() => setCurrentStep(2)}
                 />
               </motion.div>
