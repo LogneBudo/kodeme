@@ -1,66 +1,53 @@
-.page {
-  height: calc(100vh - 60px);
-  background: linear-gradient(to bottom right, #f8fafc, #f1f5f9);
-  width: 100%;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
+/* UserManagement Page Styles */
 
-.content {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 15px;
-  box-sizing: border-box;
-}
-
-.header {
-  display: flex;
-  justify-content: space-between;
+.roleBadge {
+  display: inline-flex;
   align-items: center;
-  margin-bottom: 32px;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.roleBadgeAdmin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.roleBadgeUser {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.infoBox {
+  padding: 16px;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.infoIcon {
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
-.titleGroup {
-  display: flex;
-  flex-direction: column;
+.infoText {
+  font-size: 14px;
+  color: #92400e;
+  line-height: 1.5;
 }
 
-.titleRow {
+.infoText strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.actionContainer {
   display: flex;
-  align-items: center;
   gap: 8px;
-  margin-bottom: 8px;
-}
-
-.titleIcon {
-  width: 40px;
-  height: 40px;
-  background: #0f172a;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
-}
-
-.subtitle {
-  color: #64748b;
-  font-size: 16px;
-  margin: 0;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 60px 0;
-  color: #666;
+  justify-content: flex-end;
 }

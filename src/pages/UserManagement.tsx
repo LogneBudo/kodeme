@@ -4,7 +4,8 @@ import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-rea
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
 import tableStyles from "../components/admin/AdminTable.module.css";
-import styles from "./AdminBase.module.css";
+import baseStyles from "./AdminBase.module.css";
+import styles from "./UserManagement.module.css";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -48,18 +49,7 @@ export default function UserManagement() {
       key: "role",
       label: "Role",
       render: (value, user) => (
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "6px",
-            padding: "4px 10px",
-            borderRadius: "4px",
-            fontSize: "13px",
-            background: user.role === "admin" ? "#fef3c7" : "#e5e7eb",
-            color: user.role === "admin" ? "#92400e" : "#374151",
-          }}
-        >
+        <div className={`${styles.roleBadge} ${user.role === "admin" ? styles.roleBadgeAdmin : styles.roleBadgeUser}`}>
           {user.role === "admin" ? <Shield size={14} /> : <UserIcon size={14} />}
           {user.role}
         </div>
@@ -75,7 +65,7 @@ export default function UserManagement() {
   // Render action buttons for each row
   function renderActions(user: User) {
     return (
-      <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+      <div className={styles.actionContainer}>
         <button
           onClick={() => handleToggleRole(user.id, user.role)}
           className={tableStyles.actionButton}
@@ -94,27 +84,19 @@ export default function UserManagement() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.content}>
+    <div className={baseStyles.page}>
+      <div className={baseStyles.content}>
         <AdminPageHeader 
           icon={Users}
           title="User Management"
           subtitle="Manage user roles and permissions"
         />
 
-      <div style={{
-        padding: "16px",
-        background: "#fef3c7",
-        border: "1px solid #fbbf24",
-        borderRadius: "8px",
-        marginBottom: "24px",
-        display: "flex",
-        gap: "12px",
-        alignItems: "start",
-      }}>
-        <AlertCircle size={20} color="#92400e" style={{ flexShrink: 0, marginTop: "2px" }} />
-        <div style={{ fontSize: "14px", color: "#92400e" }}>
-          <strong>Note:</strong> Users must be created in Firebase Authentication first. 
+      <div className={styles.infoBox}>
+        <AlertCircle size={20} color="#92400e" className={styles.infoIcon} />
+        <div className={styles.infoText}>
+          <strong>Note:</strong>
+          Users must be created in Firebase Authentication first. 
           After creating a user in Firebase Auth, they will appear here automatically when they first log in. 
           You can then manage their roles.
         </div>
