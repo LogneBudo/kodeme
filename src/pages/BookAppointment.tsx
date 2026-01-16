@@ -78,7 +78,7 @@ export default function BookAppointment() {
 
 
       // Mark the slot as booked
-      const updatedSlot = await updateTimeSlot(selectedSlot.id, { status: "booked" });
+      await updateTimeSlot(selectedSlot.id, { status: "booked" });
 
 
 

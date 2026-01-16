@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, ShieldAlert } from "lucide-react";
-import type { AuthUser } from "../../api/authApi";
+import { Loader2 } from "lucide-react";
 import { redirectToLogin } from "../../api/authApi";
 import { useAuth } from "../../context/AuthContext";
 
@@ -34,33 +33,6 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
     justifyContent: "center",
     background: "linear-gradient(to bottom right, #f8fafc, #f1f5f9)",
     padding: "20px",
-  };
-
-  const cardStyle: React.CSSProperties = {
-    textAlign: "center",
-    maxWidth: "360px",
-  };
-
-  const iconCircle: React.CSSProperties = {
-    width: "80px",
-    height: "80px",
-    background: "#fee2e2",
-    borderRadius: "50%",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    margin: "0 auto 24px",
-  };
-
-  const primaryButton: React.CSSProperties = {
-    background: "#0f172a",
-    color: "white",
-    border: "none",
-    borderRadius: "10px",
-    padding: "12px 20px",
-    cursor: "pointer",
-    fontSize: "16px",
-    marginTop: "12px",
   };
 
   // -----------------------------

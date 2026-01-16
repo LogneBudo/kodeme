@@ -58,8 +58,6 @@ async function fetchMapillaryImage(lat: number, lng: number): Promise<string | n
     const url = `https://graph.mapillary.com/images?fields=id,thumb_2048_url,thumb_1024_url&limit=1&closeto=${lng},${lat}&access_token=${MAPILLARY_TOKEN}`;
     const res = await fetch(url);
     if (!res.ok) {
-      const errorText = await res.text();
-
       return null;
     }
     const json = await res.json();

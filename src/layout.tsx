@@ -8,10 +8,6 @@ type LayoutProps = {
   currentPageName: string;
 };
 
-type User = {
-  role: string;
-} | null;
-
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
