@@ -1,9 +1,9 @@
 import { Loader2 } from "lucide-react";
 
 export interface Column<T> {
-  key: string;
+  key: Extract<keyof T, string>;
   label: string;
-  render?: (value: any, row: T, isEditing: boolean) => React.ReactNode;
+  render?: (value: T[keyof T], row: T, isEditing: boolean) => React.ReactNode;
   textAlign?: "left" | "right" | "center";
   width?: string;
 }
@@ -73,7 +73,7 @@ export default function AdminTable<T extends { id?: string | number }>({
             const disabled = isRowDisabled(row);
             const rowKey = keyExtractor(row, index);
             // Check if row has an _isEditing state (for edit mode)
-            const isEditing = (row as any)._isEditing || false;
+            const isEditing = Boolean(((row as unknown) as Record<string, unknown>)._isEditing);
 
             return (
               <tr
@@ -87,8 +87,8 @@ export default function AdminTable<T extends { id?: string | number }>({
                 }}
               >
                 {columns.map((col) => {
-                  const value = (row as any)[col.key];
-                  const content = col.render ? col.render(value, row, isEditing) : value;
+                  const value = row[col.key] as T[keyof T];
+                  const content = col.render ? col.render(value, row, isEditing) : String(value);
 
                   return (
                     <td

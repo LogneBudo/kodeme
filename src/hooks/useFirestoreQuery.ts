@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
-export interface UseFirestoreQueryOptions<T> {
+export interface UseFirestoreQueryOptions {
   onError?: (error: Error) => void;
 }
 
@@ -35,8 +35,8 @@ export interface UseFirestoreQueryResult<T> {
  */
 export function useFirestoreQuery<T>(
   fetchFn: () => Promise<T>,
-  deps: React.DependencyList = [],
-  options: UseFirestoreQueryOptions<T> = {}
+  deps?: React.DependencyList,
+  options: UseFirestoreQueryOptions = {}
 ): UseFirestoreQueryResult<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +63,7 @@ export function useFirestoreQuery<T>(
 
   useEffect(() => {
     refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   return { data, loading, error, refetch };
