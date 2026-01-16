@@ -1,6 +1,8 @@
 import type { CalendarEvent } from "../types/calendar";
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
+// Default to same-origin /api in hosted environments. For local dev without `vercel dev`,
+// set VITE_BACKEND_URL=http://localhost:3001 in .env.local to point to a local server.
+const API_BASE = import.meta.env.VITE_BACKEND_URL ?? "";
 
 // Fetch calendar events for a given date range
 // This would be implemented with actual OAuth calls to Google/Outlook APIs

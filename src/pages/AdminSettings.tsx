@@ -211,7 +211,7 @@ export default function SettingsPage() {
 
 	async function checkCalendarStatus() {
 		try {
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
+			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
 			const response = await fetch(`${backendUrl}/api/calendar/status`);
 			const data = await response.json();
 			setCalendarConnected(data.connected);
@@ -282,8 +282,8 @@ export default function SettingsPage() {
 	async function handleConnectGoogle() {
 		try {
 			setGoogleConnecting(true);
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
-			const response = await fetch(`${backendUrl}/auth/google/init`);
+			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
+			const response = await fetch(`${backendUrl}/api/auth/google/init`);
 			const data = await response.json();
 			if (data.url) {
 				// Redirect to Google OAuth
@@ -302,8 +302,8 @@ export default function SettingsPage() {
 	async function handleConnectOutlook() {
 		try {
 			setOutlookConnecting(true);
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "http://localhost:3001";
-			const response = await fetch(`${backendUrl}/auth/outlook/init`);
+			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
+			const response = await fetch(`${backendUrl}/api/auth/outlook/init`);
 			const data = await response.json();
 			if (data.url) {
 				// Redirect to Microsoft OAuth
