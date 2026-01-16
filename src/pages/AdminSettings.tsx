@@ -217,20 +217,6 @@ export default function SettingsPage() {
 		setLoading(false);
 	}
 
-	async function checkCalendarStatus() {
-		try {
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
-			const response = await fetch(`${backendUrl}/api/calendar/status`);
-			const data = await response.json();
-			setCalendarConnected(data.connected);
-			setOutlookConnected(data.outlookConnected || false);
-		} catch (error) {
-			console.error("Failed to check calendar status:", error);
-			setCalendarConnected(false);
-			setOutlookConnected(false);
-		}
-	}
-
 	async function handleSave() {
 		if (!settings) return;
 		setSaving(true);
