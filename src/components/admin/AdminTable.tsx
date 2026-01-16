@@ -1,4 +1,3 @@
-import { Loader2 } from "lucide-react";
 import { TableSkeletonBody } from "../skeletons/TableSkeleton";
 
 export interface Column<T> {

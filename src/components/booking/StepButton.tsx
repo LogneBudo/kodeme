@@ -1,12 +1,12 @@
-import React from "lucide-react";
+import React from "react";
+import type { ReactNode, ButtonHTMLAttributes } from "react";
 
-interface StepButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface StepButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "ghost";
   size?: "sm" | "md" | "lg";
-  icon?: React.ReactNode;
+  icon?: ReactNode;
   loading?: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 /**
@@ -19,7 +19,7 @@ export default function StepButton({
   icon,
   loading = false,
   children,
-  disabled,
+  disabled = false,
   ...props
 }: StepButtonProps) {
   const variantStyles = {
@@ -74,7 +74,7 @@ export default function StepButton({
         gap: "8px",
         fontWeight: 500,
         transition: "all 0.2s ease",
-        ...props.style,
+        ...(props.style as React.CSSProperties),
       }}
     >
       {loading && (
