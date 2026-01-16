@@ -49,10 +49,16 @@ const SETTINGS_GROUPS = [
 	},
 ];
 
+// Utility to hash settings for change detection
+function hashSettings(settings: Settings | null): string {
+	if (!settings) return "";
+	return JSON.stringify(settings);
+}
+
 export default function SettingsPage() {
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
-	const [lastSavedSettings, setLastSavedSettings] = useState<Settings | null>(null);
+	const [savedHash, setSavedHash] = useState<string>("");
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [savedRecently, setSavedRecently] = useState(false);
@@ -185,7 +191,7 @@ export default function SettingsPage() {
 		const data = await getSettings();
 		console.log("Loaded settings from Firestore:", data);
 		setSettings(data);
-		setLastSavedSettings(data);
+		setSavedHash(hashSettings(data));
 		// If a city is already saved, populate the cityValidation state
 		if (data.restaurantCity) {
 			console.log("Setting city validation with:", {
@@ -233,21 +239,15 @@ export default function SettingsPage() {
 		if (success) {
 			toast.success("Settings saved successfully!");
 			setSavedRecently(true);
-			setLastSavedSettings(JSON.parse(JSON.stringify(settings)));
+			setSavedHash(hashSettings(settings));
 			setTimeout(() => setSavedRecently(false), 2000);
 		} else {
 			toast.error("Failed to save settings");
 		}
 	}
 
-	// Check if there are unsaved changes
-	const hasUnsavedChanges = settings && lastSavedSettings && (
-		settings.restaurantCity !== lastSavedSettings.restaurantCity ||
-		settings.restaurantCountry !== lastSavedSettings.restaurantCountry ||
-		settings.restaurantPerimeterKm !== lastSavedSettings.restaurantPerimeterKm ||
-		JSON.stringify(settings.restaurants) !== JSON.stringify(lastSavedSettings.restaurants) ||
-		settings.curatedList !== lastSavedSettings.curatedList
-	);
+	// Check if there are unsaved changes using hash comparison
+	const hasUnsavedChanges = settings && savedHash !== "" && hashSettings(settings) !== savedHash;
 
 	function handleAddBlockedSlot() {
 		if (!settings) return;
