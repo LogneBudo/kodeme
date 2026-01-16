@@ -53,7 +53,7 @@ kodeme/
    git push heroku main
    ```
 
-**Option B: Deploy to Railway/Render**
+**Option B: Deploy to Render**
 - Connect GitHub repo
 - Set environment variables in dashboard
 - Deploy
