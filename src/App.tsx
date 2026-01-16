@@ -6,7 +6,7 @@ import AdminSlots from "../src/pages/AdminSlots";
 import UserManagement from "../src/pages/UserManagement";
 import AdminSettings from "../src/pages/AdminSettings";
 import Login from "../src/pages/Login";
-import RequireAdmin from "./components/admin/RequireAdmin";
+import AdminPage from "./components/admin/AdminPage";
 import AdminAppointments from "../src/pages/AdminAppointments";
 import GoogleOAuthCallback from "../src/pages/GoogleOAuthCallback";
 import OutlookOAuthCallback from "../src/pages/OutlookOAuthCallback";
@@ -36,44 +36,36 @@ export default function App() {
       <Route
         path="/admin/slots"
         element={
-          <RequireAdmin>
-            <Layout currentPageName="AdminSlots">
-              <AdminSlots />
-            </Layout>
-          </RequireAdmin>
+          <AdminPage title="Slot Management" pageName="AdminSlots">
+            <AdminSlots />
+          </AdminPage>
         }
       />
 
       <Route
         path="/admin/users"
         element={
-          <RequireAdmin>
-            <Layout currentPageName="UserManagement">
-              <UserManagement />
-            </Layout>
-          </RequireAdmin>
+          <AdminPage title="User Management" pageName="UserManagement">
+            <UserManagement />
+          </AdminPage>
         }
       />
 
       <Route
         path="/admin/settings"
         element={
-          <RequireAdmin>
-            <Layout currentPageName="AdminSettings">
-              <AdminSettings />
-            </Layout>
-          </RequireAdmin>
+          <AdminPage title="Settings" pageName="AdminSettings">
+            <AdminSettings />
+          </AdminPage>
         }
       />
-      // Add AdminAppointments route
+
       <Route
         path="/admin/appointments"
         element={
-          <RequireAdmin>
-            <Layout currentPageName="AdminAppointments">
-              <AdminAppointments />
-            </Layout>
-          </RequireAdmin>
+          <AdminPage title="Appointments" pageName="AdminAppointments">
+            <AdminAppointments />
+          </AdminPage>
         }
       />
     </Routes>
