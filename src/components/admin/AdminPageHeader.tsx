@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import React from "react";
-import styles from "../pages/AdminBase.module.css";
+import styles from "../../pages/AdminBase.module.css";
 
 interface AdminPageHeaderProps {
   icon: LucideIcon;
