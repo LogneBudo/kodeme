@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { listAppointments, updateAppointment, deleteAppointment } from "../api/firebaseApi";
 import type { Appointment } from "../types/appointment";
 import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
+import AdminToolbar from "../components/admin/AdminToolbar";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
 import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
 import tableStyles from "../components/admin/AdminTable.module.css";
@@ -20,6 +21,9 @@ export default function AdminAppointments() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editStatus, setEditStatus] = useState<AppointmentStatus>("pending");
   const [editNotes, setEditNotes] = useState<string>("");  const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   function startEdit(apt: Appointment) {
     setEditingId(apt.id);
     setEditStatus(apt.status as AppointmentStatus);
@@ -56,6 +60,58 @@ export default function AdminAppointments() {
       toast.error("Failed to delete appointment");
     }
     setActionLoading((prev) => ({ ...prev, [`delete-${id}`]: false }));
+  }
+
+  // Filter and search appointments
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter((apt) => {
+      // Status filter
+      if (statusFilter !== "all" && apt.status !== statusFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesEmail = apt.email?.toLowerCase().includes(query);
+        const matchesLocation = apt.locationDetails?.type?.toLowerCase().includes(query) ||
+                               apt.locationDetails?.details?.toLowerCase().includes(query);
+        const matchesDate = apt.date?.includes(query) || apt.appointmentDate?.includes(query);
+        return matchesEmail || matchesLocation || matchesDate;
+      }
+      
+      return true;
+    });
+  }, [appointments, statusFilter, searchQuery]);
+
+  // Status counts for filter options
+  const statusCounts = useMemo(() => {
+    const counts = { pending: 0, confirmed: 0, cancelled: 0 };
+    appointments.forEach((apt) => {
+      if (apt.status in counts) {
+        counts[apt.status as keyof typeof counts]++;
+      }
+    });
+    return counts;
+  }, [appointments]);
+
+  // Bulk delete handler
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    if (!window.confirm(`Delete ${selectedIds.size} selected appointment${selectedIds.size > 1 ? 's' : ''}?`)) return;
+    
+    const deletePromises = Array.from(selectedIds).map(id => deleteAppointment(id));
+    const results = await Promise.all(deletePromises);
+    
+    const successCount = results.filter(Boolean).length;
+    if (successCount > 0) {
+      toast.success(`Deleted ${successCount} appointment${successCount > 1 ? 's' : ''}`);
+      await refetch();
+      setSelectedIds(new Set());
+    }
+    if (successCount < selectedIds.size) {
+      toast.error(`Failed to delete ${selectedIds.size - successCount} appointment${selectedIds.size - successCount > 1 ? 's' : ''}`);
+    }
   }
 
   // Helper to determine if appointment is in the past
@@ -177,9 +233,27 @@ export default function AdminAppointments() {
           subtitle="View and manage all bookings"
         />
 
+        <AdminToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search by email, location, or date..."
+          filterValue={statusFilter}
+          onFilterChange={setStatusFilter}
+          filterLabel="Status"
+          filterOptions={[
+            { value: "pending", label: "Pending", count: statusCounts.pending },
+            { value: "confirmed", label: "Confirmed", count: statusCounts.confirmed },
+            { value: "cancelled", label: "Cancelled", count: statusCounts.cancelled },
+          ]}
+          selectedCount={selectedIds.size}
+          onBulkDelete={handleBulkDelete}
+          onRefresh={refetch}
+          showBulkActions={true}
+        />
+
         <AdminTable
           columns={columns}
-          data={appointments}
+          data={filteredAppointments}
           loading={loading}
           emptyMessage="No appointments found."
           renderActions={renderActions}

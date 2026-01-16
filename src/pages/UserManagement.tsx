@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
+import AdminToolbar from "../components/admin/AdminToolbar";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
 import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
 import tableStyles from "../components/admin/AdminTable.module.css";
@@ -14,6 +15,9 @@ export default function UserManagement() {
     []
   );
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   async function handleToggleRole(userId: string, currentRole: "admin" | "user") {
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
@@ -34,6 +38,50 @@ export default function UserManagement() {
       await refetch();
     }
     setActionLoading((prev) => ({ ...prev, [`delete-${userId}`]: false }));
+  }
+
+  // Filter and search users
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // Role filter
+      if (roleFilter !== "all" && user.role !== roleFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        return user.email.toLowerCase().includes(query);
+      }
+      
+      return true;
+    });
+  }, [users, roleFilter, searchQuery]);
+
+  // Role counts for filter options
+  const roleCounts = useMemo(() => {
+    const counts = { admin: 0, user: 0 };
+    users.forEach((user) => {
+      if (user.role in counts) {
+        counts[user.role as keyof typeof counts]++;
+      }
+    });
+    return counts;
+  }, [users]);
+
+  // Bulk delete handler
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} selected user${selectedIds.size > 1 ? 's' : ''}?`)) return;
+    
+    const deletePromises = Array.from(selectedIds).map(id => deleteUser(id));
+    const results = await Promise.all(deletePromises);
+    
+    const successCount = results.filter(Boolean).length;
+    if (successCount > 0) {
+      await refetch();
+      setSelectedIds(new Set());
+    }
   }
 
   // Column definitions for AdminTable
@@ -95,6 +143,23 @@ export default function UserManagement() {
           subtitle="Manage user roles and permissions"
         />
 
+        <AdminToolbar
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchPlaceholder="Search by email..."
+          filterValue={roleFilter}
+          onFilterChange={setRoleFilter}
+          filterLabel="Role"
+          filterOptions={[
+            { value: "admin", label: "Admin", count: roleCounts.admin },
+            { value: "user", label: "User", count: roleCounts.user },
+          ]}
+          selectedCount={selectedIds.size}
+          onBulkDelete={handleBulkDelete}
+          onRefresh={refetch}
+          showBulkActions={true}
+        />
+
       <div className={styles.infoBox}>
         <AlertCircle size={20} color="#92400e" className={styles.infoIcon} />
         <div className={styles.infoText}>
@@ -107,7 +172,7 @@ export default function UserManagement() {
 
       <AdminTable
         columns={columns}
-        data={users}
+        data={filteredUsers}
         loading={loading}
         emptyMessage="No users found. Users will appear here once they log in for the first time."
         renderActions={renderActions}
