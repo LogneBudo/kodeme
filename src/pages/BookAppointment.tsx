@@ -11,7 +11,7 @@ import SlotSelectionStep from "../components/booking/SlotSelectionStep";
 import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
-import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings } from "../api/firebaseApi";
+import { updateTimeSlot, createAppointment as createFirebaseAppointment, getSettings, createAppointmentWithSlot } from "../api/firebaseApi";
 import styles from "./BookAppointment.module.css";
 import bookingStyles from "../components/booking/Booking.module.css";
 // 
@@ -64,7 +64,8 @@ export default function BookAppointment() {
     setIsBooking(true);
 
     try {
-      const appointment = await createFirebaseAppointment({
+      // Use atomic operation: create appointment + mark slot as booked
+      const appointment = await createAppointmentWithSlot({
         email,
         slotId: selectedSlot.id,
         locationDetails: {
@@ -73,15 +74,7 @@ export default function BookAppointment() {
         },
         status: "confirmed",
         appointmentDate: selectedSlot.date,
-      });
-
-
-
-      // Mark the slot as booked
-      await updateTimeSlot(selectedSlot.id, { status: "booked" });
-
-
-
+      }, selectedSlot.id);
 
       setBookedAppointment({ ...appointment, time: selectedSlot.time, date: selectedSlot.date });
     } catch (error) {

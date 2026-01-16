@@ -11,6 +11,7 @@ import {
   where,
   orderBy,
   Timestamp,
+  writeBatch,
 } from "firebase/firestore";
 import { db } from "../firebase";
 import type { TimeSlot } from "../types/timeSlot";
@@ -249,6 +250,54 @@ export async function createAppointment(
     return getAppointment(docRef.id) as Promise<Appointment>;
   } catch (error) {
     console.error("Error creating appointment:", error);
+    throw error;
+  }
+}
+
+// Atomic booking: create appointment + mark slot as booked in a single transaction
+export async function createAppointmentWithSlot(
+  appointmentData: Omit<Appointment, "id" | "createdAt" | "expiresAt">,
+  slotId: string
+): Promise<Appointment> {
+  try {
+    const batch = writeBatch(db);
+    
+    // Create appointment document
+    const aptsRef = collection(db, "appointments");
+    const appointmentDocRef = doc(aptsRef); // Generate new doc ref
+    const now = Timestamp.now();
+    const expiresAt = new Date(now.toDate());
+    expiresAt.setDate(expiresAt.getDate() + 90);
+    
+    const appointmentPayload = {
+      slotId: appointmentData.slotId,
+      email: appointmentData.email,
+      locationDetails: {
+        type: appointmentData.locationDetails?.type,
+      },
+      status: appointmentData.status,
+      appointmentDate: appointmentData.appointmentDate,
+      createdAt: now,
+      expiresAt,
+      notes: appointmentData.notes,
+    };
+    
+    batch.set(appointmentDocRef, appointmentPayload);
+    
+    // Update slot status to booked
+    const slotRef = doc(db, "time_slots", slotId);
+    batch.update(slotRef, {
+      status: "booked",
+      updatedAt: now,
+    });
+    
+    // Commit both operations atomically
+    await batch.commit();
+    
+    // Return the created appointment
+    return getAppointment(appointmentDocRef.id) as Promise<Appointment>;
+  } catch (error) {
+    console.error("Error creating appointment with slot:", error);
     throw error;
   }
 }
