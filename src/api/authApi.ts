@@ -83,21 +83,32 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 export async function getCurrentUser(): Promise<AuthUser> {
-  // If cache is available, return it immediately
-  if (authInitialized) {
-    console.log("Returning cached user:", cachedUser?.email);
+  // Fast path: if a user is already cached, return it
+  if (cachedUser) {
     return cachedUser;
   }
-  
-  // Otherwise wait for initialization (max 5 seconds)
-  console.log("Waiting for auth initialization...");
-  let attempts = 0;
-  while (!authInitialized && attempts < 100) {
-    await new Promise(resolve => setTimeout(resolve, 50));
-    attempts++;
+
+  // If auth has initialized but cache is empty, wait briefly for state to settle
+  // This covers the moment right after signInWithEmailAndPassword where
+  // onAuthStateChanged may not have populated cachedUser yet.
+  const waitFor = async (predicate: () => boolean, tries = 60, delayMs = 50) => {
+    for (let i = 0; i < tries; i++) {
+      if (predicate()) return true;
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return predicate();
+  };
+
+  if (!authInitialized) {
+    await waitFor(() => authInitialized, 100, 50); // up to ~5s
   }
-  
-  console.log("Auth initialized, returning user:", cachedUser?.email);
+
+  // After init, if still no cachedUser but Firebase auth shows a current user,
+  // wait a bit longer for our onAuthStateChanged to populate the cache.
+  if (!cachedUser && auth.currentUser) {
+    await waitFor(() => !!cachedUser, 60, 50); // up to ~3s
+  }
+
   return cachedUser;
 }
 

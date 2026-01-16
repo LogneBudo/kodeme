@@ -10,6 +10,7 @@ type RequireAdminProps = {
 export default function RequireAdmin({ children }: RequireAdminProps) {
   const [user, setUser] = useState<AuthUser>(null);
   const [loading, setLoading] = useState(true);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -23,6 +24,17 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
       }
     })();
   }, []);
+
+  // If user is not admin after loading, redirect to login with redirect param
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== "admin") {
+        const redirectPath = window.location.pathname + window.location.search;
+        setRedirecting(true);
+        redirectToLogin(redirectPath);
+      }
+    }
+  }, [loading, user]);
 
   // -----------------------------
   // Inline styles
@@ -80,28 +92,12 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
   // -----------------------------
   // Access denied
   // -----------------------------
-  if (user?.role !== "admin") {
+  if (!loading && (!user || user.role !== "admin")) {
     return (
       <div style={fullScreenCenter}>
-        <div style={cardStyle}>
-          <div style={iconCircle}>
-            <ShieldAlert size={40} color="#dc2626" />
-          </div>
-
-          <h2 style={{ fontSize: "24px", fontWeight: 700, color: "#0f172a", marginBottom: "12px" }}>
-            Access Denied
-          </h2>
-
-          <p style={{ color: "#64748b", marginBottom: "20px" }}>
-            You need administrator privileges to access this area.
-          </p>
-
-          <button
-            onClick={() => (window.location.href = "/")}
-            style={primaryButton}
-          >
-            Go to Booking
-          </button>
+        <div style={{ textAlign: "center" }}>
+          <Loader2 size={40} style={{ margin: "0 auto 16px", color: "#94a3b8" }} className="animate-spin" />
+          <p style={{ color: "#64748b" }}>{redirecting ? "Redirecting to login..." : "Checking permissions..."}</p>
         </div>
       </div>
     );

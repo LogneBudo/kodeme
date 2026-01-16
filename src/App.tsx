@@ -8,6 +8,8 @@ import AdminSettings from "../src/pages/AdminSettings";
 import Login from "../src/pages/Login";
 import RequireAdmin from "./components/admin/RequireAdmin";
 import AdminAppointments from "../src/pages/AdminAppointments";
+import GoogleOAuthCallback from "../src/pages/GoogleOAuthCallback";
+import OutlookOAuthCallback from "../src/pages/OutlookOAuthCallback";
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
         path="/"
         element={<Navigate to="/BookAppointment" replace />}
       />
+      <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
+      <Route path="/auth/outlook/callback" element={<OutlookOAuthCallback />} />
       <Route
         path="/BookAppointment"
         element={

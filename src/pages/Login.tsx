@@ -19,8 +19,15 @@ export default function Login() {
     const result = await login(email, password);
     
     if (result.success) {
-      const redirect = searchParams.get("redirect") || "/BookAppointment";
-      navigate(redirect);
+      // Read and sanitize redirect target (must be same-origin path)
+      const raw = searchParams.get("redirect") || "/BookAppointment";
+      const isSafePath = raw.startsWith("/") && !raw.startsWith("//");
+      let target = isSafePath ? raw : "/BookAppointment";
+      // Avoid redirect loop to the login page
+      if (target.toLowerCase().startsWith("/admin/login")) {
+        target = "/admin/settings";
+      }
+      navigate(target, { replace: true });
     } else {
       setError(result.error || "Login failed");
     }
