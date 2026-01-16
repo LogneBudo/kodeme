@@ -12,6 +12,7 @@ import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
 import { getSettings, createAppointmentWithSlot } from "../api/firebaseApi";
+import { validateEmail, validateRequired } from "../utils/validation";
 import styles from "./BookAppointment.module.css";
 import bookingStyles from "../components/booking/Booking.module.css";
 // 
@@ -101,36 +102,36 @@ export default function BookAppointment() {
   };
 
   // Validation functions
-  const validateEmail = (email: string) => {
-    return email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isEmailValid = () => {
+    return validateEmail(email).isValid;
   };
 
-  const validateLocation = () => {
+  const isLocationValid = () => {
     if (!selectedLocation) return false;
-    if (selectedLocation === "restaurant" && !locationDetails.trim()) return false;
-    if ((selectedLocation === "other" || selectedLocation === "your_premises") && !locationDetails.trim()) return false;
+    if (selectedLocation === "restaurant" && !validateRequired(locationDetails).isValid) return false;
+    if ((selectedLocation === "other" || selectedLocation === "your_premises") && !validateRequired(locationDetails).isValid) return false;
     return true;
   };
 
-  const validateTimeframe = () => {
-    return timeframe.trim() !== "";
+  const isTimeframeValid = () => {
+    return validateRequired(timeframe).isValid;
   };
 
   // Step transition with validation
   const goToStep2 = () => {
-    if (validateEmail(email)) {
+    if (isEmailValid()) {
       setCurrentStep(2);
     }
   };
 
   const goToStep3 = () => {
-    if (validateLocation()) {
+    if (isLocationValid()) {
       setCurrentStep(3);
     }
   };
 
   const goToStep4 = () => {
-    if (validateTimeframe()) {
+    if (isTimeframeValid()) {
       setCurrentStep(4);
     }
   };

@@ -3,6 +3,7 @@ import { Mail, ArrowRight } from "lucide-react";
 import StepContainer from "./StepContainer";
 import StyledInput from "./StyledInput";
 import StepButton from "./StepButton";
+import { validateEmail } from "../../utils/validation";
 
 type Props = {
   email: string;
@@ -13,19 +14,14 @@ type Props = {
 export default function EmailStep({ email, setEmail, onNext }: Props) {
   const [error, setError] = useState("");
 
-  const validateEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
-
   const handleNext = () => {
-    if (!email.trim()) {
-      setError("Please enter your email");
+    const validation = validateEmail(email);
+    
+    if (!validation.isValid) {
+      setError(validation.error || "Invalid email");
       return;
     }
-    if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
+    
     setError("");
     onNext();
   };
