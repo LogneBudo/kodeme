@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { TableSkeletonBody } from "../skeletons/TableSkeleton";
 
 export interface Column<T> {
   key: Extract<keyof T, string>;
@@ -16,6 +17,7 @@ export interface AdminTableProps<T> {
   renderActions: (row: T, isEditing: boolean) => React.ReactNode;
   isRowDisabled?: (row: T) => boolean;
   keyExtractor?: (row: T, index: number) => string | number;
+  skeletonRows?: number;
 }
 
 export default function AdminTable<T extends { id?: string | number }>({
@@ -26,12 +28,35 @@ export default function AdminTable<T extends { id?: string | number }>({
   renderActions,
   isRowDisabled = () => false,
   keyExtractor = (row) => row.id || Math.random(),
+  skeletonRows = 5,
 }: AdminTableProps<T>) {
-  if (loading) {
+  if (loading && data.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "60px 0", color: "#666" }}>
-        <Loader2 style={{ margin: "0 auto 16px", animation: "spin 1s linear infinite" }} size={24} />
-        Loading...
+      <div style={{ background: "white", borderRadius: "8px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.1)" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ background: "#f5f5f5", borderBottom: "1px solid #ddd" }}>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  style={{
+                    padding: "12px 16px",
+                    textAlign: col.textAlign || "left",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    width: col.width,
+                  }}
+                >
+                  {col.label}
+                </th>
+              ))}
+              <th style={{ padding: "12px 16px", textAlign: "right", fontSize: "14px", fontWeight: 600 }}>
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <TableSkeletonBody rows={skeletonRows} />
+        </table>
       </div>
     );
   }
