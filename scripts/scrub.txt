@@ -1,0 +1,8 @@
+***REMOVED***
+regex:AIza[0-9A-Za-z\-_]{35}==>[REMOVED_API_KEY]
+regex:MLY\|[0-9A-Za-z\|]+==>[REMOVED_MAPILLARY_TOKEN]
+regex:1:[0-9]{6,}:web:[0-9a-fA-F]{6,}==>[REMOVED_FIREBASE_APP_ID]
+regex:firebaseapp\.com==>firebaseapp.example.com
+regex:maps\.geoapify\.com==>maps.geoapify.com
+regex:GEOAPIFY_[REMOVED][A-Za-z0-9_\-]*==>GEOAPIFY_[REMOVED][REMOVED]
+regex:RESEND_[A-Z_]+==>RESEND_[REMOVED]
