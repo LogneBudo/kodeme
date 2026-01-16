@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
-import styles from "./UserManagement.module.css";
+import AdminPageHeader from "../components/admin/AdminPageHeader";
+import styles from "./AdminBase.module.css";
 
 export default function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -38,19 +39,11 @@ export default function UserManagement() {
   return (
     <div className={styles.page}>
       <div className={styles.content}>
-        <div className={styles.header}>
-          <div className={styles.titleGroup}>
-            <div className={styles.titleRow}>
-              <div className={styles.titleIcon}>
-                <Users size={20} color="white" />
-              </div>
-              <h1 className={styles.title}>User Management</h1>
-            </div>
-            <p className={styles.subtitle}>
-              Manage user roles and permissions
-            </p>
-          </div>
-        </div>
+        <AdminPageHeader 
+          icon={Users}
+          title="User Management"
+          subtitle="Manage user roles and permissions"
+        />
 
       <div style={{
         padding: "16px",

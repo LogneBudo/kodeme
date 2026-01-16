@@ -13,6 +13,7 @@ import type { CalendarEvent } from "../types/calendar";
 import { toast } from "sonner";
 
 import RequireAdmin from "../components/admin/RequireAdmin";
+import AdminPageHeader from "../components/admin/AdminPageHeader";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
@@ -23,7 +24,7 @@ import {
   getSettings,
   type Settings as SettingsType,
 } from "../api/firebaseApi";
-import styles from "./AdminSlots.module.css";
+import styles from "./AdminBase.module.css";
 
 function AdminSlots() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -124,21 +125,11 @@ function AdminSlots() {
     <RequireAdmin>
       <div className={styles.page}>
         <div className={styles.content}>
-          <div className={styles.header}>
-            <div className={styles.titleGroup}>
-              <div className={styles.titleRow}>
-                <div className={styles.titleIcon}>
-                  <Settings size={20} color="white" />
-                </div>
-                <h1 className={styles.title}>
-                  Slot Management
-                </h1>
-              </div>
-              <p className={styles.subtitle}>
-                  Click on any slot to toggle its availability
-              </p>
-            </div>
-          </div>
+          <AdminPageHeader 
+            icon={Settings}
+            title="Slot Management"
+            subtitle="Click on any slot to toggle its availability"
+          />
 
           <WeekNavigator
             currentDate={currentDate}

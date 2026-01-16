@@ -4,7 +4,8 @@ import { listAppointments, updateAppointment, deleteAppointment } from "../api/f
 import type { Appointment } from "../types/appointment";
 import { Loader2, Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
-import styles from "./AdminAppointments.module.css";
+import AdminPageHeader from "../components/admin/AdminPageHeader";
+import styles from "./AdminBase.module.css";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled";
 
@@ -65,19 +66,11 @@ export default function AdminAppointments() {
   return (
     <div className={styles.page}>
       <div className={styles.content}>
-        <div className={styles.header}>
-          <div className={styles.titleGroup}>
-            <div className={styles.titleRow}>
-              <div className={styles.titleIcon}>
-                <Calendar size={20} color="white" />
-              </div>
-              <h1 className={styles.title}>Appointments</h1>
-            </div>
-            <p className={styles.subtitle}>
-              View and manage all bookings
-            </p>
-          </div>
-        </div>
+        <AdminPageHeader 
+          icon={Calendar}
+          title="Appointments"
+          subtitle="View and manage all bookings"
+        />
 
       {loading ? (
         <div className={styles.loading}><Loader2 className="spin" /> Loading...</div>

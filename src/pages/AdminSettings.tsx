@@ -6,11 +6,12 @@ import WorkingDaysSettings from "../components/admin/settings/WorkingDaysSetting
 import BlockedSlotsSettings from "../components/admin/settings/BlockedSlotsSettings";
 import CalendarIntegrationSettings from "../components/admin/settings/CalendarIntegrationSettings";
 import RestaurantSettings from "../components/admin/settings/RestaurantSettings";
+import AdminPageHeader from "../components/admin/AdminPageHeader";
 import { useSearchParams } from "react-router-dom";
 import { getSettings, updateSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
 import { Settings as SettingsIcon, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
 import { toast } from "sonner";
-import styles from "./AdminSettings.module.css";
+import styles from "./AdminBase.module.css";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -331,19 +332,11 @@ export default function SettingsPage() {
 		<div className={styles.page}>
 			<div className={styles.content}>
 				{/* Header */}
-				<div className={styles.header}>
-					<div className={styles.titleGroup}>
-						<div className={styles.titleRow}>
-							<div className={styles.titleIcon}>
-								<SettingsIcon size={20} color="white" />
-							</div>
-							<h1 className={styles.title}>Settings</h1>
-						</div>
-						<p className={styles.subtitle}>
-							Manage your booking preferences and availability
-						</p>
-					</div>
-				</div>
+				<AdminPageHeader 
+					icon={SettingsIcon}
+					title="Settings"
+					subtitle="Manage your booking preferences and availability"
+				/>
 
 			{/* Main Content */}
 			<div style={{ display: "grid", gridTemplateColumns: "320px 1fr", gap: "32px" }}>
