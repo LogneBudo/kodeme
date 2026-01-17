@@ -80,8 +80,9 @@ jobs:
           echo "## 🧪 E2E Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f cypress/results/junit.xml ]; then
-            total=$(grep -o 'tests="[0-9]*"' cypress/results/junit.xml | head -1 | grep -o '[0-9]*')
-            failures=$(grep -o 'failures="[0-9]*"' cypress/results/junit.xml | head -1 | grep -o '[0-9]*')
+            # Sum all test counts across all test suites
+            total=$(grep -o 'tests="[0-9]*"' cypress/results/junit.xml | grep -o '[0-9]*' | awk '{sum+=$1} END {print sum}')
+            failures=$(grep -o 'failures="[0-9]*"' cypress/results/junit.xml | grep -o '[0-9]*' | awk '{sum+=$1} END {print sum}')
             passed=$((total - failures))
             echo "✅ **Passed:** $passed" >> $GITHUB_STEP_SUMMARY
             echo "❌ **Failed:** $failures" >> $GITHUB_STEP_SUMMARY
