@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="8.719" tests="3" failures="0">
-  <testsuite name="Root Suite" timestamp="2026-01-17T14:19:49" tests="0" file="cypress\e2e\auth.cy.ts" time="0.000" failures="0">
+<testsuites name="Mocha Tests" time="7.038" tests="3" failures="0">
+  <testsuite name="Root Suite" timestamp="2026-01-17T15:03:58" tests="0" file="cypress\e2e\auth.cy.ts" time="0.000" failures="0">
   </testsuite>
-  <testsuite name="Auth Flow" timestamp="2026-01-17T14:19:49" tests="3" time="8.711" failures="0">
-    <testcase name="Auth Flow logs in once with redirect and lands on admin settings" time="4.335" classname="logs in once with redirect and lands on admin settings">
+  <testsuite name="Auth Flow" timestamp="2026-01-17T15:03:58" tests="3" time="7.032" failures="0">
+    <testcase name="Auth Flow logs in once with redirect and lands on admin settings" time="3.400" classname="logs in once with redirect and lands on admin settings">
     </testcase>
-    <testcase name="Auth Flow stays logged in when navigating to another admin page" time="1.419" classname="stays logged in when navigating to another admin page">
+    <testcase name="Auth Flow stays logged in when navigating to another admin page" time="1.232" classname="stays logged in when navigating to another admin page">
     </testcase>
-    <testcase name="Auth Flow logout clears auth and user cannot access admin pages" time="2.818" classname="logout clears auth and user cannot access admin pages">
+    <testcase name="Auth Flow logout clears auth and user cannot access admin pages" time="2.279" classname="logout clears auth and user cannot access admin pages">
     </testcase>
   </testsuite>
 </testsuites>
