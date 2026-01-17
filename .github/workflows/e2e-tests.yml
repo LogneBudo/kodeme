@@ -10,6 +10,7 @@ on:
 jobs:
   cypress-run:
     runs-on: ubuntu-latest
+    environment: Production
     
     env:
       CYPRESS_EMAIL: ${{ secrets.CYPRESS_EMAIL }}
