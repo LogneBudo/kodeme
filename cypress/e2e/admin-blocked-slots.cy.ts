@@ -16,7 +16,7 @@ describe('Admin Blocked Slots Settings', () => {
       cy.get('input[type="email"]').type(email);
       cy.get('input[type="password"]').type(password);
       cy.get('button[type="submit"]').click();
-      cy.contains('Logout', { timeout: 10000 }).should('be.visible');
+      cy.get('[class*="profileButton"]', { timeout: 10000 }).should('exist');
     });
 
     cy.visit('/admin/settings');
