@@ -73,3 +73,26 @@ jobs:
           name: Cypress Test Results
           path: 'cypress/results/junit.xml'
           reporter: 'java-junit'
+
+      - name: Create test summary
+        if: always()
+        run: |
+          echo "## 🧪 E2E Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f cypress/results/junit.xml ]; then
+            total=$(grep -o 'tests="[0-9]*"' cypress/results/junit.xml | head -1 | grep -o '[0-9]*')
+            failures=$(grep -o 'failures="[0-9]*"' cypress/results/junit.xml | head -1 | grep -o '[0-9]*')
+            passed=$((total - failures))
+            echo "✅ **Passed:** $passed" >> $GITHUB_STEP_SUMMARY
+            echo "❌ **Failed:** $failures" >> $GITHUB_STEP_SUMMARY
+            echo "📊 **Total:** $total tests" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Test Suites:" >> $GITHUB_STEP_SUMMARY
+            echo "- 🏪 Admin Restaurant Settings" >> $GITHUB_STEP_SUMMARY
+            echo "- ⏰ Admin Working Hours" >> $GITHUB_STEP_SUMMARY
+            echo "- 📅 Admin Working Days" >> $GITHUB_STEP_SUMMARY
+            echo "- 🚫 Admin Blocked Slots" >> $GITHUB_STEP_SUMMARY
+            echo "- 📆 Admin Calendar Integration" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+          fi
