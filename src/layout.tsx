@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAuth } from "./context/AuthContext";
+import UserProfile from "./components/UserProfile";
 import layoutStyles from "./layout.module.css";
 type LayoutProps = {
   children: React.ReactNode;
@@ -78,13 +79,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
                 </div>
               )}
             </div>
-            <button
-              onClick={handleLogout}
-              className={layoutStyles.logoutButton}
-            >
-              <LogOut size={16} />
-              Logout
-            </button>
+            <UserProfile />
           </div>
         )}
 
