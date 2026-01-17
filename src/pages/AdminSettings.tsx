@@ -234,9 +234,6 @@ export default function SettingsPage() {
 		}
 	}
 
-	// Check if there are unsaved changes using hash comparison
-	const hasUnsavedChanges = settings && savedHash !== "" && hashSettings(settings) !== savedHash;
-
 	function handleAddBlockedSlot() {
 		if (!settings) return;
 		// Validate times
