@@ -61,3 +61,11 @@ jobs:
         with:
           name: cypress-videos
           path: cypress/videos
+
+      - name: Generate test report
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Cypress Test Results
+          path: 'cypress/results/junit.xml'
+          reporter: 'java-junit'
