@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { login } from "../api/authApi";
+import { login, getCurrentUser } from "../api/authApi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Calendar, LogIn } from "lucide-react";
 import { validateEmail } from "../utils/validation";
 import styles from "./Login.module.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { refresh } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +37,9 @@ export default function Login() {
     const result = await login(email, password);
     
     if (result.success) {
+      // Ensure context catches up with enriched user before redirecting
+      await refresh();
+      const enriched = await getCurrentUser();
       // Read and sanitize redirect target (must be same-origin path)
       const raw = searchParams.get("redirect") || "/BookAppointment";
       const isSafePath = raw.startsWith("/") && !raw.startsWith("//");
@@ -42,6 +47,12 @@ export default function Login() {
       // Avoid redirect loop to the login page
       if (target.toLowerCase().startsWith("/admin/login")) {
         target = "/admin/settings";
+      }
+      // If redirecting to admin and user is not admin, stay and show error
+      if (target.toLowerCase().startsWith("/admin") && (!enriched || enriched.role !== "admin")) {
+        setError("You do not have admin permissions.");
+        setLoading(false);
+        return;
       }
       navigate(target, { replace: true });
     } else {

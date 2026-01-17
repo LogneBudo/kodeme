@@ -16,6 +16,9 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
   useEffect(() => {
     if (!loading) {
       if (!user || user.role !== "admin") {
+        // Avoid redirect loop if already on login page
+        const isOnLogin = window.location.pathname.toLowerCase().startsWith("/admin/login");
+        if (isOnLogin) return;
         const redirectPath = window.location.pathname + window.location.search;
         setRedirecting(true);
         redirectToLogin(redirectPath);

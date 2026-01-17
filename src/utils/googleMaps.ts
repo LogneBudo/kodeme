@@ -1,17 +1,10 @@
 // Google Maps API Loader
 // This script dynamically loads the Google Maps JavaScript API
 
-declare global {
-  interface Window {
-    google: typeof google;
-    initGoogleMaps?: () => void;
-  }
-}
-
 export const loadGoogleMapsAPI = (): Promise<void> => {
   return new Promise((resolve, reject) => {
     // Check if already loaded
-    if ((window as any).google && (window as any).google.maps) {
+    if (window.google?.maps) {
       resolve();
       return;
     }
@@ -20,7 +13,7 @@ export const loadGoogleMapsAPI = (): Promise<void> => {
     if (document.querySelector('script[src*="maps.googleapis.com"]')) {
       // Wait for it to load
       const checkInterval = setInterval(() => {
-        if ((window as any).google && (window as any).google.maps) {
+        if (window.google?.maps) {
           clearInterval(checkInterval);
           resolve();
         }
@@ -37,7 +30,7 @@ export const loadGoogleMapsAPI = (): Promise<void> => {
     }
 
     // Create callback
-    (window as any).initGoogleMaps = () => {
+    window.initGoogleMaps = () => {
       resolve();
     };
 

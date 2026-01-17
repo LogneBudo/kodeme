@@ -56,21 +56,14 @@ export function isTimeSlotBlocked(
 
   // Check if any calendar event overlaps with this slot
   return calendarEvents.some((event) => {
-    let eventStart: Date;
-    let eventEnd: Date;
+    const isDateOnly = event.startTime.length === 10 && event.endTime.length === 10;
+    const eventStart = isDateOnly
+      ? new Date(`${event.startTime}T00:00:00Z`)
+      : new Date(event.startTime);
+    const eventEnd = isDateOnly
+      ? new Date(`${event.endTime}T23:59:59Z`)
+      : new Date(event.endTime);
 
-    // Handle all-day events (only 'date' field, no 'dateTime')
-    if (typeof event.startTime === 'string' && (event.startTime as string).length === 10) {
-      // Format: YYYY-MM-DD (all-day event)
-      eventStart = new Date(event.startTime + 'T00:00:00Z');
-      eventEnd = new Date(event.endTime + 'T23:59:59Z');
-    } else {
-      // Format: ISO 8601 datetime (timed event)
-      eventStart = new Date(event.startTime as any);
-      eventEnd = new Date(event.endTime as any);
-    }
-
-    // If event starts before slot ends AND event ends after slot starts, there's an overlap
     return eventStart < slotEnd && eventEnd > slotStart;
   });
 }

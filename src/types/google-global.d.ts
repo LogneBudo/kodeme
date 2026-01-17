@@ -1,3 +1,13 @@
-// Minimal globals to satisfy TS when Google Maps script is optional
-// Do not rely on these shapes for runtime; ensure defensive checks before use.
-declare const google: any;
+// Minimal, safe typings for optional Google Maps JS API presence.
+// These keep TS happy without pulling full @types/google.maps.
+
+export {}; // Ensure this file is a module so global augmentation works
+
+declare global {
+	interface Window {
+		google?: {
+			maps?: unknown; // Minimal; code should guard with optional chaining
+		};
+		initGoogleMaps?: () => void;
+	}
+}

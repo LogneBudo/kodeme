@@ -6,7 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 const DEFAULT_CENTER = { lat: 37.9838, lng: 23.7275 }; // Athens, Greece
 
-const GEOAPIFY_[REMOVED] = import.meta.env.VITE_GEOAPIFY_[REMOVED];
+const GEOAPIFY_API_KEY = import.meta.env.VITE_GEOAPIFY_API_KEY || "";
 const MAPILLARY_TOKEN = import.meta.env.VITE_MAPILLARY_TOKEN || '';
 
 interface Restaurant {
@@ -49,7 +49,7 @@ function getMapillaryImage(lat: number, lng: number): string | null {
   // For demo, use a static image URL pattern (real use requires Mapillary API key)
   // Example: https://images.mapillary.com/<image_key>/thumb-1024.jpg
   // Here, we use a placeholder OSM streetview image
-  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=480&height=180&center=lonlat:${lng},${lat}&zoom=16&apiKey=${GEOAPIFY_[REMOVED]}`;
+  return `https://maps.geoapify.com/v1/staticmap?style=osm-carto&width=480&height=180&center=lonlat:${lng},${lat}&zoom=16&apiKey=${GEOAPIFY_API_KEY}`;
 }
 
 async function fetchMapillaryImage(lat: number, lng: number): Promise<string | null> {
@@ -116,7 +116,7 @@ const FindRestaurant: React.FC<FindRestaurantProps> = ({ city, selectedRestauran
         }
         // Fetch restaurants from Geoapify
         const placesResp = await fetch(
-          `https://api.geoapify.com/v2/places?categories=catering.restaurant&filter=rect:${center.lng-0.05},${center.lat-0.05},${center.lng+0.05},${center.lat+0.05}&limit=10&apiKey=${GEOAPIFY_[REMOVED]}`
+          `https://api.geoapify.com/v2/places?categories=catering.restaurant&filter=rect:${center.lng-0.05},${center.lat-0.05},${center.lng+0.05},${center.lat+0.05}&limit=10&apiKey=${GEOAPIFY_API_KEY}`
         );
         const placesData = await placesResp.json();
         if (placesData && placesData.features) {

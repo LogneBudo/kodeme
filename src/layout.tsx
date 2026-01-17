@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAuth } from "./context/AuthContext";
@@ -11,10 +11,11 @@ type LayoutProps = {
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   async function handleLogout() {
     await logout();
-    window.location.href = "/BookAppointment";
+    navigate("/BookAppointment", { replace: true });
   }
 
   const navItems = [
