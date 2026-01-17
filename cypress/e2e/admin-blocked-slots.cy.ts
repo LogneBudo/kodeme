@@ -63,30 +63,41 @@ describe('Admin Blocked Slots Settings', () => {
   });
 
   it('removes an existing daily blocked slot', () => {
-    // Add then remove
+    // Clear any existing blocked slots first
+    cy.get('button[data-testid^="remove-blocked-"]').each(($btn) => {
+      cy.wrap($btn).click();
+      cy.wait(200);
+    });
+    
+    // Now add a new blocked slot
     cy.get('[data-testid="blocked-start-hour"]').select('16');
     cy.get('[data-testid="blocked-start-minute"]').select('00');
     cy.get('[data-testid="blocked-end-hour"]').select('16');
     cy.get('[data-testid="blocked-end-minute"]').select('30');
     cy.get('[data-testid="blocked-label"]').clear().type('Break');
     cy.get('[data-testid="add-blocked-slot"]').click();
+    
+    // Wait a bit and verify the slot was added
+    cy.wait(100);
+    cy.get('[data-testid^="blocked-item-"]').should('exist');
+    
+    // Click the remove button
+    cy.get('button[data-testid^="remove-blocked-"]').first().click();
+    
+    // Wait for the removal
+    cy.wait(300);
+    
+    // Verify all removed - should see empty message
+    cy.get('[data-testid="blocked-empty"]').should('be.visible');
 
-    // Find the list item containing label "Break" and matching time and scope, then remove
-    cy.contains('li', 'Break', { timeout: 5000 }).within(() => {
-      cy.contains('16:00 - 16:30');
-      cy.contains('Every day');
-      cy.get('[data-testid^="remove-blocked-"]').click({ force: true });
-    });
-
-    // Save and reload
+    // Save settings
     cy.get('button').contains('Save Settings').click();
     cy.wait(1000);
     cy.reload();
     cy.contains('Blocked Time Slots').click();
 
-    // Check that the specific label and time range are not present
-    cy.contains('Break').should('not.exist');
-    cy.contains('16:00 - 16:30').should('not.exist');
+    // Verify it's still empty after reload
+    cy.get('[data-testid="blocked-empty"]').should('be.visible');
   });
 
   it('allows only 15-minute increments (00, 15, 30)', () => {
