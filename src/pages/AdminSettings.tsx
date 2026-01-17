@@ -58,7 +58,6 @@ function hashSettings(settings: Settings | null): string {
 export default function SettingsPage() {
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
-	const [savedHash, setSavedHash] = useState<string>("");
 	const [loading, setLoading] = useState(true);
 	const [saving, setSaving] = useState(false);
 	const [savedRecently, setSavedRecently] = useState(false);
@@ -193,7 +192,6 @@ export default function SettingsPage() {
 		const data = await getSettings();
 
 		setSettings(data);
-		setSavedHash(hashSettings(data));
 		// If a city is already saved, populate the cityValidation state
 		if (data.restaurantCity) {
 			console.log("Setting city validation with:", {
@@ -227,7 +225,6 @@ export default function SettingsPage() {
 		if (success) {
 			toast.success("Settings saved successfully!");
 			setSavedRecently(true);
-			setSavedHash(hashSettings(settings));
 			setTimeout(() => setSavedRecently(false), 2000);
 		} else {
 			toast.error("Failed to save settings");
