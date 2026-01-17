@@ -49,12 +49,6 @@ const SETTINGS_GROUPS = [
 	},
 ];
 
-// Utility to hash settings for change detection
-function hashSettings(settings: Settings | null): string {
-	if (!settings) return "";
-	return JSON.stringify(settings);
-}
-
 export default function SettingsPage() {
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
