@@ -45,20 +45,19 @@ export function useWeekSlots({
     const allDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
     if (!settings) return allDays;
 
-    const { startDay, endDay } = settings.workingDays;
-    return allDays.filter((day) => {
-      const dow = day.getDay();
-      return startDay <= endDay
-        ? dow >= startDay && dow <= endDay
-        : dow >= startDay || dow <= endDay;
-    });
+    const allowed = new Set(settings.workingDays || []);
+    if (!allowed.size) return [];
+
+    return allDays.filter((day) => allowed.has(day.getDay()));
   }, [weekStart, settings]);
 
   const timeSlots = useMemo(() => {
     if (!settings) return [];
 
     const slots: string[] = [];
-    const { startHour, endHour } = settings.workingHours;
+    const { startTime, endTime } = settings.workingHours;
+    const [startHour] = startTime.split(':').map(Number);
+    const [endHour] = endTime.split(':').map(Number);
 
     for (let hour = startHour; hour < endHour; hour++) {
       slots.push(`${String(hour).padStart(2, "0")}:00`);
@@ -71,7 +70,9 @@ export function useWeekSlots({
   const buildDaySlots = useCallback(
     (): string[] => {
       if (!settings) return [];
-      const { startHour, endHour } = settings.workingHours;
+      const { startTime, endTime } = settings.workingHours;
+      const [startHour] = startTime.split(':').map(Number);
+      const [endHour] = endTime.split(':').map(Number);
       const daySlots: string[] = [];
 
       for (let hour = startHour; hour < endHour; hour++) {

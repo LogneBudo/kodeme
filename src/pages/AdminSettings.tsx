@@ -14,7 +14,6 @@ import { toast } from "sonner";
 import styles from "./AdminBase.module.css";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 // Settings groups definition
 const SETTINGS_GROUPS = [
@@ -430,7 +429,6 @@ export default function SettingsPage() {
 								<WorkingHoursSettings
 									workingHours={settings.workingHours}
 									setWorkingHours={hours => setSettings({ ...settings, workingHours: hours })}
-									HOURS={HOURS}
 								/>
 							)}
 							{/* Working Days Tab */}
@@ -504,32 +502,32 @@ export default function SettingsPage() {
 								<div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
 									<button
 										onClick={handleSave}
-										disabled={saving || !hasUnsavedChanges}
+											disabled={saving}
 										style={{
 											display: "flex",
 											alignItems: "center",
 											gap: "8px",
 											padding: "12px 24px",
-											background: saving || !hasUnsavedChanges ? "#999" : "#222",
+												background: saving ? "#999" : "#222",
 											color: "white",
 											border: "none",
 											borderRadius: "6px",
 											fontSize: "14px",
 											fontWeight: 600,
-											cursor: saving || !hasUnsavedChanges ? "not-allowed" : "pointer",
+												cursor: saving ? "not-allowed" : "pointer",
 											transition: "background 0.2s",
 										}}
 										onMouseEnter={(e) => {
-											if (!saving && hasUnsavedChanges) {
-												(e.currentTarget as HTMLElement).style.background = "#404040";
-											}
+												if (!saving) {
+													(e.currentTarget as HTMLElement).style.background = "#404040";
+												}
 										}}
 										onMouseLeave={(e) => {
-											if (!saving && hasUnsavedChanges) {
-												(e.currentTarget as HTMLElement).style.background = "#222";
-											} else if (!hasUnsavedChanges) {
-												(e.currentTarget as HTMLElement).style.background = "#999";
-											}
+												if (!saving) {
+													(e.currentTarget as HTMLElement).style.background = "#222";
+												} else {
+													(e.currentTarget as HTMLElement).style.background = "#999";
+												}
 										}}
 									>
 										<Save size={16} />

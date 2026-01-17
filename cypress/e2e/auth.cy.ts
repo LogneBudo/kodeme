@@ -1,3 +1,5 @@
+/// <reference types="cypress" />
+
 describe('Auth Flow', () => {
   const email = Cypress.env('EMAIL');
   const password = Cypress.env('PASSWORD');

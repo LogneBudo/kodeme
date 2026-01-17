@@ -1,0 +1,171 @@
+.container {
+  max-width: 600px;
+}
+
+.header {
+  margin-top: 0;
+  margin-bottom: 24px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #222;
+}
+
+.description {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.daysDisplay {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+}
+
+.daysDisplayText {
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+}
+
+.daysDisplaySubtext {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  margin: 0;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.dayButton {
+  padding: 12px 8px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  position: relative;
+}
+
+.dayButton:hover:not(.selected) {
+  border-color: #b8b8b8;
+  background: #f8f8f8;
+}
+
+.dayButton.selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.dayButton.disabled {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.dayButton.disabled:hover {
+  background: #f5f5f5;
+  border-color: #e0e0e0;
+}
+
+.dayLabel {
+  display: block;
+  font-size: 11px;
+  margin-top: 2px;
+  opacity: 0.8;
+}
+
+.quickSelect {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.quickSelectLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  display: flex;
+  align-items: center;
+  margin-right: 4px;
+}
+
+.quickSelectButton {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #444;
+  transition: all 0.2s ease;
+}
+
+.quickSelectButton:hover {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #1565c0;
+  line-height: 1.5;
+}
+
+.infoIcon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+@media (max-width: 768px) {
+  .daysGrid {
+    gap: 6px;
+  }
+
+  .dayButton {
+    padding: 10px 4px;
+    font-size: 12px;
+  }
+
+  .dayLabel {
+    font-size: 10px;
+  }
+
+  .quickSelect {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quickSelectButton {
+    width: 100%;
+  }
+}

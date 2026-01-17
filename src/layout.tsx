@@ -11,6 +11,7 @@ type LayoutProps = {
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -53,11 +54,11 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         {!loading && user && user.role === "admin" && (
           <div className={layoutStyles.desktopNav}>
             <div className={layoutStyles.adminDropdownContainer}>
-              <button className={layoutStyles.adminDropdownButton} onClick={() => setMobileMenuOpen((open) => !open)}>
+              <button className={layoutStyles.adminDropdownButton} onClick={() => setAdminDropdownOpen((open) => !open)}>
                 <Menu size={16} />
                 Admin Menu
               </button>
-              {mobileMenuOpen && (
+              {adminDropdownOpen && (
                 <div className={layoutStyles.adminDropdownMenu}>
                   {adminNavItems.map(item => {
                     const Icon = item.icon;
@@ -67,7 +68,7 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
                         key={item.name}
                         to={`/${item.name}`}
                         className={`${layoutStyles.navLink} ${isActive ? layoutStyles.active : ""}`}
-                        onClick={() => setMobileMenuOpen(false)}
+                        onClick={() => setAdminDropdownOpen(false)}
                       >
                         <Icon size={16} />
                         {item.label}

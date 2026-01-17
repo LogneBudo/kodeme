@@ -206,4 +206,7 @@
   .mobileMenuButton {
     display: none !important;
   }
+  .mobileMenu {
+    display: none !important;
+  }
 }

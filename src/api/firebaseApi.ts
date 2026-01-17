@@ -486,14 +486,13 @@ export async function deleteUser(userId: string): Promise<boolean> {
 // ============ SETTINGS ============
 
 export type WorkingHours = {
-  startHour: number; // 0-23
-  endHour: number;   // 0-23
+  startTime: string; // "HH:mm" format (e.g., "09:00")
+  endTime: string;   // "HH:mm" format (e.g., "17:30")
 };
 
-export type WorkingDays = {
-  startDay: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
-  endDay: number;   // 0=Sunday, 1=Monday, ..., 6=Saturday
-};
+// Working days are stored as an array of day indexes (0=Sunday, 6=Saturday).
+// We normalize any legacy shape (startDay/endDay) to this array on read.
+export type WorkingDays = number[];
 
 export type BlockedSlot = {
   _key: string;
@@ -535,6 +534,34 @@ export type Settings = {
 };
 
 const SETTINGS_DOC = "main";
+const DEFAULT_WORKING_DAYS: WorkingDays = [1, 2, 3, 4, 5];
+
+function normalizeWorkingDays(raw: unknown): WorkingDays {
+  // If already an array, sanitize numbers and ensure at least one day.
+  if (Array.isArray(raw)) {
+    const days = Array.from(new Set(raw.filter(d => Number.isInteger(d) && d >= 0 && d <= 6))).sort((a, b) => a - b);
+    return days.length > 0 ? days : DEFAULT_WORKING_DAYS;
+  }
+
+  // Legacy shape { startDay, endDay }
+  if (raw && typeof raw === "object" && "startDay" in (raw as Record<string, unknown>) && "endDay" in (raw as Record<string, unknown>)) {
+    const start = Number((raw as { startDay: unknown }).startDay);
+    const end = Number((raw as { endDay: unknown }).endDay);
+    const days: number[] = [];
+    if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && start <= 6 && end >= 0 && end <= 6) {
+      if (start <= end) {
+        for (let i = start; i <= end; i++) days.push(i);
+      } else {
+        for (let i = start; i <= 6; i++) days.push(i);
+        for (let i = 0; i <= end; i++) days.push(i);
+      }
+    }
+    const unique = Array.from(new Set(days)).sort((a, b) => a - b);
+    return unique.length > 0 ? unique : DEFAULT_WORKING_DAYS;
+  }
+
+  return DEFAULT_WORKING_DAYS;
+}
 
 export async function getSettings(): Promise<Settings> {
   try {
@@ -545,8 +572,8 @@ export async function getSettings(): Promise<Settings> {
       const data = settingsDoc.data();
       return {
         id: settingsDoc.id,
-        workingHours: data.workingHours || { startHour: 9, endHour: 17 },
-        workingDays: data.workingDays || { startDay: 1, endDay: 5 },
+        workingHours: data.workingHours || { startTime: "09:00", endTime: "17:00" },
+        workingDays: normalizeWorkingDays(data.workingDays),
         blockedSlots: data.blockedSlots || [],
         oneOffUnavailableSlots: data.oneOffUnavailableSlots || [],
         updatedAt: data.updatedAt?.toDate() || new Date(),
@@ -564,8 +591,8 @@ export async function getSettings(): Promise<Settings> {
     } else {
       // Return default settings if not found
       return {
-        workingHours: { startHour: 9, endHour: 17 },
-        workingDays: { startDay: 1, endDay: 5 },
+        workingHours: { startTime: "09:00", endTime: "17:00" },
+        workingDays: DEFAULT_WORKING_DAYS,
         blockedSlots: [],
         oneOffUnavailableSlots: [],
         calendarSync: {
@@ -584,8 +611,8 @@ export async function getSettings(): Promise<Settings> {
     console.error("Error fetching settings:", error);
     // Return default settings on error
     return {
-      workingHours: { startHour: 9, endHour: 17 },
-      workingDays: { startDay: 1, endDay: 5 },
+      workingHours: { startTime: "09:00", endTime: "17:00" },
+      workingDays: DEFAULT_WORKING_DAYS,
       blockedSlots: [],
       oneOffUnavailableSlots: [],
       calendarSync: {
@@ -607,7 +634,7 @@ export async function updateSettings(settings: Settings): Promise<boolean> {
     const settingsRef = doc(db, "settings", SETTINGS_DOC);
     await setDoc(settingsRef, {
       workingHours: settings.workingHours,
-      workingDays: settings.workingDays,
+      workingDays: settings.workingDays || DEFAULT_WORKING_DAYS,
       blockedSlots: settings.blockedSlots,
       oneOffUnavailableSlots: settings.oneOffUnavailableSlots || [],
       calendarSync: settings.calendarSync || {
