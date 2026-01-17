@@ -6,4 +6,8 @@ module.exports = defineConfig({
     supportFile: 'cypress/support/e2e.ts',
   },
   video: false,
+  env: {
+    EMAIL: process.env.CYPRESS_EMAIL || process.env.EMAIL,
+    PASSWORD: process.env.CYPRESS_PASSWORD || process.env.PASSWORD,
+  },
 });
