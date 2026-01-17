@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "cy:open": "cypress open",
     "cy:run": "cypress run",
-    "cy:run:spec": "cypress run --spec"
+    "cy:run:spec": "cypress run --spec",
+    "setup-hooks": "node -e \"const fs = require('fs'); fs.chmodSync('.git/hooks/pre-commit', '0755'); console.log('✅ Git hooks installed');\""
   },
   "dependencies": {
     "date-fns": "^4.1.0",
