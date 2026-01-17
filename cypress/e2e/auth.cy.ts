@@ -20,18 +20,22 @@ describe('Auth Flow', () => {
     
     // Wait for auth to complete and redirect
     cy.url({ timeout: 15000 }).should('include', '/admin/settings');
-    cy.contains('Logout', { timeout: 10000 }).should('be.visible');
+    // Check for profile button (user is logged in)
+    cy.get('button').contains(/admin menu|logout/i, { timeout: 10000 }).should('exist');
   });
 
   it('stays logged in when navigating to another admin page', () => {
     cy.visit('/admin/appointments');
-    cy.contains('Logout', { timeout: 10000 }).should('be.visible');
+    // Check for profile button (user is logged in)
+    cy.get('button').contains(/admin menu|logout/i, { timeout: 10000 }).should('exist');
     cy.url().should('include', '/admin/appointments');
   });
 
   it('logout clears auth and user cannot access admin pages', () => {
     cy.visit('/admin/settings');
-    cy.contains('Logout', { timeout: 10000 }).should('be.visible');
+    // Click profile button to open dropdown
+    cy.get('button').contains(/admin menu|logout/i, { timeout: 10000 }).parent().find('button').first().click();
+    // Click logout button in dropdown
     cy.contains('Logout').click();
     
     // After logout, user is redirected away (either to /BookAppointment or /admin/login)
@@ -42,7 +46,7 @@ describe('Auth Flow', () => {
     cy.visit('/admin/appointments');
     cy.url({ timeout: 10000 }).should('include', '/admin/login');
     
-    // Verify we're logged out (no Logout button in protected views means RequireAdmin intercepted)
+    // Verify we're logged out (no profile button in protected views means RequireAdmin intercepted)
     cy.get('input[type="email"]').should('be.visible');
   });
 });
