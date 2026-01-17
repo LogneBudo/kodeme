@@ -1,6 +1,7 @@
 # easyAppointments
 
 ![E2E Tests](https://github.com/LogneBudo/kodeme/actions/workflows/e2e-tests.yml/badge.svg)
+![Test Results](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/LogneBudo/kodeme/main/test-results.json)
 
 A lightweight appointment scheduling platform that simplifies booking and admin management of time slots.
 
