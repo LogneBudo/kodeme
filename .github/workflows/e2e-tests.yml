@@ -93,6 +93,19 @@ jobs:
             echo "- 📅 Admin Working Days" >> $GITHUB_STEP_SUMMARY
             echo "- 🚫 Admin Blocked Slots" >> $GITHUB_STEP_SUMMARY
             echo "- 📆 Admin Calendar Integration" >> $GITHUB_STEP_SUMMARY
+            
+            # Create JSON for dynamic badge
+            echo "{\"schemaVersion\":1,\"label\":\"tests\",\"message\":\"$passed passed\",\"color\":\"success\"}" > test-results.json
           else
             echo "⚠️ No test results found" >> $GITHUB_STEP_SUMMARY
+            echo "{\"schemaVersion\":1,\"label\":\"tests\",\"message\":\"no results\",\"color\":\"inactive\"}" > test-results.json
           fi
+
+      - name: Commit test results
+        if: always()
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add test-results.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update test results [skip ci]"
+          git push
