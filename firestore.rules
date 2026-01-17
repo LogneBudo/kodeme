@@ -34,14 +34,13 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
     
-    // Appointments - authenticated users can create and read their own, admins can manage all
+    // Appointments - anyone can create (for public booking), only admins can manage
     match /appointments/{appointmentId} {
-      // Anyone can read (for admin dashboard)
+      // Anyone can read (for admin dashboard and public confirmation)
       allow read: if true;
       
-      // Authenticated users can create appointments
-      allow create: if isAuthenticated() && 
-                      request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'date', 'time']);
+      // Anyone can create appointments (public booking form)
+      allow create: if request.resource.data.keys().hasAll(['customerName', 'customerEmail', 'date', 'time']);
       
       // Only admins can update or delete
       allow update, delete: if isAdmin();
