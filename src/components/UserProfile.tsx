@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { LogOut, User } from "lucide-react";
+import { LogOut } from "lucide-react";
 import styles from "./UserProfile.module.css";
 
 export default function UserProfile() {
