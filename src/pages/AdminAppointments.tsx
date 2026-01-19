@@ -1,21 +1,23 @@
 
 import { useState, useMemo } from "react";
-import { listAppointments, updateAppointment, deleteAppointment } from "../api/firebaseApi";
+import { listTenantAppointments, updateTenantAppointment, deleteTenantAppointment } from "../api/firebaseApi";
 import type { Appointment } from "../types/appointment";
 import { Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
-import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
+import { useFirestoreTenantQuery } from "../hooks/useFirestoreTenantQuery";
+import { useAuth } from "../context/AuthContext";
 import tableStyles from "../components/admin/AdminTable.module.css";
 import styles from "./AdminBase.module.css";
 
 type AppointmentStatus = "pending" | "confirmed" | "cancelled";
 
 export default function AdminAppointments() {
-  const { data: appointments = [], loading, refetch } = useFirestoreQuery(
-    () => listAppointments(),
+  const { orgId, calendarId } = useAuth();
+  const { data: appointments = [], loading, refetch } = useFirestoreTenantQuery(
+    (orgId, calendarId) => listTenantAppointments(orgId, calendarId),
     []
   );
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -37,8 +39,9 @@ export default function AdminAppointments() {
   }
 
   async function saveEdit(id: string) {
+    if (!orgId || !calendarId) return;
     setActionLoading((prev) => ({ ...prev, [`save-${id}`]: true }));
-    const updated = await updateAppointment(id, { status: editStatus, notes: editNotes });
+    const updated = await updateTenantAppointment(orgId, calendarId, id, { status: editStatus, notes: editNotes });
     if (updated) {
       toast.success("Appointment updated");
       await refetch();
@@ -50,9 +53,10 @@ export default function AdminAppointments() {
   }
 
   async function handleDelete(id: string) {
+    if (!orgId || !calendarId) return;
     if (!window.confirm("Delete this appointment?")) return;
     setActionLoading((prev) => ({ ...prev, [`delete-${id}`]: true }));
-    const ok = await deleteAppointment(id);
+    const ok = await deleteTenantAppointment(orgId, calendarId, id);
     if (ok) {
       toast.success("Appointment deleted");
       await refetch();
@@ -99,10 +103,11 @@ export default function AdminAppointments() {
 
   // Bulk delete handler
   async function handleBulkDelete() {
+    if (!orgId || !calendarId) return;
     if (selectedIds.size === 0) return;
     if (!window.confirm(`Delete ${selectedIds.size} selected appointment${selectedIds.size > 1 ? 's' : ''}?`)) return;
     
-    const deletePromises = Array.from(selectedIds).map(id => deleteAppointment(id));
+    const deletePromises = Array.from(selectedIds).map(id => deleteTenantAppointment(orgId, calendarId, id));
     const results = await Promise.all(deletePromises);
     
     const successCount = results.filter(Boolean).length;

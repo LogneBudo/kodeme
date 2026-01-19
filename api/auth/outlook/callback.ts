@@ -1,6 +1,8 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-let outlookTokens: any | null = null;
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { saveCalendarToken } from "../../../src/api/calendarTokensApi";
+import { getAuthContext } from "../../apiUtils";
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -38,7 +40,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const tokens = await tokenResponse.json();
     if (!tokenResponse.ok) throw new Error(tokens.error_description || "Failed to get tokens");
 
-    outlookTokens = tokens;
+    // Extract multi-tenant context (orgId, branchId, userId)
+    const { orgId, branchId, userId } = getAuthContext(req);
+    if (!orgId || !userId) {
+      return res.redirect(`${adminSettingsUrl}?error=missing_context&provider=outlook`);
+    }
+
+    // Save tokens to Firestore
+    await saveCalendarToken({
+      provider: "outlook",
+      orgId,
+      branchId,
+      userId,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: tokens.expires_in ? Date.now() + tokens.expires_in * 1000 : undefined,
+      scope: tokens.scope,
+      tokenType: tokens.token_type,
+    });
+
     return res.redirect(`${adminSettingsUrl}?calendar=connected&provider=outlook`);
   } catch (error: any) {
     console.error("/api/auth/outlook/callback error", error);
@@ -47,8 +67,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminSettingsUrl = `${proto}://${host}/admin/settings`;
     return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(error?.message || "unknown")}&provider=outlook`);
   }
-}
-
-export function getOutlookTokens() {
-  return outlookTokens;
 }

@@ -1,0 +1,257 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================================
+    // HELPER FUNCTIONS - Multi-Tenant & Multi-Branch
+    // ============================================================================
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Get current user document
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    // Check if user is admin of organization (admin role in user doc)
+    function isOrgAdmin(orgId) {
+      return isAuthenticated() && 
+             getUserDoc().role == 'admin' &&
+             getUserDoc().org_id == orgId;
+    }
+    
+    // Check if user belongs to organization
+    function userBelongsToOrg(orgId) {
+      return isAuthenticated() &&
+             getUserDoc().org_id == orgId;
+    }
+    
+    // Check if user is assigned to branch
+    function userBelongsToBranch(orgId, branchId) {
+      return userBelongsToOrg(orgId) &&
+             getUserDoc().branch_assignments != null &&
+             branchId in getUserDoc().branch_assignments;
+    }
+    
+    // Check if user has role in branch (from branch_assignments)
+    function userHasRoleInBranch(orgId, branchId, role) {
+      return userBelongsToBranch(orgId, branchId) &&
+             getUserDoc().branch_assignments[branchId] == role;
+    }
+    
+    // Get organization document
+    function getOrgDoc(orgId) {
+      return get(/databases/$(database)/documents/organizations/$(orgId)).data;
+    }
+    
+    // Get subscription tier for organization
+    function getOrgTier(orgId) {
+      return getOrgDoc(orgId).subscription_tier;
+    }
+    
+    // Check tier feature access (e.g., 'api_access', 'white_label', 'real_time_sync')
+    function hasTierFeature(orgId, feature) {
+      let tier = getOrgTier(orgId);
+      // Features are defined in SubscriptionTier type
+      // FREE: no_api, no_white_label, limited_calendars, limited_sync
+      // STARTER: no_api, no_white_label
+      // PROFESSIONAL: api_access
+      // ENTERPRISE: all features
+      return getOrgDoc(orgId)[feature] == true ||
+             tier == 'enterprise' ||
+             (feature == 'read_only_calendar' && tier == 'free') ||
+             (feature == 'api_access' && (tier == 'professional' || tier == 'enterprise')) ||
+             (feature == 'white_label' && tier == 'enterprise') ||
+             (feature == 'real_time_sync' && tier == 'enterprise');
+    }
+    
+    // ============================================================================
+    // ORGANIZATIONS COLLECTION
+    // ============================================================================
+    
+    match /organizations/{orgId} {
+      // Only org admins can read their organization
+      allow read: if isOrgAdmin(orgId);
+      
+      // Only org admins can update organization
+      allow update: if isOrgAdmin(orgId) && 
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['created_by', 'created_at', 'org_id']);
+      
+      // Organization creation happens server-side only
+      allow create, delete: if false;
+    }
+    
+    // ============================================================================
+    // USERS COLLECTION
+    // ============================================================================
+    
+    match /users/{userId} {
+      // User can read their own data
+      // Org admin can read users in their organization
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid == userId || isOrgAdmin(getUserDoc().org_id));
+      
+      // User creates their own profile on signup
+      allow create: if isAuthenticated() && request.auth.uid == userId &&
+                       request.resource.data.uid == userId &&
+                       request.resource.data.email == request.auth.token.email;
+      
+      // User can update their own basic info
+      // Org admin can update any user in their org
+      allow update: if (isAuthenticated() && request.auth.uid == userId) ||
+                       isOrgAdmin(resource.data.org_id);
+      
+      // Deletion restricted - use deactivation instead
+      allow delete: if false;
+    }
+    
+    // ============================================================================
+    // BRANCHES COLLECTION
+    // ============================================================================
+    
+    match /branches/{branchId} {
+      // Branch document structure: { org_id, name, address, location, timezone, created_at, created_by, _data: [...] }
+      
+      // User can read branch if they belong to the organization
+      allow read: if userBelongsToOrg(resource.data.org_id);
+      
+      // Only org admin can update branch
+      allow update: if isOrgAdmin(resource.data.org_id) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['org_id', 'created_at', 'created_by']);
+      
+      // Branch creation/deletion handled server-side
+      allow create, delete: if false;
+    }
+    
+    // ============================================================================
+    // SETTINGS COLLECTION (Organization-wide settings)
+    // ============================================================================
+    
+    match /settings/{settingId} {
+      // settingId format: {orgId}_{branchId}
+      let orgId = settingId.split('_')[0];
+      let branchId = settingId.split('_')[1];
+      
+      // Anyone can read settings for public booking
+      allow read: if true;
+      
+      // Only org admins can write settings
+      allow write: if isOrgAdmin(orgId) &&
+                      request.resource.data.org_id == orgId &&
+                      request.resource.data.branch_id == branchId;
+    }
+    
+    // ============================================================================
+    // TIME SLOTS COLLECTION (Per-branch availability)
+    // ============================================================================
+    
+    match /time_slots/{slotId} {
+      // Public: Anyone can read time slots for booking
+      allow read: if true;
+      
+      // Authenticated branch user: Can create/update slots for their branch
+      allow create, update: if isAuthenticated() &&
+                              userBelongsToBranch(request.resource.data.org_id, request.resource.data.branch_id) &&
+                              request.resource.data.keys().hasAll(['org_id', 'branch_id', 'date', 'start_time', 'end_time']);
+      
+      // Only org admins can delete slots
+      allow delete: if isOrgAdmin(resource.data.org_id);
+    }
+    
+    // ============================================================================
+    // APPOINTMENTS COLLECTION (Per-branch appointments)
+    // ============================================================================
+    
+    match /appointments/{appointmentId} {
+      // Public: Anyone can read appointments
+      allow read: if true;
+      
+      // Public booking: Anyone can create appointment with required fields
+      allow create: if request.resource.data.keys().hasAll(['org_id', 'branch_id', 'customerName', 'customerEmail', 'date', 'time']) &&
+                       request.resource.data.date is timestamp &&
+                       request.resource.data.time is string;
+      
+      // Branch user: Can update appointments in their branch
+      allow update: if isAuthenticated() &&
+                       userBelongsToBranch(resource.data.org_id, resource.data.branch_id) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['org_id', 'branch_id', 'created_at']);
+      
+      // Only org admins can delete appointments
+      allow delete: if isOrgAdmin(resource.data.org_id);
+    }
+    
+    // ============================================================================
+    // CALENDAR TOKENS COLLECTION (Per-branch calendar integration)
+    // ============================================================================
+    
+    // Document ID format: {orgId}_{branchId}_{userId}
+    match /calendar_tokens/{tokenId} {
+      let parts = tokenId.split('_');
+      let orgId = parts[0];
+      let branchId = parts[1];
+      let userId = parts[2];
+      
+      // Only the user who owns the token or org admin can read
+      allow read: if (isAuthenticated() && request.auth.uid == userId) ||
+                     isOrgAdmin(orgId);
+      
+      // User can create their own token for their branch
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == userId &&
+                       userBelongsToBranch(orgId, branchId) &&
+                       request.resource.data.org_id == orgId &&
+                       request.resource.data.branch_id == branchId &&
+                       request.resource.data.user_uid == userId &&
+                       request.resource.data.keys().hasAll(['org_id', 'branch_id', 'user_uid', 'provider']);
+      
+      // User can update their own token
+      allow update: if (isAuthenticated() && request.auth.uid == userId) &&
+                       !request.resource.data.diff(resource.data).affectedKeys().hasAny(['org_id', 'branch_id', 'user_uid']);
+      
+      // User can delete their own token or org admin can delete any
+      allow delete: if (isAuthenticated() && request.auth.uid == userId) ||
+                       isOrgAdmin(orgId);
+    }
+    
+    // ============================================================================
+    // CALENDAR EVENTS COLLECTION (Per-branch linked calendar events)
+    // ============================================================================
+    
+    match /calendar_events/{eventId} {
+      // eventId format: {orgId}_{branchId}_{externalEventId}
+      let orgId = resource.data.org_id;
+      let branchId = resource.data.branch_id;
+      
+      // Only branch users can read events in their branch
+      allow read: if isAuthenticated() &&
+                     userBelongsToBranch(orgId, branchId);
+      
+      // Backend only: Events synced from external calendars (no frontend write)
+      allow write: if false;
+    }
+    
+    // ============================================================================
+    // ORGANIZATIONS_USAGE COLLECTION (Tier limit tracking)
+    // ============================================================================
+    
+    match /organizations_usage/{orgId} {
+      // Only org admins can read usage data
+      allow read: if isOrgAdmin(orgId);
+      
+      // Backend only: Usage updated by server
+      allow write: if false;
+    }
+    
+    // ============================================================================
+    // CATCH-ALL: Deny everything else
+    // ============================================================================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

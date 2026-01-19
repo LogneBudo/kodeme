@@ -1,8 +1,8 @@
+
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { google } from "googleapis";
-
-// In-memory tokens (note: serverless instances may be ephemeral)
-let googleTokens: any | null = null;
+import { saveCalendarToken } from "../../../src/api/calendarTokensApi";
+import { getAuthContext } from "../../apiUtils";
 
 function getRedirectUri(req: VercelRequest) {
   const envUri = process.env.GOOGLE_REDIRECT_URI;
@@ -11,6 +11,7 @@ function getRedirectUri(req: VercelRequest) {
   const proto = (req.headers["x-forwarded-proto"] as string) || "https";
   return `${proto}://${host}/auth/google/callback`;
 }
+
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -34,7 +35,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, getRedirectUri(req));
     const { tokens } = await oauth2Client.getToken(code);
-    googleTokens = tokens;
+
+    // Extract multi-tenant context (orgId, branchId, userId)
+    const { orgId, branchId, userId } = getAuthContext(req);
+    if (!orgId || !userId) {
+      return res.redirect(`${adminSettingsUrl}?error=missing_context&provider=google`);
+    }
+
+    // Save tokens to Firestore
+    await saveCalendarToken({
+      provider: "google",
+      orgId,
+      branchId,
+      userId,
+      accessToken: tokens.access_token!,
+      refreshToken: tokens.refresh_token,
+      expiresAt: tokens.expiry_date,
+      scope: tokens.scope,
+      tokenType: tokens.token_type,
+    });
 
     return res.redirect(`${adminSettingsUrl}?calendar=connected&provider=google`);
   } catch (error: any) {
@@ -44,9 +63,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const adminSettingsUrl = `${proto}://${host}/admin/settings`;
     return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(error?.message || "unknown")}&provider=google`);
   }
-}
-
-// helper export to be reused by calendar endpoints in the same instance
-export function getGoogleTokens() {
-  return googleTokens;
 }

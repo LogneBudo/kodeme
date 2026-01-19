@@ -12,7 +12,7 @@ export type SlotState = (typeof SlotState)[keyof typeof SlotState];
 export const slotStateDisplay: Record<SlotState, { label: string; icon: string }> = {
   [SlotState.Past]: { label: "Past", icon: "—" },
   [SlotState.CalendarBlocked]: { label: "Calendar blocked", icon: "X" },
-  [SlotState.Blocked]: { label: "Blocked", icon: "X" },
+  [SlotState.Blocked]: { label: "Blocked", icon: "🔒" },
   [SlotState.Booked]: { label: "Booked", icon: "✓" },
   [SlotState.Unavailable]: { label: "Unavailable", icon: "✕" },
   [SlotState.Available]: { label: "Available", icon: "✓" },

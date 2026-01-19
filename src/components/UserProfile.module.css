@@ -98,6 +98,26 @@
   margin: 4px 0 0 0;
 }
 
+.linkButton {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0f172a;
+  font-weight: 500;
+  font-size: 14px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.linkButton:hover {
+  background: #f5f5f5;
+  color: #111827;
+}
+
 .logoutButton {
   width: 100%;
   padding: 12px 16px;

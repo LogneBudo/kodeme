@@ -6,7 +6,9 @@ import { db } from "../firebase";
 export type AuthUser = {
   uid: string;
   email: string;
-  role: string;
+  role: "owner" | "admin" | "user"; // User's role within their organization
+  org_id?: string; // MULTI-TENANCY: Which organization this user belongs to
+  branch_assignments?: Record<string, string>; // MULTI-TENANCY: { calendarId: role } mappings
 } | null;
 
 let cachedUser: AuthUser = null;
@@ -29,6 +31,8 @@ onAuthStateChanged(auth, async (user) => {
             uid: user.uid,
             email: user.email || "",
             role: userData.role || "user",
+            org_id: userData.org_id,
+            branch_assignments: userData.branch_assignments,
           };
 
         } else {
@@ -37,6 +41,8 @@ onAuthStateChanged(auth, async (user) => {
             uid: user.uid,
             email: user.email || "",
             role: "user",
+            org_id: undefined,
+            branch_assignments: undefined,
           };
 
           
@@ -61,6 +67,8 @@ onAuthStateChanged(auth, async (user) => {
           uid: user.uid,
           email: user.email || "",
           role: "user",
+          org_id: undefined,
+          branch_assignments: undefined,
         };
       }
     } catch (error) {
@@ -70,6 +78,8 @@ onAuthStateChanged(auth, async (user) => {
         uid: user.uid,
         email: user.email || "",
         role: "user",
+        org_id: undefined,
+        branch_assignments: undefined,
       };
     }
   } else {

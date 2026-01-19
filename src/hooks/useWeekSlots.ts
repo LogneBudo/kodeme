@@ -54,11 +54,19 @@ export function useWeekSlots({
   const timeSlots = useMemo(() => {
     if (!settings) return [];
 
-    const slots: string[] = [];
-    const { startTime, endTime } = settings.workingHours;
-    const [startHour] = startTime.split(':').map(Number);
-    const [endHour] = endTime.split(':').map(Number);
+    let startHour = 0, endHour = 23;
+    if (
+      typeof settings.workingHours.startHour === 'number' &&
+      typeof settings.workingHours.endHour === 'number'
+    ) {
+      startHour = settings.workingHours.startHour;
+      endHour = settings.workingHours.endHour;
+    } else {
+      [startHour] = (settings.workingHours.startTime || "00:00").split(":").map(Number);
+      [endHour] = (settings.workingHours.endTime || "23:45").split(":").map(Number);
+    }
 
+    const slots: string[] = [];
     for (let hour = startHour; hour < endHour; hour++) {
       slots.push(`${String(hour).padStart(2, "0")}:00`);
       slots.push(`${String(hour).padStart(2, "0")}:30`);

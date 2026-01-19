@@ -11,11 +11,14 @@
     "cy:open": "cypress open",
     "cy:run": "cypress run",
     "cy:run:spec": "cypress run --spec",
-    "setup-hooks": "node -e \"const fs = require('fs'); fs.chmodSync('.git/hooks/pre-commit', '0755'); console.log('✅ Git hooks installed');\""
+    "setup-hooks": "node -e \"const fs = require('fs'); fs.chmodSync('.git/hooks/pre-commit', '0755'); console.log('✅ Git hooks installed');\"",
+    "fix-calendar": "tsx scripts/fix-calendar-data.ts"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "firebase": "^12.7.0",
+    "firebase-admin": "^13.6.0",
     "framer-motion": "^12.23.26",
     "googleapis": "^131.0.0",
     "leaflet": "^1.9.4",
@@ -34,11 +37,12 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "cypress": "^13.7.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "cypress": "^13.7.1",
+    "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4"

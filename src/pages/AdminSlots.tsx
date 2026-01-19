@@ -17,24 +17,26 @@ import AdminPageHeader from "../components/admin/AdminPageHeader";
 import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
-import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
+import { useFirestoreTenantQuery } from "../hooks/useFirestoreTenantQuery";
+import { useAuth } from "../context/AuthContext";
 
 import type { Appointment } from "../types/appointment";
 import {
-  listAppointments,
-  getSettings,
+  listTenantAppointments,
+  getTenantSettings,
 } from "../api/firebaseApi";
 import styles from "./AdminBase.module.css";
 
 function AdminSlots() {
+  const { orgId, calendarId } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // Use the hook to load settings
-  const { data: settings } = useFirestoreQuery(
-    () => getSettings(),
+  // Use tenant-aware hook to load settings
+  const { data: settings } = useFirestoreTenantQuery(
+    (orgId, calendarId) => getTenantSettings(orgId, calendarId),
     []
   );
   
@@ -65,6 +67,8 @@ function AdminSlots() {
 
   // Load appointments and calendar events when date changes
   useEffect(() => {
+    if (!orgId || !calendarId) return; // Skip if tenant context not ready
+    
     let isMounted = true;
     const loadData = async () => {
       setLoading(true);
@@ -72,7 +76,7 @@ function AdminSlots() {
       const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
 
       try {
-        const allAppointments = await listAppointments();
+        const allAppointments = await listTenantAppointments(orgId, calendarId);
         const weekAppointments = allAppointments.filter((apt) => {
           const d = new Date(apt.appointmentDate);
           return d >= weekStart && d <= weekEnd;
@@ -103,7 +107,7 @@ function AdminSlots() {
     return () => {
       isMounted = false;
     };
-  }, [currentDate]);
+  }, [currentDate, orgId, calendarId]);
 
 
   return (

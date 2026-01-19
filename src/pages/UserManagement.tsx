@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { listUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
+import { listTenantUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
+import { useAuth } from "../context/AuthContext";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
@@ -10,9 +11,13 @@ import baseStyles from "./AdminBase.module.css";
 import styles from "./UserManagement.module.css";
 
 export default function UserManagement() {
+  const { orgId } = useAuth();
   const { data: users = [], loading, refetch } = useFirestoreQuery(
-    () => listUsers(),
-    []
+    async () => {
+      if (!orgId) return [];
+      return listTenantUsers(orgId);
+    },
+    [orgId]
   );
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   const [searchQuery, setSearchQuery] = useState("");

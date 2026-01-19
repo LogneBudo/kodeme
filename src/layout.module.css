@@ -74,6 +74,11 @@
   align-items: center;
 }
 
+.calendarSwitcherContainer {
+  min-width: 180px;
+  max-width: 250px;
+}
+
 .adminDropdownContainer {
   position: relative;
 }

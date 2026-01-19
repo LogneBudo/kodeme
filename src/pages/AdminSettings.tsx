@@ -1,6 +1,5 @@
 
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import WorkingHoursSettings from "../components/admin/settings/WorkingHoursSettings";
 import WorkingDaysSettings from "../components/admin/settings/WorkingDaysSettings";
 import BlockedSlotsSettings from "../components/admin/settings/BlockedSlotsSettings";
@@ -8,12 +7,24 @@ import CalendarIntegrationSettings from "../components/admin/settings/CalendarIn
 import RestaurantSettings from "../components/admin/settings/RestaurantSettings";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import { useSearchParams } from "react-router-dom";
-import { getSettings, updateSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
+import { getTenantSettings, updateTenantSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
+import { useAuth } from "../context/AuthContext";
 import { Settings as SettingsIcon, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./AdminBase.module.css";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+// Helper to fetch calendar connection status
+async function fetchCalendarStatus(backendUrl: string) {
+	try {
+		const resp = await fetch(`${backendUrl}/api/calendar/status`, { credentials: "include" });
+		if (!resp.ok) return { connected: false, outlookConnected: false };
+		return await resp.json();
+	} catch {
+		return { connected: false, outlookConnected: false };
+	}
+}
 
 // Settings groups definition
 const SETTINGS_GROUPS = [
@@ -50,6 +61,7 @@ const SETTINGS_GROUPS = [
 ];
 
 export default function SettingsPage() {
+	const { orgId, calendarId } = useAuth();
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -60,6 +72,13 @@ export default function SettingsPage() {
 	const [outlookConnecting, setOutlookConnecting] = useState(false);
 	const [calendarConnected, setCalendarConnected] = useState(false);
 	const [outlookConnected, setOutlookConnected] = useState(false);
+	const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
+		// Fetch real connection status from backend
+		const pollCalendarStatus = useCallback(async () => {
+			const status = await fetchCalendarStatus(backendUrl);
+			setCalendarConnected(!!status.connected);
+			setOutlookConnected(!!status.outlookConnected);
+		}, [backendUrl]);
 	const [newBlockedSlot, setNewBlockedSlot] = useState<BlockedSlot>({
 		_key: Date.now().toString(),
 		startTime: "12:00",
@@ -156,34 +175,59 @@ export default function SettingsPage() {
 
 	useEffect(() => {
 		loadSettings();
-		// Note: calendar status check always returns false due to in-memory token storage in serverless
-		// Calendar connection is confirmed via OAuth redirect, not status polling
-		
+		pollCalendarStatus();
 		// Check if returning from OAuth callback
 		const calendarParam = searchParams.get("calendar");
 		const providerParam = searchParams.get("provider");
 		if (calendarParam === "connected" || calendarParam === "callback_received") {
-			if (providerParam === "outlook") {
-				toast.success("Outlook Calendar connected!");
-				setOutlookConnected(true);
-				setOutlookConnecting(false);
-			} else {
-				toast.success("Google Calendar connected!");
-				setCalendarConnected(true);
-				setGoogleConnecting(false);
-			}
+			toast.success(`${providerParam === "outlook" ? "Outlook" : "Google"} Calendar connected!`);
 			setActiveTab("calendar");
+			setGoogleConnecting(false);
+			setOutlookConnecting(false);
+			pollCalendarStatus();
 		} else if (searchParams.get("error")) {
 			const errorMsg = searchParams.get("error");
 			toast.error(`Failed to connect ${providerParam === "outlook" ? "Outlook" : "Google"} Calendar: ${errorMsg}`);
 			setGoogleConnecting(false);
 			setOutlookConnecting(false);
 		}
-	}, [searchParams]);
+		// eslint-disable-next-line
+	}, [searchParams, orgId, calendarId, pollCalendarStatus]);
+	// Disconnect handlers
+	async function handleDisconnectGoogle() {
+		try {
+			const resp = await fetch(`${backendUrl}/api/calendar/disconnect?provider=google`, { method: "POST", credentials: "include" });
+			if (resp.ok) {
+				toast.success("Google Calendar disconnected.");
+				setCalendarConnected(false);
+				pollCalendarStatus();
+			} else {
+				toast.error("Failed to disconnect Google Calendar");
+			}
+		} catch {
+			toast.error("Failed to disconnect Google Calendar");
+		}
+	}
+
+	async function handleDisconnectOutlook() {
+		try {
+			const resp = await fetch(`${backendUrl}/api/calendar/disconnect?provider=outlook`, { method: "POST", credentials: "include" });
+			if (resp.ok) {
+				toast.success("Outlook Calendar disconnected.");
+				setOutlookConnected(false);
+				pollCalendarStatus();
+			} else {
+				toast.error("Failed to disconnect Outlook Calendar");
+			}
+		} catch {
+			toast.error("Failed to disconnect Outlook Calendar");
+		}
+	}
 
 	async function loadSettings() {
+		if (!orgId || !calendarId) return;
 		setLoading(true);
-		const data = await getSettings();
+		const data = await getTenantSettings(orgId, calendarId);
 
 		setSettings(data);
 		// If a city is already saved, populate the cityValidation state
@@ -210,11 +254,11 @@ export default function SettingsPage() {
 	}
 
 	async function handleSave() {
-		if (!settings) return;
+		if (!orgId || !calendarId || !settings) return;
 		setSaving(true);
 		setSavedRecently(false);
 
-		const success = await updateSettings(settings);
+		const success = await updateTenantSettings(orgId, calendarId, settings);
 		setSaving(false);
 		if (success) {
 			toast.success("Settings saved successfully!");
@@ -448,6 +492,8 @@ export default function SettingsPage() {
 									outlookConnecting={outlookConnecting}
 									handleConnectGoogle={handleConnectGoogle}
 									handleConnectOutlook={handleConnectOutlook}
+									handleDisconnectGoogle={handleDisconnectGoogle}
+									handleDisconnectOutlook={handleDisconnectOutlook}
 								/>
 							)}
 														{/* Restaurants Tab */}

@@ -31,3 +31,8 @@ cypress.env.json
 
 # Ignore Google OAuth token file
 backend/.google-tokens.json
+# Project Management & Tracking (DO NOT COMMIT)
+PROGRESS_TRACKER.md
+PROGRESS_TRACKER.json
+.progress-state.json
+PHASE_*.json

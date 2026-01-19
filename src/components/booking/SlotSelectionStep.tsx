@@ -12,7 +12,9 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { listTimeSlots } from "../../api/firebaseApi";
+import { listTenantTimeSlots, getTenantSettings, listTenantAppointments } from "../../api/firebaseApi";
+import { useAuth } from "../../context/AuthContext";
+import { usePublicBookingContext } from "../../context/PublicBookingContext";
 import type { TimeSlot } from "../../types/timeSlot";
 import StepContainer from "./StepContainer";
 import StepButton from "./StepButton";
@@ -34,13 +36,18 @@ export default function SlotSelectionStep({
   onBack,
   isBooking,
 }: Props) {
+  const authContext = useAuth();
+  const publicContext = usePublicBookingContext();
+  // Use public booking params when present (unauthenticated flow), otherwise auth context
+  const orgId = publicContext?.orgId || authContext.orgId;
+  const calendarId = publicContext?.calendarId || authContext.calendarId;
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     loadSlots();
-  }, [timeframe]);
+  }, [timeframe, orgId, calendarId]);
 
   const getDateRange = () => {
   const today = startOfDay(new Date());
@@ -70,36 +77,135 @@ export default function SlotSelectionStep({
 };
 
   const loadSlots = async () => {
+    if (!orgId || !calendarId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     const { start, end } = getDateRange();
     
     try {
-      const allSlots = await listTimeSlots();
+      // Fetch tenant settings + appointments to build availability if time_slots collection is empty
+      const [settings, appointments, storedSlots] = await Promise.all([
+        getTenantSettings(orgId, calendarId),
+        listTenantAppointments(orgId, calendarId).catch(() => []),
+        listTenantTimeSlots(orgId, calendarId).catch(() => []),
+      ]);
 
+      const hasStoredSlots = storedSlots.length > 0;
 
-      const availableSlots = allSlots.filter((slot) => {
-        // Check if slot is within the requested date range
-        const slotDate = parseISO(slot.date);
-        const inRange = !isBefore(slotDate, start) && !isAfter(slotDate, end);
-        
-        // Check if slot is marked as available
-        const isAvailable = slot.status === "available";
-        
+      const normalizeDate = (raw: any) =>
+        typeof raw === "string"
+          ? parseISO(raw)
+          : raw?.toDate?.()
+            ? raw.toDate()
+            : new Date(raw);
 
-        
-        return inRange && isAvailable;
-      });
+      const isTimeBlocked = (date: Date, time: string) => {
+        if (!settings?.blockedSlots) return false;
+        const [slotHour, slotMinute] = time.split(":").map(Number);
+        const slotMinutes = slotHour * 60 + slotMinute;
 
+        return settings.blockedSlots.some((blocked) => {
+          const [startHour, startMinute] = blocked.startTime.split(":").map(Number);
+          const [endHour, endMinute] = blocked.endTime.split(":").map(Number);
+          const blockStart = startHour * 60 + startMinute;
+          const blockEnd = endHour * 60 + endMinute;
+          const within = slotMinutes >= blockStart && slotMinutes < blockEnd;
+          if (!within) return false;
+          if (blocked.date) {
+            return blocked.date === format(date, "yyyy-MM-dd");
+          }
+          return true;
+        });
+      };
 
+      const isUnavailable = (date: Date, time: string) =>
+        !!settings?.oneOffUnavailableSlots?.some(
+          (s) => s.date === format(date, "yyyy-MM-dd") && s.time === time
+        );
 
-      availableSlots.sort((a, b) => {
-        const dateCompare = a.date.localeCompare(b.date);
-        if (dateCompare !== 0) return dateCompare;
-        return a.time.localeCompare(b.time);
-      });
+      const hasAppointment = (date: Date, time: string) =>
+        appointments?.some((a) => {
+          const d = normalizeDate((a as any).appointmentDate ?? (a as any).date);
+          return (
+            format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd") &&
+            (a as any).time === time &&
+            (a as any).status !== "cancelled"
+          );
+        });
 
-      setSlots(availableSlots);
+      const slotsFromStorage = storedSlots
+        .filter((slot) => {
+          const slotDate = normalizeDate(slot.date);
+          const inRange = !isBefore(slotDate, start) && !isAfter(slotDate, end);
+          const isAvailable = !slot.status || slot.status === "available";
+          return inRange && isAvailable;
+        })
+        .sort((a, b) => {
+          const dateCompare = String(a.date).localeCompare(String(b.date));
+          if (dateCompare !== 0) return dateCompare;
+          return String(a.time).localeCompare(String(b.time));
+        });
+
+      const generateSlots = (): TimeSlot[] => {
+        if (!settings) return [];
+        // workingDays is an array of numbers (0=Sun, 1=Mon, ...)
+        const workingDays = new Set(settings.workingDays || []);
+        // Prefer startHour/endHour if present, else use startTime/endTime
+        let startHour = 0, endHour = 23;
+        if (typeof settings.workingHours.startHour === 'number' && typeof settings.workingHours.endHour === 'number') {
+          startHour = settings.workingHours.startHour;
+          endHour = settings.workingHours.endHour;
+        } else {
+          [startHour] = (settings.workingHours.startTime || "00:00").split(":").map(Number);
+          [endHour] = (settings.workingHours.endTime || "23:45").split(":").map(Number);
+        }
+
+        const generated: TimeSlot[] = [];
+        for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
+          if (!workingDays.has(d.getDay())) continue;
+          for (let hour = startHour; hour < endHour; hour++) {
+            for (let minute of [0, 30]) {
+              const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+              if (isTimeBlocked(d, time)) continue;
+              if (isUnavailable(d, time)) continue;
+              if (hasAppointment(d, time)) continue;
+              generated.push({
+                id: `${format(d, "yyyy-MM-dd")}-${time}`,
+                org_id: orgId,
+                calendar_id: calendarId,
+                date: format(d, "yyyy-MM-dd"),
+                time,
+                status: "available",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+            }
+          }
+        }
+        return generated.sort((a, b) => {
+          const dateCompare = String(a.date).localeCompare(String(b.date));
+          if (dateCompare !== 0) return dateCompare;
+          return String(a.time).localeCompare(String(b.time));
+        });
+      };
+
+      // If stored slots exist but all are blocked/booked, treat as "all available" (persisted slots = exceptions only)
+      let availableSlots: TimeSlot[];
+      // If there are any stored slots, treat them as exceptions (blocked/booked),
+      // and generate all possible slots, filtering out any that match a stored slot (by date+time)
+      if (hasStoredSlots) {
+        const storedBlocked = new Set(slotsFromStorage.map(s => `${s.date}|${s.time}`));
+        availableSlots = generateSlots().filter(s => !storedBlocked.has(`${s.date}|${s.time}`));
+      } else {
+        availableSlots = generateSlots();
+      }
+      console.log('[SlotSelectionStep] org:', orgId, 'calendar:', calendarId, 'slots:', availableSlots.length, 'stored:', hasStoredSlots, 'settings:', settings, 'appointments:', appointments.length);
+      // Limit to first 8 slots for display
+      setSlots(availableSlots.slice(0, 8));
+      // Optionally, show more slots by default (remove slice if present)
     } catch (error) {
       console.error("Failed to load time slots:", error);
       setSlots([]);
@@ -109,7 +215,12 @@ export default function SlotSelectionStep({
   };
 
   const formatSlotDisplay = (slot: TimeSlot) => {
-    const date = parseISO(slot.date);
+    const rawDate: any = slot.date;
+    const date = typeof rawDate === "string"
+      ? parseISO(rawDate)
+      : rawDate?.toDate?.()
+        ? rawDate.toDate()
+        : new Date(rawDate);
     return {
       date: format(date, "EEE, MMM d"),
       time: slot.time,

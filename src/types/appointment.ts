@@ -1,5 +1,7 @@
 export type Appointment = {
   id: string;
+  org_id?: string; // MULTI-TENANCY: Which organization owns this appointment (optional during Phase 1)
+  calendar_id?: string; // MULTI-TENANCY: Which calendar this appointment belongs to (optional during Phase 1)
   slotId: string; // Reference to TimeSlot
   email: string;
   locationDetails: {

@@ -16,6 +16,8 @@ interface CalendarIntegrationSettingsProps {
   outlookConnecting: boolean;
   handleConnectGoogle: () => void;
   handleConnectOutlook: () => void;
+  handleDisconnectGoogle: () => void;
+  handleDisconnectOutlook: () => void;
 }
 
 const CalendarIntegrationSettings: React.FC<CalendarIntegrationSettingsProps> = ({
@@ -27,6 +29,8 @@ const CalendarIntegrationSettings: React.FC<CalendarIntegrationSettingsProps> = 
   outlookConnecting,
   handleConnectGoogle,
   handleConnectOutlook,
+  handleDisconnectGoogle,
+  handleDisconnectOutlook,
 }) => (
   <div>
     <h2 style={{ marginTop: 0, marginBottom: "18px", fontSize: "22px", fontWeight: 700 }}>
@@ -36,28 +40,57 @@ const CalendarIntegrationSettings: React.FC<CalendarIntegrationSettingsProps> = 
       Automatically sync your bookings with your calendar and block busy times
     </p>
     <div style={{ background: "#fafcff", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "28px 24px 24px 24px", marginBottom: "24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-      {calendarConnected && (
-        <div style={{ marginBottom: "18px", color: "#22c55e", fontWeight: 600, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-          <span style={{ fontSize: "18px" }}>✔</span> Google Calendar connected successfully!
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%", alignItems: "center" }}>
+        {/* Google Calendar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center" }}>
+          {calendarConnected ? (
+            <>
+              <span style={{ color: "#22c55e", fontWeight: 600, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "18px" }}>✔</span> Google Calendar connected
+              </span>
+              <button
+                onClick={handleDisconnectGoogle}
+                style={{ background: "#ef4444", color: "white", border: "none", borderRadius: "6px", padding: "8px 18px", fontWeight: 600, cursor: "pointer", fontSize: "14px", marginLeft: "8px" }}
+              >
+                Disconnect
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleConnectGoogle}
+              disabled={googleConnecting}
+              style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: googleConnecting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
+            >
+              <span style={{ display: "flex", alignItems: "center" }}><Calendar size={16} /></span>
+              Connect Google Calendar
+            </button>
+          )}
         </div>
-      )}
-      <div style={{ display: "flex", gap: "16px" }}>
-        <button
-          onClick={handleConnectGoogle}
-          disabled={googleConnecting || calendarConnected}
-          style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: googleConnecting || calendarConnected ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
-        >
-          <span style={{ display: "flex", alignItems: "center" }}><Calendar size={16} /></span>
-          Connect Google Calendar
-        </button>
-        <button
-          onClick={handleConnectOutlook}
-          disabled={outlookConnecting || outlookConnected}
-          style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: outlookConnecting || outlookConnected ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
-        >
-          <span style={{ display: "flex", alignItems: "center" }}><Calendar size={16} /></span>
-          Connect Outlook Calendar
-        </button>
+        {/* Outlook Calendar */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center" }}>
+          {outlookConnected ? (
+            <>
+              <span style={{ color: "#22c55e", fontWeight: 600, fontSize: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "18px" }}>✔</span> Outlook Calendar connected
+              </span>
+              <button
+                onClick={handleDisconnectOutlook}
+                style={{ background: "#ef4444", color: "white", border: "none", borderRadius: "6px", padding: "8px 18px", fontWeight: 600, cursor: "pointer", fontSize: "14px", marginLeft: "8px" }}
+              >
+                Disconnect
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleConnectOutlook}
+              disabled={outlookConnecting}
+              style={{ background: "#2563eb", color: "white", border: "none", borderRadius: "6px", padding: "10px 24px", fontWeight: 600, cursor: outlookConnecting ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "15px" }}
+            >
+              <span style={{ display: "flex", alignItems: "center" }}><Calendar size={16} /></span>
+              Connect Outlook Calendar
+            </button>
+          )}
+        </div>
       </div>
     </div>
     <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: "12px", padding: "24px 24px 18px 24px", marginBottom: "18px" }}>

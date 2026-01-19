@@ -3,6 +3,7 @@ import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useAuth } from "./context/AuthContext";
 import UserProfile from "./components/UserProfile";
+import CalendarSwitcher from "./components/CalendarSwitcher";
 import layoutStyles from "./layout.module.css";
 type LayoutProps = {
   children: React.ReactNode;
@@ -25,6 +26,8 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
     { name: "admin/appointments", label: "Appointments", icon: Calendar, adminOnly: true },
     { name: "admin/slots", label: "Slots", icon: Settings, adminOnly: true },
     { name: "admin/users", label: "Users", icon: Users, adminOnly: true },
+    { name: "admin/calendars", label: "Calendars", icon: Calendar, adminOnly: true },
+    { name: "admin/team", label: "Team", icon: Users, adminOnly: true },
     { name: "admin/settings", label: "Settings", icon: Settings, adminOnly: true },
   ];
 
@@ -54,6 +57,9 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
         {/* Desktop Navigation for admin only, as dropdown */}
         {!loading && user && user.role === "admin" && (
           <div className={layoutStyles.desktopNav}>
+            <div className={layoutStyles.calendarSwitcherContainer}>
+              <CalendarSwitcher />
+            </div>
             <div className={layoutStyles.adminDropdownContainer}>
               <button className={layoutStyles.adminDropdownButton} onClick={() => setAdminDropdownOpen((open) => !open)}>
                 <Menu size={16} />

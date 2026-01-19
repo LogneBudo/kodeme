@@ -11,7 +11,9 @@ import SlotSelectionStep from "../components/booking/SlotSelectionStep";
 import SuccessScreen from "../components/booking/SuccessScreen";
 import EmailStep from "../components/booking/EmailStep";
 import LocationStep from "../components/booking/LocationStep";
-import { getSettings, createAppointmentWithSlot } from "../api/firebaseApi";
+import { getTenantSettings, createTenantAppointmentWithSlot } from "../api/firebaseApi";
+import { useAuth } from "../context/AuthContext";
+import { usePublicBookingContext } from "../context/PublicBookingContext";
 import { validateEmail, validateRequired } from "../utils/validation";
 import styles from "./BookAppointment.module.css";
 import bookingStyles from "../components/booking/Booking.module.css";
@@ -23,6 +25,12 @@ import type { Restaurant } from "../types/restaurant";
 const steps = ["Email", "Location", "Timeframe", "Confirm Slot"];
 
 export default function BookAppointment() {
+  const authContext = useAuth();
+  const publicContext = usePublicBookingContext();
+  
+  // Use public booking params if available, otherwise use auth context
+  const orgId = publicContext?.orgId || authContext.orgId;
+  const calendarId = publicContext?.calendarId || authContext.calendarId;
   const locationBackgrounds: Record<string, string> = {
     zoom: zoomImg,
     your_premises: premisesImg,
@@ -44,8 +52,9 @@ export default function BookAppointment() {
 
   useEffect(() => {
     (async () => {
+      if (!orgId || !calendarId) return;
       try {
-        const settings = await getSettings();
+        const settings = await getTenantSettings(orgId, calendarId);
         setRestaurants(settings.restaurants || []);
       } catch (err) {
         console.error("Failed to load restaurants", err);
@@ -53,20 +62,20 @@ export default function BookAppointment() {
         setLoadingRestaurants(false);
       }
     })();
-  }, []);
+  }, [orgId, calendarId]);
 
   // ---------------------------------------------------------
   // Use Firebase API for appointment creation
   // ---------------------------------------------------------
 
   const handleBook = useCallback(async () => {
-    if (!selectedSlot) return;
+    if (!orgId || !calendarId || !selectedSlot) return;
 
     setIsBooking(true);
 
     try {
       // Use atomic operation: create appointment + mark slot as booked
-      const appointment = await createAppointmentWithSlot({
+      const appointment = await createTenantAppointmentWithSlot(orgId, calendarId, {
         email,
         slotId: selectedSlot.id,
         locationDetails: {
@@ -83,7 +92,7 @@ export default function BookAppointment() {
     } finally {
       setIsBooking(false);
     }
-  }, [selectedSlot, email, selectedLocation, locationDetails]);
+  }, [orgId, calendarId, selectedSlot, email, selectedLocation, locationDetails]);
 
   const handleReset = useCallback(() => {
     setCurrentStep(1);
