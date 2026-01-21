@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import BookAppointment from "./BookAppointment";
-import { getTenantCalendar } from "../api/firebaseApi";
+import { getTenantCalendar } from "../api/firebaseApi/calendars";
 import { PublicBookingContext } from "../context/PublicBookingContext";
 import type { Calendar } from "../types/branch";
 

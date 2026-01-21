@@ -1,7 +1,7 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { google } from "googleapis";
-import { saveCalendarToken } from "../../../src/api/calendarTokensApi";
+import { saveCalendarToken } from "../../_shared/calendarTokensApi";
 import { getAuthContext } from "../../apiUtils";
 
 function getRedirectUri(req: VercelRequest) {
@@ -49,18 +49,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       branchId,
       userId,
       accessToken: tokens.access_token!,
-      refreshToken: tokens.refresh_token,
-      expiresAt: tokens.expiry_date,
-      scope: tokens.scope,
-      tokenType: tokens.token_type,
+      refreshToken: tokens.refresh_token ?? undefined,
+      expiresAt: tokens.expiry_date ?? undefined,
+      scope: tokens.scope ?? undefined,
+      tokenType: tokens.token_type ?? undefined,
     });
 
     return res.redirect(`${adminSettingsUrl}?calendar=connected&provider=google`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("/api/auth/google/callback error", error);
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const proto = (req.headers["x-forwarded-proto"] as string) || "https";
     const adminSettingsUrl = `${proto}://${host}/admin/settings`;
-    return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(error?.message || "unknown")}&provider=google`);
+    let message = "unknown";
+    function hasMessage(e: unknown): e is { message: string } {
+      return typeof e === "object" && e !== null && "message" in e && typeof (e as { message: unknown }).message === "string";
+    }
+    if (hasMessage(error)) {
+      message = error.message;
+    }
+    return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(message)}&provider=google`);
   }
 }

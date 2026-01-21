@@ -1,6 +1,6 @@
 
 import { useState, useMemo } from "react";
-import { listTenantAppointments, updateTenantAppointment, deleteTenantAppointment } from "../api/firebaseApi";
+import { listTenantAppointments, updateTenantAppointment, deleteTenantAppointment } from "../api/firebaseApi/appointments";
 import type { Appointment } from "../types/appointment";
 import { Trash2, Edit2, Save, X, Calendar } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
 import { useFirestoreTenantQuery } from "../hooks/useFirestoreTenantQuery";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 import tableStyles from "../components/admin/AdminTable.module.css";
 import styles from "./AdminBase.module.css";
 

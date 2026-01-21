@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { saveCalendarToken } from "../../../src/api/calendarTokensApi";
+import { saveCalendarToken } from "../../_shared/calendarTokensApi";
 import { getAuthContext } from "../../apiUtils";
 
 
@@ -60,11 +60,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     return res.redirect(`${adminSettingsUrl}?calendar=connected&provider=outlook`);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("/api/auth/outlook/callback error", error);
     const host = req.headers["x-forwarded-host"] || req.headers.host;
     const proto = (req.headers["x-forwarded-proto"] as string) || "https";
     const adminSettingsUrl = `${proto}://${host}/admin/settings`;
-    return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(error?.message || "unknown")}&provider=outlook`);
+    const message =
+      error && typeof error === "object" && "message" in error && typeof (error as { message?: unknown }).message === "string"
+        ? (error as { message: string }).message
+        : "unknown";
+    return res.redirect(`${adminSettingsUrl}?error=callback_failed&message=${encodeURIComponent(message)}&provider=outlook`);
   }
 }

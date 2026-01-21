@@ -1,0 +1,386 @@
+openapi: 3.0.3
+info:
+  title: Kodeme Backend API
+  version: 1.0.0
+paths:
+  /api/auth/google/init:
+    get:
+      summary: Start Google OAuth flow (returns redirect URL)
+      tags:
+        - auth
+      responses:
+        '200':
+          description: URL to redirect the user to
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+  /api/auth/google/callback:
+    get:
+      summary: OAuth callback for Google (redirects to admin settings)
+      tags:
+        - auth
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: error
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirects to admin settings on success or error
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/auth/outlook/init:
+    get:
+      summary: Start Microsoft OAuth flow (returns redirect URL)
+      tags:
+        - auth
+      responses:
+        '200':
+          description: URL to redirect the user to
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/auth/outlook/callback:
+    get:
+      summary: OAuth callback for Microsoft Outlook (redirects to admin settings)
+      tags:
+        - auth
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: error
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirects to admin settings on success or error
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/booking-confirmation:
+    post:
+      summary: Send booking confirmation email (ICS)
+      tags:
+        - booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingConfirmationRequest'
+      responses:
+        '200':
+          description: Result object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmationResponse'
+  /api/calendar/events:
+    get:
+      summary: Retrieve calendar events and connection status
+      tags:
+        - calendar
+      responses:
+        '200':
+          description: Events list with connection flags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No connected calendar for this user
+  /api/calendar/disconnect:
+    post:
+      summary: Disconnect calendar provider
+      tags:
+        - calendar
+      parameters:
+        - in: query
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum:
+              - google
+              - outlook
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid provider
+  /api/calendar/status:
+    get:
+      summary: Get calendar connection status
+      tags:
+        - calendar
+      responses:
+        '200':
+          description: Status object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /api/debug:
+    get:
+      summary: Debug environment flags (non-sensitive)
+      tags:
+        - debug
+      responses:
+        '200':
+          description: Environment status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasGoogleClientId:
+                    type: boolean
+                  hasGoogleClientSecret:
+                    type: boolean
+                  hasGoogleRedirectUri:
+                    type: boolean
+                  hasMicrosoftClientId:
+                    type: boolean
+                  hasMicrosoftClientSecret:
+                    type: boolean
+                  hasMicrosoftRedirectUri:
+                    type: boolean
+                  googleClientIdStart:
+                    type: string
+  /api/invitations:
+    post:
+      summary: Create an invitation
+      tags:
+        - invitations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - org_id
+                - created_by
+                - expires
+              properties:
+                org_id:
+                  type: string
+                created_by:
+                  type: string
+                expires:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/invitations/validate/{code}:
+    get:
+      summary: Validate an invitation code
+      tags:
+        - invitations
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invitation object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '404':
+          description: Invalid or expired invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/invitations/redeem:
+    post:
+      summary: Redeem an invitation
+      tags:
+        - invitations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - user_id
+              properties:
+                code:
+                  type: string
+                user_id:
+                  type: string
+      responses:
+        '200':
+          description: Redeemed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+components:
+  responses:
+    Unauthorized:
+      description: Missing orgId or userId in request context
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+    EventsResponse:
+      type: object
+      properties:
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        connected:
+          type: boolean
+        outlookConnected:
+          type: boolean
+    StatusResponse:
+      type: object
+      properties:
+        connected:
+          type: boolean
+        outlookConnected:
+          type: boolean
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Internal invitation id
+        code:
+          type: string
+          description: Invitation code shown to invitee
+        org_id:
+          type: string
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          additionalProperties: true
+    BookingConfirmationRequest:
+      type: object
+      required:
+        - email
+        - appointment
+        - icsContent
+      properties:
+        email:
+          type: string
+          format: email
+        appointment:
+          $ref: '#/components/schemas/Appointment'
+        icsContent:
+          type: string
+          description: Raw ICS content to attach
+    BookingConfirmationResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    UrlResponse:
+      type: object
+      properties:
+        url:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        service:
+          type: string
+        durationMinutes:
+          type: integer
+        customer:
+          type: object
+          properties:
+            name:
+              type: string
+            email:
+              type: string
+              format: email
+        location:
+          type: string
+tags:
+  - name: calendar
+    description: Calendar integration endpoints
+  - name: invitations
+    description: Invitation lifecycle endpoints
+  - name: booking
+    description: Booking confirmation endpoints (email, ICS)
+  - name: auth
+    description: OAuth and authentication-related endpoints
+  - name: debug
+    description: Debug and environment helpers

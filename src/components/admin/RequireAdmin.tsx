@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { redirectToLogin } from "../../api/authApi";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 
 type RequireAdminProps = {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ export default function RequireAdmin({ children }: RequireAdminProps) {
         const isOnLogin = window.location.pathname.toLowerCase().startsWith("/admin/login");
         if (isOnLogin) return;
         const redirectPath = window.location.pathname + window.location.search;
-        setRedirecting(true);
+        setTimeout(() => setRedirecting(true), 0);
         redirectToLogin(redirectPath);
       }
     }

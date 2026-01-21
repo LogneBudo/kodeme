@@ -1,10 +1,22 @@
+
 import { useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
+import { useNavigate, Link } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import styles from "./UserProfile.module.css";
 
-export default function UserProfile() {
+type AdminNavItem = {
+  name: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+};
+
+type UserProfileProps = {
+  adminNavItems?: AdminNavItem[];
+  currentPageName?: string;
+};
+
+export default function UserProfile({ adminNavItems = [], currentPageName }: UserProfileProps) {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const navigate = useNavigate();
@@ -46,6 +58,27 @@ export default function UserProfile() {
               <p className={styles.infoRole}>{user.role === "admin" ? "👑 Admin" : "👤 User"}</p>
             </div>
           </div>
+          {/* Admin menu items */}
+          {adminNavItems.length > 0 && (
+            <div className={styles.adminMenuSection}>
+              {adminNavItems.map(item => {
+                const Icon = item.icon;
+                const isActive = currentPageName === item.name;
+                return (
+                  <Link
+                    key={item.name}
+                    to={`/${item.name}`}
+                    className={`${styles.linkButton} ${isActive ? styles.active : ""}`}
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    <Icon size={16} />
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <hr className={styles.menuDivider} />
+            </div>
+          )}
           <button
             onClick={() => { navigate("/admin/profile"); setDropdownOpen(false); }}
             className={styles.linkButton}

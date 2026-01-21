@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { useAuth } from "../context/AuthContext";
-import { listTenantCalendars, getCalendarUnsafe } from "../api/firebaseApi";
+import { useAuth } from "../context/useAuth";
+import { listTenantCalendars, getCalendarUnsafe } from "../api/firebaseApi/calendars";
 import type { Calendar } from "../types/branch";
 import styles from "./CalendarSwitcher.module.css";
 
@@ -15,11 +15,12 @@ export default function CalendarSwitcher() {
   // Fetch calendars for this organization
   useEffect(() => {
     if (!orgId) {
-      setLoading(false);
+      // Defer setLoading to avoid cascading renders
+      setTimeout(() => setLoading(false), 0);
       return;
     }
 
-    setLoading(true);
+    setTimeout(() => setLoading(true), 0);
     listTenantCalendars(orgId)
       .then(async (cals) => {
         setCalendars(cals);

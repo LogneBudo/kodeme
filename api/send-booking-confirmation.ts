@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_[REMOVED]);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
@@ -29,7 +29,7 @@ The Appointments Team
     `;
 
     const response = await resend.emails.send({
-      from: process.env.RESEND_[REMOVED] || "noreply@resend.dev",
+      from: process.env.RESEND_API_KEY || "noreply@resend.dev",
       to: email,
       subject: "Appointment Confirmation",
       html: `<pre>${emailContent}</pre>`,
@@ -38,10 +38,14 @@ The Appointments Team
       ],
     });
 
-    if ((response as any).error) throw new Error((response as any).error.message || "Failed to send email");
+    // Type guard for error property
+    if (typeof response === "object" && response !== null && "error" in response && response.error) {
+      const errorMessage = (response as { error: { message?: string } }).error.message || "Failed to send email";
+      throw new Error(errorMessage);
+    }
     return res.json({ success: true, message: "Email sent successfully", email });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error sending email:", error);
-    return res.status(500).json({ success: false, error: error?.message || "Failed to send email" });
+    return res.status(500).json({ success: false, error: (error as Error)?.message || "Failed to send email" });
   }
 }

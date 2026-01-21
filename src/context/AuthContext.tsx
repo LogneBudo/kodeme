@@ -1,12 +1,16 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AuthUser } from "../api/authApi";
 import { getCurrentUser, login as apiLogin, logout as apiLogout } from "../api/authApi";
-import { getOrganization, listTenantCalendars, createTenantCalendar } from "../api/firebaseApi";
+import { getOrganization } from "../api/firebaseApi/organizations";
+import { listTenantCalendars, createTenantCalendar } from "../api/firebaseApi/calendars";
 import type { Organization } from "../types/organization";
 import { auth, db } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
+
+export { AuthContext };
+export type { AuthContextValue };
 
 type Tenant = Organization & {
   calendars?: { id: string; name: string }[];
@@ -38,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tenants, setTenants] = useState<Tenant[] | undefined>(undefined);
   const [needsSetup, setNeedsSetup] = useState(false);
   const opIdRef = useRef(0);
-  const authDebug = (import.meta as any).env?.VITE_AUTH_DEBUG === "true";
+  const authDebug = (import.meta as ImportMeta).env?.VITE_AUTH_DEBUG === "true";
 
   // Derive an org_id from branch assignment keys when org_id is missing or invalid
   const deriveOrgIdFromAssignments = (assignments?: Record<string, string>): string | undefined => {
@@ -91,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 ...u,
                 org_id: data.org_id,
                 branch_assignments: data.branch_assignments,
-                role: (data.role as any) || u.role || "user",
+                role: (data.role as string) || u.role || "user",
               } as AuthUser;
               if (authDebug) {
                 console.log("[auth] Hydrated org_id from Firestore fallback", data.org_id);
@@ -106,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (myOp === opIdRef.current) {
         setUser(u);
 
-        const inferredOrgId = deriveOrgIdFromAssignments(u?.branch_assignments as any);
+        const inferredOrgId = deriveOrgIdFromAssignments(u?.branch_assignments as Record<string, string> | undefined);
         const effectiveOrgId = u?.org_id || inferredOrgId;
         const primaryCalendarFromAssignments = u?.branch_assignments ? Object.keys(u.branch_assignments)[0] : undefined;
 
@@ -136,12 +140,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           try {
             let org = await getOrganization(effectiveOrgId);
+            const triedOrgIds = [effectiveOrgId];
             if (!org && inferredOrgId && inferredOrgId !== effectiveOrgId) {
-              // Try inferred org if the declared org_id is wrong
-              if (authDebug) {
-                console.warn(`[auth] Org ${effectiveOrgId} missing, retrying inferred ${inferredOrgId}`);
-              }
               org = await getOrganization(inferredOrgId);
+              triedOrgIds.push(inferredOrgId);
               if (org) {
                 setOrgId(inferredOrgId);
               }
@@ -154,7 +156,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               } else {
                 setOrganization(undefined);
                 if (authDebug) {
-                  console.warn(`[auth] Organization ${effectiveOrgId} not found`);
+                  console.warn(`[auth] Organization not found. Tried: ${triedOrgIds.join(", ")}`);
                 }
               }
               // Set primary calendar (from branch assignments or fallback to first calendar; seed if none)
@@ -209,48 +211,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       mounted = false;
       unsub();
     };
-  }, []);
+  }, [authDebug]);
 
-  const switchTenant = async (newOrgId: string) => {
-    try {
-      if (!user || !user.branch_assignments || !user.branch_assignments[newOrgId]) {
-        throw new Error("User does not belong to this organization");
-      }
-      
-      const org = await getOrganization(newOrgId);
-      if (org) {
-        setOrgId(newOrgId);
-        setOrganization(org);
-        
-        // Switch to first available calendar in new org
-        const calendars = user.branch_assignments ? Object.keys(user.branch_assignments).filter(b => b.startsWith(newOrgId)) : [];
-        if (calendars.length > 0) {
-          setCalendarId(calendars[0]);
+  const switchTenant = useCallback(
+    async (newOrgId: string) => {
+      try {
+        if (!user || !user.branch_assignments || !user.branch_assignments[newOrgId]) {
+          throw new Error("User does not belong to this organization");
         }
         
-        if (authDebug) {
-          console.log(`[auth] Switched to org ${newOrgId}`);
+        const org = await getOrganization(newOrgId);
+        if (org) {
+          setOrgId(newOrgId);
+          setOrganization(org);
+          
+          // Switch to first available calendar in new org
+          const calendars = user.branch_assignments ? Object.keys(user.branch_assignments).filter(b => b.startsWith(newOrgId)) : [];
+          if (calendars.length > 0) {
+            setCalendarId(calendars[0]);
+          }
+          
+          if (authDebug) {
+            console.log(`[auth] Switched to org ${newOrgId}`);
+          }
+          toast("Switched organization", { id: "auth-state" });
         }
-        toast("Switched organization", { id: "auth-state" });
+      } catch (err) {
+        console.error("[auth] Failed to switch organization:", err);
+        toast.error("Failed to switch organization");
       }
-    } catch (err) {
-      console.error("[auth] Failed to switch organization:", err);
-      toast.error("Failed to switch organization");
-    }
-  };
+    },
+    [user, authDebug]
+  );
   
-  const switchCalendar = async (newCalendarId: string) => {
-    if (user && user.branch_assignments && user.branch_assignments[newCalendarId]) {
-      setCalendarId(newCalendarId);
-      if (authDebug) {
-        console.log(`[auth] Switched to calendar ${newCalendarId}`);
+  const switchCalendar = useCallback(
+    async (newCalendarId: string) => {
+      if (user && user.branch_assignments && user.branch_assignments[newCalendarId]) {
+        setCalendarId(newCalendarId);
+        if (authDebug) {
+          console.log(`[auth] Switched to calendar ${newCalendarId}`);
+        }
+        toast("Switched calendar", { id: "auth-state" });
+      } else {
+        console.error("[auth] User does not have access to this calendar");
+        toast.error("No access to this calendar");
       }
-      toast("Switched calendar", { id: "auth-state" });
-    } else {
-      console.error("[auth] User does not have access to this calendar");
-      toast.error("No access to this calendar");
-    }
-  };
+    },
+    [user, authDebug]
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -306,7 +314,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               
               if (myOp === opIdRef.current) {
                 setUser(u);
-                const inferredOrgId = deriveOrgIdFromAssignments(u?.branch_assignments as any);
+                const inferredOrgId = deriveOrgIdFromAssignments(u?.branch_assignments as Record<string, string> | undefined);
                 const effectiveOrgId = u?.org_id || inferredOrgId;
                 const primaryCalendarFromAssignments = u?.branch_assignments ? Object.keys(u.branch_assignments)[0] : undefined;
                 
@@ -386,32 +394,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       },
     }),
-    [user, loading, orgId, calendarId, organization, tenants, needsSetup]
+    [user, loading, orgId, calendarId, organization, tenants, needsSetup, authDebug, switchCalendar, switchTenant]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    // Defensive fallback to avoid crashing when provider isn't mounted yet.
-    // Logs an error and returns a minimal, inert context so callers can handle gracefully.
-    console.error("useAuth called outside of AuthProvider. Returning inert fallback context.");
-    return {
-      user: null,
-      loading: true,
-      orgId: undefined,
-      calendarId: undefined,
-      organization: undefined,
-      tenants: undefined,
-      needsSetup: false,
-      switchTenant: async () => {},
-      switchCalendar: async () => {},
-      login: async () => ({ success: false, error: "Auth not initialized" }),
-      logout: async () => {},
-      refresh: async () => {},
-    } as AuthContextValue;
-  }
-  return ctx;
 }

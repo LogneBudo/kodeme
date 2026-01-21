@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Clock, ArrowLeft, CalendarCheck, Loader2 } from "lucide-react";
 import {
   format,
@@ -12,12 +12,15 @@ import {
   isBefore,
   startOfDay,
 } from "date-fns";
-import { listTenantTimeSlots, getTenantSettings, listTenantAppointments } from "../../api/firebaseApi";
-import { useAuth } from "../../context/AuthContext";
+import { listTenantTimeSlots } from "../../api/firebaseApi/timeslots";
+import { getTenantSettings } from "../../api/firebaseApi/settings";
+import { listTenantAppointments } from "../../api/firebaseApi/appointments";
+import { useAuth } from "../../context/useAuth";
 import { usePublicBookingContext } from "../../context/PublicBookingContext";
 import type { TimeSlot } from "../../types/timeSlot";
 import StepContainer from "./StepContainer";
 import StepButton from "./StepButton";
+import type { Appointment } from "../../types/appointment";
 
 type Props = {
   timeframe: string;
@@ -43,46 +46,40 @@ export default function SlotSelectionStep({
   const calendarId = publicContext?.calendarId || authContext.calendarId;
   const [slots, setSlots] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(true);
+  
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    loadSlots();
-  }, [timeframe, orgId, calendarId]);
-
-  const getDateRange = () => {
-  const today = startOfDay(new Date());
-
-  switch (timeframe) {
-    case "asap": {
-      return { start: today, end: addDays(today, 30) };
-    }
-
-    case "this_week": {
-      return { start: today, end: endOfWeek(today, { weekStartsOn: 1 }) };
-    }
-
-    case "next_week": {
-      const nextWeekStart = startOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
-      return { start: nextWeekStart, end: endOfWeek(nextWeekStart, { weekStartsOn: 1 }) };
-    }
-
-    case "this_month": {
-      return { start: today, end: endOfMonth(today) };
-    }
-
-    default: {
-      return { start: today, end: addDays(today, 7) };
-    }
-  }
-};
-
-  const loadSlots = async () => {
+  const loadSlots = useCallback(async () => {
     if (!orgId || !calendarId) {
       setLoading(false);
       return;
     }
     setLoading(true);
+    const getDateRange = () => {
+    const today = startOfDay(new Date());
 
+    switch (timeframe) {
+      case "asap": {
+        return { start: today, end: addDays(today, 30) };
+      }
+
+      case "this_week": {
+        return { start: today, end: endOfWeek(today, { weekStartsOn: 1 }) };
+      }
+
+      case "next_week": {
+        const nextWeekStart = startOfWeek(addWeeks(today, 1), { weekStartsOn: 1 });
+        return { start: nextWeekStart, end: endOfWeek(nextWeekStart, { weekStartsOn: 1 }) };
+      }
+
+      case "this_month": {
+        return { start: today, end: endOfMonth(today) };
+      }
+
+      default: {
+        return { start: today, end: addDays(today, 7) };
+      }
+    }
+  };
     const { start, end } = getDateRange();
     
     try {
@@ -95,12 +92,12 @@ export default function SlotSelectionStep({
 
       const hasStoredSlots = storedSlots.length > 0;
 
-      const normalizeDate = (raw: any) =>
+      const normalizeDate = (raw: string | Date | { toDate?: () => Date }) =>
         typeof raw === "string"
           ? parseISO(raw)
-          : raw?.toDate?.()
-            ? raw.toDate()
-            : new Date(raw);
+          : typeof raw === "object" && raw !== null && typeof (raw as { toDate?: () => Date }).toDate === "function"
+            ? (raw as { toDate: () => Date }).toDate()
+            : new Date(raw as Date);
 
       const isTimeBlocked = (date: Date, time: string) => {
         if (!settings?.blockedSlots) return false;
@@ -126,13 +123,15 @@ export default function SlotSelectionStep({
           (s) => s.date === format(date, "yyyy-MM-dd") && s.time === time
         );
 
+      
+
       const hasAppointment = (date: Date, time: string) =>
-        appointments?.some((a) => {
-          const d = normalizeDate((a as any).appointmentDate ?? (a as any).date);
+        appointments?.some((a: Appointment & { appointmentDate?: string | Date | { toDate?: () => Date } }) => {
+          const d = normalizeDate(a.appointmentDate ?? a.date);
           return (
             format(d, "yyyy-MM-dd") === format(date, "yyyy-MM-dd") &&
-            (a as any).time === time &&
-            (a as any).status !== "cancelled"
+            a.time === time &&
+            a.status !== "cancelled"
           );
         });
 
@@ -155,10 +154,7 @@ export default function SlotSelectionStep({
         const workingDays = new Set(settings.workingDays || []);
         // Prefer startHour/endHour if present, else use startTime/endTime
         let startHour = 0, endHour = 23;
-        if (typeof settings.workingHours.startHour === 'number' && typeof settings.workingHours.endHour === 'number') {
-          startHour = settings.workingHours.startHour;
-          endHour = settings.workingHours.endHour;
-        } else {
+        if (typeof settings.workingHours.startTime === 'string' && typeof settings.workingHours.endTime === 'string') {
           [startHour] = (settings.workingHours.startTime || "00:00").split(":").map(Number);
           [endHour] = (settings.workingHours.endTime || "23:45").split(":").map(Number);
         }
@@ -167,7 +163,7 @@ export default function SlotSelectionStep({
         for (let d = new Date(start); d <= end; d = addDays(d, 1)) {
           if (!workingDays.has(d.getDay())) continue;
           for (let hour = startHour; hour < endHour; hour++) {
-            for (let minute of [0, 30]) {
+            for (const minute of [0, 30]) {
               const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
               if (isTimeBlocked(d, time)) continue;
               if (isUnavailable(d, time)) continue;
@@ -212,15 +208,19 @@ export default function SlotSelectionStep({
     } finally {
       setLoading(false);
     }
-  };
+  }, [orgId, calendarId, timeframe]);
+
+  useEffect(() => {
+    loadSlots();
+  }, [loadSlots]);
 
   const formatSlotDisplay = (slot: TimeSlot) => {
-    const rawDate: any = slot.date;
+    const rawDate: string | Date | { toDate?: () => Date } = slot.date as string | Date | { toDate?: () => Date };
     const date = typeof rawDate === "string"
       ? parseISO(rawDate)
-      : rawDate?.toDate?.()
-        ? rawDate.toDate()
-        : new Date(rawDate);
+      : typeof rawDate === "object" && rawDate !== null && typeof (rawDate as { toDate?: () => Date }).toDate === "function"
+        ? (rawDate as { toDate: () => Date }).toDate()
+        : new Date(rawDate as Date);
     return {
       date: format(date, "EEE, MMM d"),
       time: slot.time,

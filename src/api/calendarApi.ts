@@ -2,7 +2,8 @@ import type { CalendarEvent } from "../types/calendar";
 
 // Default to same-origin /api in hosted environments. For local dev without `vercel dev`,
 // set VITE_BACKEND_URL=http://localhost:3001 in .env.local to point to a local server.
-const API_BASE = import.meta.env.VITE_BACKEND_URL ?? "";
+// Use relative path for Vite proxy
+
 
 // Fetch calendar events for a given date range
 // This would be implemented with actual OAuth calls to Google/Outlook APIs
@@ -11,7 +12,7 @@ export async function getCalendarEventsForWeek(
   endDate: Date
 ): Promise<CalendarEvent[]> {
   try {
-    const response = await fetch(`${API_BASE}/api/calendar/events`, {
+    const response = await fetch(`/api/calendar/events`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

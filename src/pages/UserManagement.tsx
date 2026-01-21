@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { listTenantUsers, updateUserRole, deleteUser, type User } from "../api/firebaseApi";
-import { useAuth } from "../context/AuthContext";
+import { listTenantUsers, updateUserRole, deleteUser } from "../api/firebaseApi/users";
+import type { User } from "../api/firebaseApi/users";
+import { useAuth } from "../context/useAuth";
 import { Users, Trash2, Shield, User as UserIcon, AlertCircle } from "lucide-react";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
@@ -19,6 +20,11 @@ export default function UserManagement() {
     },
     [orgId]
   );
+
+  // Debug: Log all users fetched from Firestore
+  if (typeof window !== 'undefined') {
+    console.log('[UserManagement] All users from Firestore:', users);
+  }
   const [actionLoading, setActionLoading] = useState<{ [key: string]: boolean }>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
@@ -48,20 +54,23 @@ export default function UserManagement() {
   // Filter and search users
   const filteredUsers = useMemo(() => {
     if (!users || !Array.isArray(users)) return [];
-    return users.filter((user) => {
+    const filtered = users.filter((user) => {
       // Role filter
       if (roleFilter !== "all" && user.role !== roleFilter) {
         return false;
       }
-      
       // Search filter
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         return user.email.toLowerCase().includes(query);
       }
-      
       return true;
     });
+    // Debug: Log filtered users
+    if (typeof window !== 'undefined') {
+      console.log('[UserManagement] Filtered users:', filtered);
+    }
+    return filtered;
   }, [users, roleFilter, searchQuery]);
 
   // Role counts for filter options

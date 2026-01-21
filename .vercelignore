@@ -1,0 +1,4 @@
+# Ignore local-only files and folders
+.env*
+node_modules/
+.git/

@@ -1,6 +1,6 @@
 
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getCalendarToken } from "../../src/api/calendarTokensApi";
+import { getCalendarToken } from "../_shared/calendarTokensApi";
 import { getAuthContext } from "../apiUtils";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

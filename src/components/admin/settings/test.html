@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Clock Arc Highlight</title>
+</head>
+<body>
+<svg id="clock" width="300" height="300" viewBox="0 0 300 300">
+  <!-- Clock outline -->
+  <circle cx="150" cy="150" r="140" stroke="black" fill="none"/>
+
+  <!-- Arc span -->
+  <path id="arc" fill="orange" />
+</svg>
+
+<script>
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const angleRad = (angleDeg - 90) * Math.PI / 180;
+  return {
+    x: cx + r * Math.cos(angleRad),
+    y: cy + r * Math.sin(angleRad)
+  };
+}
+
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const angleRad = (angleDeg - 90) * Math.PI / 180;
+  return {
+    x: cx + r * Math.cos(angleRad),
+    y: cy + r * Math.sin(angleRad)
+  };
+}
+
+function describeArc(cx, cy, r, startHour, endHour) {
+  let startAngle = startHour * 30;
+  let endAngle = endHour * 30;
+
+  // Wrap end angle if it's "before" start angle
+  if (endAngle <= startAngle) {
+    endAngle += 360;
+  }
+
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+
+  const sweepAngle = endAngle - startAngle;
+  const largeArcFlag = sweepAngle > 180 ? "1" : "0";
+
+  return [
+    "M", cx, cy,
+    "L", start.x, start.y,
+    "A", r, r, 0, largeArcFlag, 1, end.x, end.y,
+    "Z"
+  ].join(" ");
+}
+
+// Example: highlight span from 10h to 5h
+document.getElementById("arc").setAttribute("d",
+  describeArc(150, 150, 140, 10, 5));
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: Kodeme Backend API
+  version: 1.0.0
+paths:
+  /api/auth/google/init:
+    get:
+      summary: Start Google OAuth flow (returns redirect URL)
+      tags:
+        - auth
+      responses:
+        '200':
+          description: URL to redirect the user to
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+  /api/auth/google/callback:
+    get:
+      summary: OAuth callback for Google (redirects to admin settings)
+      tags:
+        - auth
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: error
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirects to admin settings on success or error
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/auth/outlook/init:
+    get:
+      summary: Start Microsoft OAuth flow (returns redirect URL)
+      tags:
+        - auth
+      responses:
+        '200':
+          description: URL to redirect the user to
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/auth/outlook/callback:
+    get:
+      summary: OAuth callback for Microsoft Outlook (redirects to admin settings)
+      tags:
+        - auth
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+        - in: query
+          name: error
+          schema:
+            type: string
+      responses:
+        '302':
+          description: Redirects to admin settings on success or error
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/booking-confirmation:
+    post:
+      summary: Send booking confirmation email (ICS)
+      tags:
+        - booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookingConfirmationRequest'
+      responses:
+        '200':
+          description: Result object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookingConfirmationResponse'
+  /api/calendar/events:
+    get:
+      summary: Retrieve calendar events and connection status
+      tags:
+        - calendar
+      responses:
+        '200':
+          description: Events list with connection flags
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: No connected calendar for this user
+  /api/calendar/disconnect:
+    post:
+      summary: Disconnect calendar provider
+      tags:
+        - calendar
+      parameters:
+        - in: query
+          name: provider
+          required: true
+          schema:
+            type: string
+            enum:
+              - google
+              - outlook
+      responses:
+        '200':
+          description: Success
+        '400':
+          description: Invalid provider
+  /api/calendar/status:
+    get:
+      summary: Get calendar connection status
+      tags:
+        - calendar
+      responses:
+        '200':
+          description: Status object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+  /api/debug:
+    get:
+      summary: Debug environment flags (non-sensitive)
+      tags:
+        - debug
+      responses:
+        '200':
+          description: Environment status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasGoogleClientId:
+                    type: boolean
+                  hasGoogleClientSecret:
+                    type: boolean
+                  hasGoogleRedirectUri:
+                    type: boolean
+                  hasMicrosoftClientId:
+                    type: boolean
+                  hasMicrosoftClientSecret:
+                    type: boolean
+                  hasMicrosoftRedirectUri:
+                    type: boolean
+                  googleClientIdStart:
+                    type: string
+  /api/invitations:
+    post:
+      summary: Create an invitation
+      tags:
+        - invitations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - org_id
+                - created_by
+                - expires
+              properties:
+                org_id:
+                  type: string
+                created_by:
+                  type: string
+                expires:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/invitations/validate/{code}:
+    get:
+      summary: Validate an invitation code
+      tags:
+        - invitations
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Invitation object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '404':
+          description: Invalid or expired invitation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/invitations/redeem:
+    post:
+      summary: Redeem an invitation
+      tags:
+        - invitations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - code
+                - user_id
+              properties:
+                code:
+                  type: string
+                user_id:
+                  type: string
+      responses:
+        '200':
+          description: Redeemed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+components: {}
+tags: []

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
-import { getOrganization, listTenantCalendars, getCalendarUnsafe } from "../api/firebaseApi";
+import { useAuth } from "../context/useAuth";
+import { getOrganization } from "../api/firebaseApi/organizations";
+import { listTenantCalendars, getCalendarUnsafe } from "../api/firebaseApi/calendars";
 import type { Organization } from "../types/organization";
 import type { Calendar } from "../types/branch";
 import AdminPageHeader from "../components/admin/AdminPageHeader";

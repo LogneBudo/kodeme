@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Settings, Users, LogOut, Menu, X } from "lucide-react";
 import { useState, useMemo } from "react";
-import { useAuth } from "./context/AuthContext";
+import { useAuth } from "./context/useAuth";
 import UserProfile from "./components/UserProfile";
 import CalendarSwitcher from "./components/CalendarSwitcher";
 import layoutStyles from "./layout.module.css";
@@ -13,7 +13,7 @@ type LayoutProps = {
 export default function Layout({ children, currentPageName }: LayoutProps) {
   const { user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  // Removed adminDropdownOpen, handled in UserProfile
   const navigate = useNavigate();
 
   async function handleLogout() {
@@ -54,38 +54,13 @@ export default function Layout({ children, currentPageName }: LayoutProps) {
           </div>
         )}
 
-        {/* Desktop Navigation for admin only, as dropdown */}
-        {!loading && user && user.role === "admin" && (
+        {/* Desktop Navigation: CalendarSwitcher and UserProfile (with admin items) */}
+        {!loading && user && (
           <div className={layoutStyles.desktopNav}>
             <div className={layoutStyles.calendarSwitcherContainer}>
               <CalendarSwitcher />
             </div>
-            <div className={layoutStyles.adminDropdownContainer}>
-              <button className={layoutStyles.adminDropdownButton} onClick={() => setAdminDropdownOpen((open) => !open)}>
-                <Menu size={16} />
-                Admin Menu
-              </button>
-              {adminDropdownOpen && (
-                <div className={layoutStyles.adminDropdownMenu}>
-                  {adminNavItems.map(item => {
-                    const Icon = item.icon;
-                    const isActive = currentPageName === item.name;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={`/${item.name}`}
-                        className={`${layoutStyles.navLink} ${isActive ? layoutStyles.active : ""}`}
-                        onClick={() => setAdminDropdownOpen(false)}
-                      >
-                        <Icon size={16} />
-                        {item.label}
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            <UserProfile />
+            <UserProfile adminNavItems={user.role === "admin" ? adminNavItems : []} currentPageName={currentPageName} />
           </div>
         )}
 

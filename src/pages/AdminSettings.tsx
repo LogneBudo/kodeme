@@ -1,14 +1,13 @@
-
 import { useState, useEffect, useCallback } from "react";
 import WorkingHoursSettings from "../components/admin/settings/WorkingHoursSettings";
 import WorkingDaysSettings from "../components/admin/settings/WorkingDaysSettings";
 import BlockedSlotsSettings from "../components/admin/settings/BlockedSlotsSettings";
-import CalendarIntegrationSettings from "../components/admin/settings/CalendarIntegrationSettings";
+import { CalendarIntegrationSettings } from "../components/admin/settings/CalendarIntegrationSettings";
 import RestaurantSettings from "../components/admin/settings/RestaurantSettings";
 import AdminPageHeader from "../components/admin/AdminPageHeader";
 import { useSearchParams } from "react-router-dom";
-import { getTenantSettings, updateTenantSettings, type Settings, type BlockedSlot } from "../api/firebaseApi";
-import { useAuth } from "../context/AuthContext";
+import { getTenantSettings, updateTenantSettings, type Settings, type BlockedSlot } from "../api/firebaseApi/settings";
+import { useAuth } from "../context/useAuth";
 import { Settings as SettingsIcon, Clock, Calendar, Ban, Save, CalendarSync } from "lucide-react";
 import { toast } from "sonner";
 import styles from "./AdminBase.module.css";
@@ -16,9 +15,18 @@ import styles from "./AdminBase.module.css";
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // Helper to fetch calendar connection status
-async function fetchCalendarStatus(backendUrl: string) {
+// Use relative path for Vite proxy
+async function fetchCalendarStatus(orgId?: string, userId?: string) {
 	try {
-		const resp = await fetch(`${backendUrl}/api/calendar/status`, { credentials: "include" });
+		let url = '/api/calendar/status';
+		if (orgId && userId) {
+			url += `?orgId=${encodeURIComponent(orgId)}&userId=${encodeURIComponent(userId)}`;
+		} else if (orgId) {
+			url += `?orgId=${encodeURIComponent(orgId)}`;
+		} else if (userId) {
+			url += `?userId=${encodeURIComponent(userId)}`;
+		}
+		const resp = await fetch(url, { credentials: "include" });
 		if (!resp.ok) return { connected: false, outlookConnected: false };
 		return await resp.json();
 	} catch {
@@ -61,7 +69,7 @@ const SETTINGS_GROUPS = [
 ];
 
 export default function SettingsPage() {
-	const { orgId, calendarId } = useAuth();
+	const { orgId, calendarId, user } = useAuth();
 	const [searchParams] = useSearchParams();
 	const [settings, setSettings] = useState<Settings | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -72,13 +80,12 @@ export default function SettingsPage() {
 	const [outlookConnecting, setOutlookConnecting] = useState(false);
 	const [calendarConnected, setCalendarConnected] = useState(false);
 	const [outlookConnected, setOutlookConnected] = useState(false);
-	const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
-		// Fetch real connection status from backend
-		const pollCalendarStatus = useCallback(async () => {
-			const status = await fetchCalendarStatus(backendUrl);
-			setCalendarConnected(!!status.connected);
-			setOutlookConnected(!!status.outlookConnected);
-		}, [backendUrl]);
+	// Fetch real connection status from backend
+	const pollCalendarStatus = useCallback(async () => {
+		const status = await fetchCalendarStatus(orgId, user?.uid);
+		setCalendarConnected(!!status.connected);
+		setOutlookConnected(!!status.outlookConnected);
+	}, [orgId, user]);
 	const [newBlockedSlot, setNewBlockedSlot] = useState<BlockedSlot>({
 		_key: Date.now().toString(),
 		startTime: "12:00",
@@ -196,7 +203,7 @@ export default function SettingsPage() {
 	// Disconnect handlers
 	async function handleDisconnectGoogle() {
 		try {
-			const resp = await fetch(`${backendUrl}/api/calendar/disconnect?provider=google`, { method: "POST", credentials: "include" });
+			const resp = await fetch(`/api/calendar/disconnect?provider=google`, { method: "POST", credentials: "include" });
 			if (resp.ok) {
 				toast.success("Google Calendar disconnected.");
 				setCalendarConnected(false);
@@ -211,7 +218,7 @@ export default function SettingsPage() {
 
 	async function handleDisconnectOutlook() {
 		try {
-			const resp = await fetch(`${backendUrl}/api/calendar/disconnect?provider=outlook`, { method: "POST", credentials: "include" });
+			const resp = await fetch(`/api/calendar/disconnect?provider=outlook`, { method: "POST", credentials: "include" });
 			if (resp.ok) {
 				toast.success("Outlook Calendar disconnected.");
 				setOutlookConnected(false);
@@ -302,8 +309,7 @@ export default function SettingsPage() {
 	async function handleConnectGoogle() {
 		try {
 			setGoogleConnecting(true);
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
-			const response = await fetch(`${backendUrl}/api/auth/google/init`);
+			const response = await fetch(`/api/auth/google/init`);
 			const data = await response.json();
 			if (data.url) {
 				// Redirect to Google OAuth
@@ -322,8 +328,7 @@ export default function SettingsPage() {
 	async function handleConnectOutlook() {
 		try {
 			setOutlookConnecting(true);
-			const backendUrl = import.meta.env.VITE_BACKEND_URL ?? "";
-			const response = await fetch(`${backendUrl}/api/auth/outlook/init`);
+			const response = await fetch(`/api/auth/outlook/init`);
 			const data = await response.json();
 			if (data.url) {
 				// Redirect to Microsoft OAuth
@@ -485,7 +490,7 @@ export default function SettingsPage() {
 							{activeTab === "calendar" && (
 								<CalendarIntegrationSettings
 									calendarSync={settings.calendarSync}
-									setCalendarSync={sync => setSettings({ ...settings, calendarSync: sync })}
+									 setCalendarSync={(sync: typeof settings.calendarSync) => setSettings({ ...settings, calendarSync: sync })}
 									calendarConnected={calendarConnected}
 									outlookConnected={outlookConnected}
 									googleConnecting={googleConnecting}

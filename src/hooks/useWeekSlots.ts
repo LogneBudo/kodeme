@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { addDays, format, isBefore, startOfDay, startOfWeek } from "date-fns";
 import { toast } from "sonner";
 import { isTimeSlotBlocked } from "../api/calendarApi";
-import { updateSettings, type Settings } from "../api/firebaseApi";
+import { updateSettings, type Settings } from "../api/firebaseApi/settings";
 import { SlotState } from "../constants/slotStates";
 import type { Appointment } from "../types/appointment";
 import type { CalendarEvent } from "../types/calendar";

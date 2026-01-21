@@ -18,13 +18,11 @@ import WeekNavigator from "../components/admin/WeekNavigator";
 import WeekGrid from "../components/admin/WeekGrid";
 import { useWeekSlots } from "../hooks/useWeekSlots";
 import { useFirestoreTenantQuery } from "../hooks/useFirestoreTenantQuery";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 import type { Appointment } from "../types/appointment";
-import {
-  listTenantAppointments,
-  getTenantSettings,
-} from "../api/firebaseApi";
+import { listTenantAppointments } from "../api/firebaseApi/appointments";
+import { getTenantSettings } from "../api/firebaseApi/settings";
 import styles from "./AdminBase.module.css";
 
 function AdminSlots() {

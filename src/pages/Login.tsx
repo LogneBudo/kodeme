@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Calendar, LogIn } from "lucide-react";
 import { validateEmail } from "../utils/validation";
 import styles from "./Login.module.css";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
 
 export default function Login() {
   const [email, setEmail] = useState("");

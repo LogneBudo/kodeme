@@ -1,6 +1,11 @@
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/useAuth";
+
+type UserWithOrgId = {
+  org_id?: string;
+  [key: string]: unknown;
+};
 
 type ProtectedAdminRouteProps = {
   children: React.ReactNode;
@@ -42,7 +47,11 @@ export function ProtectedAdminRoute({ children }: ProtectedAdminRouteProps) {
   }
 
   // If user has org information (from context or user payload), allow access immediately
-  if (orgId || (user as any).org_id) {
+  if (
+    orgId ||
+    ((user as UserWithOrgId)?.org_id !== undefined &&
+      (user as UserWithOrgId).org_id !== null)
+  ) {
     return <>{children}</>;
   }
 

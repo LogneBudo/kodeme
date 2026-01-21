@@ -4,14 +4,10 @@ import AdminPageHeader from "../components/admin/AdminPageHeader";
 import AdminToolbar from "../components/admin/AdminToolbar";
 import AdminTable, { type Column } from "../components/admin/AdminTable";
 import { useFirestoreQuery } from "../hooks/useFirestoreQuery";
-import { useAuth } from "../context/AuthContext";
-import {
-  listTenantUsers,
-  listTenantCalendars,
-  updateUserRole,
-  removeUserFromTenant,
-  type User,
-} from "../api/firebaseApi";
+import { useAuth } from "../context/useAuth";
+import { listTenantUsers, updateUserRole, removeUserFromTenant } from "../api/firebaseApi/users";
+import { listTenantCalendars } from "../api/firebaseApi/calendars";
+import type { User } from "../api/firebaseApi/users";
 import { toast } from "sonner";
 import tableStyles from "../components/admin/AdminTable.module.css";
 import baseStyles from "./AdminBase.module.css";

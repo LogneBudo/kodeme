@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { createOrganization } from "../api/firebaseApi";
+import { useAuth } from "../context/useAuth";
+import { createOrganization } from "../api/firebaseApi/organizations";
 import { toast } from "sonner";
 import type { SubscriptionTierName } from "../types/subscriptionTier";
 import styles from "./SetupPage.module.css";
@@ -37,11 +37,18 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+
   if (!user) {
     // Redirect to login if not authenticated
     navigate("/admin/login", { replace: true });
     return null;
   }
+
+  // If user has no org_id, offer join via invitation
+  // (Assume user.org_id is available in context)
+  // If org_id is null, show join option
+  // You may need to adjust this logic based on your actual user object
+  const showJoinOption = !user.org_id;
 
   async function handleCreateOrganization() {
     if (!user || !organizationName.trim()) {
@@ -98,6 +105,20 @@ export default function SetupPage() {
 
         <div className={styles.content}>
           {/* Organization Name */}
+          {showJoinOption && (
+            <div style={{ marginBottom: 24, textAlign: 'center' }}>
+              <p>Already have an organization? Join with an invitation code:</p>
+              <button
+                type="button"
+                style={{ padding: '8px 16px', marginTop: 8 }}
+                onClick={() => navigate('/admin/organization/join')}
+              >
+                Join Organization
+              </button>
+              <hr style={{ margin: '24px 0' }} />
+              <p>Or create a new organization below:</p>
+            </div>
+          )}
           <div className={styles.formGroup}>
             <label htmlFor="orgName" className={styles.label}>
               Organization Name

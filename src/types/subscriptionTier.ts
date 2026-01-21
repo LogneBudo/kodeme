@@ -4,7 +4,7 @@
  * Tiers determine: max branches, max users, features available
  */
 
-export type SubscriptionTierName = "free" | "starter" | "professional" | "enterprise";
+export type SubscriptionTierName = "free" | "starter" | "professional" | "enterprise" | (string & {});
 
 export type SubscriptionTierLimits = {
   max_branches: number; // 1, 3, 10, 999999

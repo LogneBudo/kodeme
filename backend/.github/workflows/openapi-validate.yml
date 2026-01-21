@@ -1,0 +1,27 @@
+name: OpenAPI Generate & Validate
+
+on:
+  pull_request:
+    paths:
+      - '**/*.ts'
+      - 'openapi.*.yaml'
+      - 'scripts/**'
+
+jobs:
+  openapi-validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate OpenAPI
+        run: npm run openapi:generate
+      - name: Validate merged OpenAPI
+        run: npx @apidevtools/swagger-cli validate openapi.merged.yaml

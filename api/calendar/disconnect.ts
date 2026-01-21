@@ -1,7 +1,9 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { deleteCalendarToken } from "../../../src/api/calendarTokensApi";
-import { getAuthContext } from "../../apiUtils";
+// No framework types available; using plain objects for req/res
+// import type { NextApiRequest, NextApiResponse } from "next";
+import { deleteCalendarToken } from "../_shared/calendarTokensApi";
+import { getAuthContext } from "../apiUtils";
 
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -21,7 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } else {
       return res.status(404).json({ error: "No token found to delete" });
     }
-  } catch (error: any) {
-    return res.status(500).json({ error: error?.message || "Failed to disconnect calendar" });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return res.status(500).json({ error: error.message });
+    }
+    return res.status(500).json({ error: "Failed to disconnect calendar" });
   }
 }

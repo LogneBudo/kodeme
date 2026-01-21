@@ -1,8 +1,8 @@
 // Environment configuration for API endpoints
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+const API_BASE_URL = "/api";
 
 export const API_ENDPOINTS = {
-  BOOKING_CONFIRMATION: `${API_BASE_URL}/api/send-booking-confirmation`,
+  BOOKING_CONFIRMATION: `${API_BASE_URL}/send-booking-confirmation`,
   HEALTH_CHECK: `${API_BASE_URL}/health`,
 };
 

@@ -1,3 +1,6 @@
+.env.production
+# Local environment files (never commit secrets)
+.env.dev
 # Logs
 logs
 *.log
@@ -36,3 +39,4 @@ PROGRESS_TRACKER.md
 PROGRESS_TRACKER.json
 .progress-state.json
 PHASE_*.json
+.vercel

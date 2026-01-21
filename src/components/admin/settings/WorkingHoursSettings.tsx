@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import styles from "./WorkingHoursSettings.module.css";
+import WorkingHoursClock3 from "./WorkingHoursClock3";
+import TimePicker from "./TimePicker";
 
 interface WorkingHoursSettingsProps {
   workingHours: { startTime: string; endTime: string };
@@ -42,7 +44,6 @@ const WorkingHoursSettings: React.FC<WorkingHoursSettingsProps> = ({ workingHour
   // Ensure we have valid time strings
   const safeStartTime = workingHours.startTime || "09:00";
   const safeEndTime = workingHours.endTime || "17:00";
-  
   const startParsed = parseTime(safeStartTime);
   const endParsed = parseTime(safeEndTime);
 
@@ -52,21 +53,18 @@ const WorkingHoursSettings: React.FC<WorkingHoursSettingsProps> = ({ workingHour
       startTime: formatTime(hours, startParsed.minutes)
     });
   };
-
   const handleStartMinuteChange = (minutes: number) => {
     setWorkingHours({
       ...workingHours,
       startTime: formatTime(startParsed.hours, minutes)
     });
   };
-
   const handleEndHourChange = (hours: number) => {
     setWorkingHours({
       ...workingHours,
       endTime: formatTime(hours, endParsed.minutes)
     });
   };
-
   const handleEndMinuteChange = (minutes: number) => {
     setWorkingHours({
       ...workingHours,
@@ -80,89 +78,37 @@ const WorkingHoursSettings: React.FC<WorkingHoursSettingsProps> = ({ workingHour
       <p className={styles.description}>
         Set the daily time window when you're available for appointments
       </p>
-      
       <div className={styles.timePickersGrid}>
-        {/* Start Time */}
-        <div>
-          <label className={styles.label}>Start Time of Day</label>
-          <div className={styles.timePickerContainer}>
-            <div className={styles.timeDisplay}>
-              <span className={styles.timeValue} data-testid="start-time-display">
-                {formatTimeDisplay(startParsed.hours, startParsed.minutes)}
-              </span>
-            </div>
-            <div className={styles.selectGroup}>
-              <select
-                value={startParsed.hours}
-                onChange={e => handleStartHourChange(parseInt(e.target.value))}
-                className={styles.select}
-                aria-label="Start hour"
-                data-testid="start-hour-select"
-              >
-                {HOURS.map(h => (
-                  <option key={h} value={h}>
-                    {uses12Hour ? (h === 0 ? '12' : h > 12 ? String(h - 12).padStart(2, '0') : String(h).padStart(2, '0')) : String(h).padStart(2, '0')}
-                  </option>
-                ))}
-              </select>
-              <span className={styles.separator}>:</span>
-              <select
-                value={startParsed.minutes}
-                onChange={e => handleStartMinuteChange(parseInt(e.target.value))}
-                className={styles.select}
-                aria-label="Start minute"
-                data-testid="start-minute-select"
-              >
-                {MINUTES.map(m => (
-                  <option key={m} value={m}>
-                    {String(m).padStart(2, '0')}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+        {/* Dynamic Clock Visualization */}
+        <div style={{ gridColumn: '1 / span 2', display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
+          <WorkingHoursClock3
+            startTime={safeStartTime}
+            endTime={safeEndTime}
+            onChange={(start, end) => setWorkingHours({ ...workingHours, startTime: start, endTime: end })}
+          />
         </div>
-
-        {/* End Time */}
-        <div>
-          <label className={styles.label}>End Time of Day</label>
-          <div className={styles.timePickerContainer}>
-            <div className={styles.timeDisplay}>
-              <span className={styles.timeValue} data-testid="end-time-display">
-                {formatTimeDisplay(endParsed.hours, endParsed.minutes)}
-              </span>
-            </div>
-            <div className={styles.selectGroup}>
-              <select
-                value={endParsed.hours}
-                onChange={e => handleEndHourChange(parseInt(e.target.value))}
-                className={styles.select}
-                aria-label="End hour"
-                data-testid="end-hour-select"
-              >
-                {HOURS.map(h => (
-                  <option key={h} value={h}>
-                    {uses12Hour ? (h === 0 ? '12' : h > 12 ? String(h - 12).padStart(2, '0') : String(h).padStart(2, '0')) : String(h).padStart(2, '0')}
-                  </option>
-                ))}
-              </select>
-              <span className={styles.separator}>:</span>
-              <select
-                value={endParsed.minutes}
-                onChange={e => handleEndMinuteChange(parseInt(e.target.value))}
-                className={styles.select}
-                aria-label="End minute"
-                data-testid="end-minute-select"
-              >
-                {MINUTES.map(m => (
-                  <option key={m} value={m}>
-                    {String(m).padStart(2, '0')}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
+        <TimePicker
+          label="Start Time of Day"
+          hours={startParsed.hours}
+          minutes={startParsed.minutes}
+          onHourChange={handleStartHourChange}
+          onMinuteChange={handleStartMinuteChange}
+          uses12Hour={uses12Hour}
+          display={formatTimeDisplay(startParsed.hours, startParsed.minutes)}
+          hourOptions={HOURS}
+          minuteOptions={MINUTES}
+        />
+        <TimePicker
+          label="End Time of Day"
+          hours={endParsed.hours}
+          minutes={endParsed.minutes}
+          onHourChange={handleEndHourChange}
+          onMinuteChange={handleEndMinuteChange}
+          uses12Hour={uses12Hour}
+          display={formatTimeDisplay(endParsed.hours, endParsed.minutes)}
+          hourOptions={HOURS}
+          minuteOptions={MINUTES}
+        />
       </div>
     </div>
   );

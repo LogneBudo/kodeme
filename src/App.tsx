@@ -18,6 +18,7 @@ import AdminDebug from "../src/pages/AdminDebug";
 import ProfilePage from "../src/pages/ProfilePage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ErrorPage from "./pages/ErrorPage";
+import TestTenantUsers from "./pages/tests";
 import { ProtectedAdminRoute } from "./components/ProtectedAdminRoute";
 
 export default function App() {
@@ -28,7 +29,7 @@ export default function App() {
         <Routes>
         <Route path="/admin/login" element={<Login />} />
         <Route path="/setup" element={<SetupPage />} />
-        
+        <Route path="/tests" element={<TestTenantUsers />} />
         <Route
           path="/"
           element={<Navigate to="/BookAppointment" replace />}

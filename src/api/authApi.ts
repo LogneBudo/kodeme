@@ -56,14 +56,13 @@ onAuthStateChanged(auth, async (user) => {
               updatedAt: now,
             });
 
-          } catch (createError) {
-
+          } catch {
+            // Intentionally ignore errors when creating user document in Firestore
           }
         }
-      } catch (firestoreError) {
-
-        // Still set user even if Firestore fails
-        cachedUser = {
+      } catch {
+          // Still set user even if Firestore fails
+          cachedUser = {
           uid: user.uid,
           email: user.email || "",
           role: "user",
