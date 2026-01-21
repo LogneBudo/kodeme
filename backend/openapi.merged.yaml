@@ -244,6 +244,705 @@ paths:
                 properties:
                   success:
                     type: boolean
+  /appointments:
+    get:
+      summary: List appointments for a tenant calendar
+      tags:
+        - Appointments
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a new tenant appointment
+      tags:
+        - Appointments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orgId
+                - calendarId
+                - appointment
+              properties:
+                orgId:
+                  type: string
+                calendarId:
+                  type: string
+                appointment:
+                  $ref: '#/components/schemas/AppointmentInput'
+      responses:
+        '200':
+          description: Created appointment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointment:
+                    $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /appointments/by-date:
+    get:
+      summary: Get appointments for a specific date
+      tags:
+        - Appointments
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Appointments for the requested date
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /appointments/{id}:
+    get:
+      summary: Get a single appointment by id
+      tags:
+        - Appointments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Appointment found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointment:
+                    $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update an existing appointment
+      tags:
+        - Appointments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orgId
+                - calendarId
+                - patch
+              properties:
+                orgId:
+                  type: string
+                calendarId:
+                  type: string
+                patch:
+                  type: object
+                  properties:
+                    slotId:
+                      type: string
+                    email:
+                      type: string
+                    status:
+                      type: string
+                    appointmentDate:
+                      type: string
+                    notes:
+                      type: string
+      responses:
+        '200':
+          description: Updated appointment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointment:
+                    $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a tenant appointment
+      tags:
+        - Appointments
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /appointments/with-slot:
+    post:
+      summary: Create a new appointment (compatibility) with slotId in body
+      tags:
+        - Appointments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orgId
+                - calendarId
+                - appointment
+              properties:
+                orgId:
+                  type: string
+                calendarId:
+                  type: string
+                appointment:
+                  $ref: '#/components/schemas/AppointmentInput'
+                slotId:
+                  type: string
+      responses:
+        '200':
+          description: Created appointment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  appointment:
+                    $ref: '#/components/schemas/Appointment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /calendars:
+    get:
+      summary: List tenant calendars
+      tags:
+        - Calendars
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of calendars
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendars:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Calendar'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      summary: Create a tenant calendar
+      tags:
+        - Calendars
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orgId
+                - userId
+                - data
+              properties:
+                orgId:
+                  type: string
+                userId:
+                  type: string
+                data:
+                  $ref: '#/components/schemas/CalendarInput'
+      responses:
+        '200':
+          description: Created calendar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendar:
+                    $ref: '#/components/schemas/Calendar'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /calendars/{id}:
+    get:
+      summary: Get a tenant calendar (authorized)
+      tags:
+        - Calendars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calendar found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendar:
+                    $ref: '#/components/schemas/Calendar'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update a tenant calendar
+      tags:
+        - Calendars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orgId
+                - updates
+              properties:
+                orgId:
+                  type: string
+                updates:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    address:
+                      type: string
+                    location:
+                      type: string
+                    timezone:
+                      type: string
+      responses:
+        '200':
+          description: Updated calendar
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendar:
+                    $ref: '#/components/schemas/Calendar'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      summary: Delete a tenant calendar
+      tags:
+        - Calendars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: orgId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Deletion result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /calendars/{id}/unsafe:
+    get:
+      summary: Get a calendar without org ownership checks (unsafe)
+      tags:
+        - Calendars
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Calendar or null when not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  calendar:
+                    $ref: '#/components/schemas/Calendar'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /organizations:
+    post:
+      summary: Create a new organization and seed default calendar/settings
+      tags:
+        - Organizations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - created_by
+              properties:
+                name:
+                  type: string
+                subscription_tier:
+                  type: string
+                created_by:
+                  type: string
+      responses:
+        '200':
+          description: Created organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /organizations/{id}:
+    get:
+      summary: Get organization by id
+      tags:
+        - Organizations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update organization
+      tags:
+        - Organizations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: object
+      responses:
+        '200':
+          description: Updated organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /organizations/by-user:
+    get:
+      summary: Get organization for a user
+      tags:
+        - Organizations
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Organization
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organization:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /settings:
+    get:
+      summary: Get global settings
+      tags:
+        - Settings
+      responses:
+        '200':
+          description: Settings object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update global settings
+      tags:
+        - Settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /settings/{orgId}/{calendarId}:
+    get:
+      summary: Get tenant settings for a calendar
+      tags:
+        - Settings
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tenant settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      summary: Update tenant settings for a calendar
+      tags:
+        - Settings
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: calendarId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   responses:
     Unauthorized:
@@ -260,6 +959,18 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
     InternalError:
       description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden - action not allowed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource not found
       content:
         application/json:
           schema:
@@ -373,6 +1084,127 @@ components:
               format: email
         location:
           type: string
+    AppointmentInput:
+      type: object
+      properties:
+        slotId:
+          type: string
+        email:
+          type: string
+          format: email
+        locationDetails:
+          type: object
+          properties:
+            type:
+              type: string
+          additionalProperties: true
+        status:
+          type: string
+        appointmentDate:
+          type: string
+        notes:
+          type: string
+    Calendar:
+      type: object
+      properties:
+        id:
+          type: string
+        org_id:
+          type: string
+        name:
+          type: string
+        address:
+          type: string
+        location:
+          type: string
+        timezone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: string
+    CalendarInput:
+      type: object
+      properties:
+        name:
+          type: string
+        address:
+          type: string
+        location:
+          type: string
+        timezone:
+          type: string
+    Organization:
+      type: object
+      properties:
+        org_id:
+          type: string
+        name:
+          type: string
+        subscription_tier:
+          type: string
+        owner_uid:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Settings:
+      type: object
+      properties:
+        org_id:
+          type: string
+        calendar_id:
+          type: string
+        workingHours:
+          type: object
+          properties:
+            startTime:
+              type: string
+            endTime:
+              type: string
+        workingDays:
+          type: array
+          items:
+            type: integer
+        blockedSlots:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        oneOffUnavailableSlots:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        calendarSync:
+          type: object
+          properties:
+            autoCreateEvents:
+              type: boolean
+            showBusyTimes:
+              type: boolean
+            syncCancellations:
+              type: boolean
+        restaurantCity:
+          type: string
+        restaurantCountry:
+          type: string
+        restaurantPerimeterKm:
+          type: number
+        restaurants:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        curatedList:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
 tags:
   - name: calendar
     description: Calendar integration endpoints

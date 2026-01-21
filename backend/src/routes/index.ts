@@ -1,3 +1,4 @@
+import settingsRoutes from './settings';
 import { Router } from 'express';
 
 import invitationsRoutes from './invitations';
@@ -12,6 +13,8 @@ import outlookAuthRoutes from './auth/outlook';
 import debugRoutes from './debug';
 import docsRoutes from './docs';
 import appointmentsRoutes from './appointments';
+import calendarsRoutes from './calendars';
+import organizationsRoutes from './organizations';
 
 const router = Router();
 
@@ -24,6 +27,9 @@ router.use('/invitations', invitationsRoutes);
 router.use('/booking-confirmation', bookingConfirmationRoutes);
 router.use('/calendar', calendarRoutes);
 router.use('/appointments', appointmentsRoutes);
+router.use('/calendars', calendarsRoutes);
+router.use('/organizations', organizationsRoutes);
+router.use('/settings', settingsRoutes);
 router.use('/auth/google', googleAuthRoutes);
 router.use('/auth/outlook', outlookAuthRoutes);
 router.use('/debug', debugRoutes);

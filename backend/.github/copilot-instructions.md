@@ -35,7 +35,6 @@
   4. Register the route in `src/routes/index.ts`
 
 ## References
-- See [README.md](../../README.md) for setup and configuration details.
 - Key directories: `src/routes/`, `src/controllers/`, `src/services/`, `src/middleware/`, `src/types/`
 
 ---

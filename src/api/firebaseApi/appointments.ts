@@ -1,18 +1,3 @@
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  getDocs,
-  getDoc,
-  doc,
-  where,
-  query,
-  orderBy,
-  Timestamp,
-  writeBatch,
-} from "firebase/firestore";
-import { db } from "./../../firebase";
 import API_BASE_URL from '../../config/api';
 import type { Appointment } from "../../types/appointment";
 import type { TimeSlot } from "../../types/timeSlot";
@@ -21,51 +6,31 @@ import type { TimeSlot } from "../../types/timeSlot";
 
 export async function listAppointments(): Promise<Appointment[]> {
   try {
-    const aptsRef = collection(db, "appointments");
-    const q = query(aptsRef, orderBy("createdAt", "desc"));
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        slotId: data.slotId,
-        email: data.email,
-        locationDetails: data.locationDetails,
-        status: data.status,
-        appointmentDate: data.appointmentDate,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        expiresAt: data.expiresAt?.toDate() || new Date(),
-        notes: data.notes,
-      } as Appointment;
-    });
+    const resp = await fetch(`${API_BASE_URL}/appointments`);
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error listing appointments: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return (json.appointments || []) as Appointment[];
   } catch (error) {
-    console.error("Error fetching appointments:", error);
+    console.error("Error fetching appointments (client->backend):", error);
     return [];
   }
 }
 
 export async function getAppointment(id: string): Promise<Appointment | null> {
   try {
-    const docRef = doc(db, "appointments", id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return null;
-
-    const data = docSnap.data();
-    return {
-      id: docSnap.id,
-      slotId: data.slotId,
-      email: data.email,
-      locationDetails: data.locationDetails,
-      status: data.status,
-      appointmentDate: data.appointmentDate,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      expiresAt: data.expiresAt?.toDate() || new Date(),
-      notes: data.notes,
-    } as Appointment;
+    const resp = await fetch(`${API_BASE_URL}/appointments/${encodeURIComponent(id)}`);
+    if (!resp.ok) {
+      if (resp.status === 404) return null;
+      const text = await resp.text();
+      throw new Error(`Backend error fetching appointment: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment | null;
   } catch (error) {
-    console.error("Error fetching appointment:", error);
+    console.error("Error fetching appointment (client->backend):", error);
     return null;
   }
 }
@@ -75,27 +40,19 @@ export async function createAppointment(
   data: Omit<Appointment, "id" | "createdAt" | "expiresAt">
 ): Promise<Appointment> {
   try {
-    const aptsRef = collection(db, "appointments");
-    const now = Timestamp.now();
-    const expiresAt = new Date(now.toDate());
-    expiresAt.setDate(expiresAt.getDate() + 90); // 90 days from now
-    // Build Firestore-safe payload (no undefined values)
-    const payload: Omit<Appointment, "id" | "createdAt" | "expiresAt"> & { createdAt: Timestamp; expiresAt: Date } = {
-      slotId: data.slotId,
-      email: data.email,
-      locationDetails: {
-        type: data.locationDetails?.type,
-      },
-      status: data.status,
-      appointmentDate: data.appointmentDate,
-      createdAt: now,
-      expiresAt,
-      notes: data.notes,
-    };
-    const docRef = await addDoc(aptsRef, payload);
-    return getAppointment(docRef.id) as Promise<Appointment>;
+    const resp = await fetch(`${API_BASE_URL}/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointment: data }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error creating appointment: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment;
   } catch (error) {
-    console.error("Error creating appointment:", error);
+    console.error("Error creating appointment (client->backend):", error);
     throw error;
   }
 }
@@ -106,44 +63,19 @@ export async function createAppointmentWithSlot(
   slotId: string
 ): Promise<Appointment> {
   try {
-    const batch = writeBatch(db);
-    
-    // Create appointment document
-    const aptsRef = collection(db, "appointments");
-    const appointmentDocRef = doc(aptsRef); // Generate new doc ref
-    const now = Timestamp.now();
-    const expiresAt = new Date(now.toDate());
-    expiresAt.setDate(expiresAt.getDate() + 90);
-    
-    const appointmentPayload = {
-      slotId: appointmentData.slotId,
-      email: appointmentData.email,
-      locationDetails: {
-        type: appointmentData.locationDetails?.type,
-      },
-      status: appointmentData.status,
-      appointmentDate: appointmentData.appointmentDate,
-      createdAt: now,
-      expiresAt,
-      notes: appointmentData.notes,
-    };
-    
-    batch.set(appointmentDocRef, appointmentPayload);
-    
-    // Update slot status to booked
-    const slotRef = doc(db, "time_slots", slotId);
-    batch.update(slotRef, {
-      status: "booked",
-      updatedAt: now,
+    const resp = await fetch(`${API_BASE_URL}/appointments/with-slot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointment: appointmentData, slotId }),
     });
-    
-    // Commit both operations atomically
-    await batch.commit();
-    
-    // Return the created appointment
-    return getAppointment(appointmentDocRef.id) as Promise<Appointment>;
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error creating appointment with slot: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment;
   } catch (error) {
-    console.error("Error creating appointment with slot:", error);
+    console.error("Error creating appointment with slot (client->backend):", error);
     throw error;
   }
 }
@@ -154,30 +86,35 @@ export async function updateAppointment(
   patch: Partial<Appointment>
 ): Promise<Appointment | null> {
   try {
-    const docRef = doc(db, "appointments", id);
-    const updateData: Partial<Omit<Appointment, 'id' | 'createdAt'>> & { updatedAt: Timestamp } = {
-      updatedAt: Timestamp.now(),
-    };
-    if (patch.slotId !== undefined) updateData.slotId = patch.slotId;
-    if (patch.email !== undefined) updateData.email = patch.email;
-    if (patch.status !== undefined) updateData.status = patch.status;
-    if (patch.appointmentDate !== undefined) updateData.appointmentDate = patch.appointmentDate;
-    if (patch.notes !== undefined) updateData.notes = patch.notes;
-    await updateDoc(docRef, updateData);
-    return getAppointment(id);
+    const resp = await fetch(`${API_BASE_URL}/appointments/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ updates: patch }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error updating appointment: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment | null;
   } catch (error) {
-    console.error("Error updating appointment:", error);
+    console.error("Error updating appointment (client->backend):", error);
     return null;
   }
 }
 
 export async function deleteAppointment(id: string): Promise<boolean> {
   try {
-    const docRef = doc(db, "appointments", id);
-    await deleteDoc(docRef);
+    const resp = await fetch(`${API_BASE_URL}/appointments/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error deleting appointment: ${resp.status} ${text}`);
+    }
     return true;
   } catch (error) {
-    console.error("Error deleting appointment:", error);
+    console.error("Error deleting appointment (client->backend):", error);
     return false;
   }
 }
@@ -191,30 +128,15 @@ export async function getAppointmentsByDate(
   date: string
 ): Promise<Appointment[]> {
   try {
-    const aptsRef = collection(db, "appointments");
-    const q = query(
-      aptsRef,
-      where("appointmentDate", "==", date),
-      orderBy("createdAt", "desc")
-    );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        slotId: data.slotId,
-        email: data.email,
-        locationDetails: data.locationDetails,
-        status: data.status,
-        appointmentDate: data.appointmentDate,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        expiresAt: data.expiresAt?.toDate() || new Date(),
-        notes: data.notes,
-      } as Appointment;
-    });
+    const resp = await fetch(`${API_BASE_URL}/appointments?date=${encodeURIComponent(date)}`);
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error listing appointments by date: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return (json.appointments || []) as Appointment[];
   } catch (error) {
-    console.error("Error fetching appointments by date:", error);
+    console.error("Error fetching appointments by date (client->backend):", error);
     return [];
   }
 }
@@ -224,26 +146,16 @@ export async function getAppointmentsByDate(
  */
 export async function getSlotsByDate(date: string): Promise<TimeSlot[]> {
   try {
-    const slotsRef = collection(db, "time_slots");
-    // Remove extra orderBy to avoid composite index requirement; sort client-side
-    const q = query(slotsRef, where("date", "==", date));
-    const snapshot = await getDocs(q);
-
-    const slots = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        date: data.date,
-        time: data.time,
-        status: data.status,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as TimeSlot;
-    });
-
+    const resp = await fetch(`${API_BASE_URL}/time-slots?date=${encodeURIComponent(date)}`);
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error listing slots by date: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    const slots = (json.slots || []) as TimeSlot[];
     return slots.sort((a, b) => a.time.localeCompare(b.time));
   } catch (error) {
-    console.error("Error fetching slots by date:", error);
+    console.error("Error fetching slots by date (client->backend):", error);
     return [];
   }
 }
@@ -260,84 +172,19 @@ export async function listTenantAppointments(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
   try {
-    const aptsRef = collection(db, "appointments");
-    const q = query(
-      aptsRef,
-      where("org_id", "==", orgId),
-      where("calendar_id", "==", calendarId),
-      orderBy("createdAt", "desc")
+    const resp = await fetch(
+      `${API_BASE_URL}/appointments?orgId=${encodeURIComponent(orgId)}&calendarId=${encodeURIComponent(calendarId)}`
     );
-    const snapshot = await getDocs(q);
-
-    return snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        org_id: data.org_id,
-        calendar_id: data.calendar_id,
-        slotId: data.slotId,
-        email: data.email,
-        locationDetails: data.locationDetails,
-        status: data.status,
-        appointmentDate: data.appointmentDate,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        expiresAt: data.expiresAt?.toDate() || new Date(),
-        notes: data.notes,
-      } as Appointment;
-    });
-  } catch (error) {
-    // Fallback: if composite index is missing or still building, perform a simpler query
-    const err = error as unknown;
-    const message =
-      typeof err === "object" && err !== null && "message" in err
-        ? String((err as { message?: unknown }).message)
-        : "";
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "code" in err &&
-      (err as { code?: unknown }).code === "failed-precondition"
-    || message.includes("requires an index")) {
-      try {
-        const aptsRef = collection(db, "appointments");
-        // Use single-field equality on org_id to satisfy security rule and avoid composite index; sort client-side
-        const q2 = query(aptsRef, where("org_id", "==", orgId));
-        const snapshot2 = await getDocs(q2);
-        const items = snapshot2.docs
-          .map((doc) => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              org_id: data.org_id,
-              calendar_id: data.calendar_id,
-              slotId: data.slotId,
-              email: data.email,
-              locationDetails: data.locationDetails,
-              status: data.status,
-              appointmentDate: data.appointmentDate,
-              createdAt: data.createdAt?.toDate() || new Date(),
-              expiresAt: data.expiresAt?.toDate() || new Date(),
-              notes: data.notes,
-            } as Appointment;
-          })
-          .filter((a) => a.calendar_id === calendarId)
-          .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-        console.warn(
-          `[appointments] Using fallback query while index builds for org=${orgId}, calendar=${calendarId}`
-        );
-        return items;
-      } catch (fallbackErr) {
-        console.error(
-          `Fallback query also failed for org=${orgId}, branch=${calendarId}:`,
-          fallbackErr
-        );
-        throw fallbackErr;
-      }
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error listing tenant appointments: ${resp.status} ${text}`);
     }
+    const json = await resp.json();
+    return (json.appointments || []) as Appointment[];
+  } catch (error) {
     console.error(
-      `Error fetching appointments for org=${orgId}, branch=${calendarId}:`,
+      `Error fetching tenant appointments (client->backend) for org=${orgId}, branch=${calendarId}:`,
       error
     );
     throw error;
@@ -355,36 +202,20 @@ export async function getTenantAppointment(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
   try {
-    const docRef = doc(db, "appointments", id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return null;
-
-    const data = docSnap.data();
-
-    // Verify org/branch match
-    if (data.org_id !== orgId || data.calendar_id !== calendarId) {
-      throw new Error("Appointment does not belong to this org/branch");
+    const resp = await fetch(
+      `${API_BASE_URL}/appointments/${encodeURIComponent(id)}?orgId=${encodeURIComponent(orgId)}&calendarId=${encodeURIComponent(calendarId)}`
+    );
+    if (!resp.ok) {
+      if (resp.status === 404) return null;
+      const text = await resp.text();
+      throw new Error(`Backend error fetching appointment: ${resp.status} ${text}`);
     }
-
-    return {
-      id: docSnap.id,
-      org_id: data.org_id,
-      calendar_id: data.calendar_id,
-      slotId: data.slotId,
-      email: data.email,
-      locationDetails: data.locationDetails,
-      status: data.status,
-      appointmentDate: data.appointmentDate,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      expiresAt: data.expiresAt?.toDate() || new Date(),
-      notes: data.notes,
-    } as Appointment;
+    const json = await resp.json();
+    return json.appointment as Appointment | null;
   } catch (error) {
     console.error(
-      `Error fetching appointment ${id} for org=${orgId}, branch=${calendarId}:`,
+      `Error fetching tenant appointment (client->backend) ${id} for org=${orgId}, branch=${calendarId}:`,
       error
     );
     throw error;
@@ -433,48 +264,26 @@ export async function createTenantAppointmentWithSlot(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
+  // Route through the backend so the atomic booking occurs server-side
   try {
-    const batch = writeBatch(db);
-    
-    // Create appointment document
-    const aptsRef = collection(db, "appointments");
-    const appointmentDocRef = doc(aptsRef); // Generate new doc ref
-    const now = Timestamp.now();
-    const expiresAt = new Date(now.toDate());
-    expiresAt.setDate(expiresAt.getDate() + 90);
-    
-    const appointmentPayload = {
-      org_id: orgId,
-      calendar_id: calendarId,
-      slotId: appointmentData.slotId,
-      email: appointmentData.email,
-      locationDetails: {
-        type: appointmentData.locationDetails?.type,
-      },
-      status: appointmentData.status,
-      appointmentDate: appointmentData.appointmentDate,
-      createdAt: now,
-      expiresAt,
-      notes: appointmentData.notes,
-    };
-    
-    batch.set(appointmentDocRef, appointmentPayload);
-    
-    // Update slot status to booked
-    const slotRef = doc(db, "time_slots", slotId);
-    batch.update(slotRef, {
-      status: "booked",
-      updatedAt: now,
+    const resp = await fetch(`${API_BASE_URL}/appointments/with-slot`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, calendarId, appointment: appointmentData, slotId }),
     });
-    
-    // Commit both operations atomically
-    await batch.commit();
-    
-    // Return the created appointment
-    return getTenantAppointment(orgId, calendarId, appointmentDocRef.id) as Promise<Appointment>;
+
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error creating appointment with slot: ${resp.status} ${text}`);
+    }
+
+    const json = await resp.json();
+    return json.appointment as Appointment;
   } catch (error) {
-    console.error("Error creating tenant appointment with slot:", error);
+    console.error(
+      `Error creating tenant appointment with slot (client -> backend) for org=${orgId}, branch=${calendarId}:`,
+      error
+    );
     throw error;
   }
 }
@@ -491,26 +300,21 @@ export async function updateTenantAppointment(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
   try {
-    // Verify ownership first
-    await getTenantAppointment(orgId, calendarId, id);
-
-    const docRef = doc(db, "appointments", id);
-    const updateData: Partial<Omit<Appointment, 'id' | 'createdAt'>> & { updatedAt: Timestamp } = {
-      updatedAt: Timestamp.now(),
-    };
-    if (patch.slotId !== undefined) updateData.slotId = patch.slotId;
-    if (patch.email !== undefined) updateData.email = patch.email;
-    if (patch.status !== undefined) updateData.status = patch.status;
-    if (patch.appointmentDate !== undefined) updateData.appointmentDate = patch.appointmentDate;
-    if (patch.notes !== undefined) updateData.notes = patch.notes;
-
-    await updateDoc(docRef, updateData);
-    return getTenantAppointment(orgId, calendarId, id);
+    const resp = await fetch(`${API_BASE_URL}/appointments/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, calendarId, updates: patch }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error updating appointment: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment | null;
   } catch (error) {
     console.error(
-      `Error updating appointment ${id} for org=${orgId}, branch=${calendarId}:`,
+      `Error updating tenant appointment (client->backend) ${id} for org=${orgId}, branch=${calendarId}:`,
       error
     );
     throw error;
@@ -528,17 +332,21 @@ export async function deleteTenantAppointment(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
   try {
-    // Verify ownership first
-    await getTenantAppointment(orgId, calendarId, id);
-
-    const docRef = doc(db, "appointments", id);
-    await deleteDoc(docRef);
+    // Route through backend which should verify ownership and perform deletion
+    const resp = await fetch(`${API_BASE_URL}/appointments/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, calendarId }),
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error deleting appointment: ${resp.status} ${text}`);
+    }
     return true;
   } catch (error) {
     console.error(
-      `Error deleting appointment ${id} for org=${orgId}, branch=${calendarId}:`,
+      `Error deleting tenant appointment (client->backend) ${id} for org=${orgId}, branch=${calendarId}:`,
       error
     );
     throw error;
