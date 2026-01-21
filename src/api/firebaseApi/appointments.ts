@@ -13,6 +13,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { db } from "./../../firebase";
+import API_BASE_URL from '../../config/api';
 import type { Appointment } from "../../types/appointment";
 import type { TimeSlot } from "../../types/timeSlot";
 
@@ -401,34 +402,21 @@ export async function createTenantAppointment(
   if (!orgId || !calendarId) {
     throw new Error("orgId and calendarId are required");
   }
-
+  // Route through the backend so secrets and Admin SDK usage remain server-side
   try {
-    const aptsRef = collection(db, "appointments");
-    const now = Timestamp.now();
-    const expiresAt = new Date(now.toDate());
-    expiresAt.setDate(expiresAt.getDate() + 90);
-
-    const docRef = await addDoc(aptsRef, {
-      org_id: orgId,
-      calendar_id: calendarId,
-      slotId: data.slotId,
-      email: data.email,
-      locationDetails: {
-        type: data.locationDetails?.type,
-      },
-      status: data.status,
-      appointmentDate: data.appointmentDate,
-      createdAt: now,
-      expiresAt,
-      notes: data.notes,
+    const resp = await fetch(`${API_BASE_URL}/appointments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orgId, calendarId, appointment: data }),
     });
-
-    return getTenantAppointment(orgId, calendarId, docRef.id) as Promise<Appointment>;
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Backend error creating appointment: ${resp.status} ${text}`);
+    }
+    const json = await resp.json();
+    return json.appointment as Appointment;
   } catch (error) {
-    console.error(
-      `Error creating appointment for org=${orgId}, branch=${calendarId}:`,
-      error
-    );
+    console.error(`Error creating appointment (client -> backend) for org=${orgId}, branch=${calendarId}:`, error);
     throw error;
   }
 }

@@ -11,6 +11,7 @@ import outlookAuthRoutes from './auth/outlook';
 
 import debugRoutes from './debug';
 import docsRoutes from './docs';
+import appointmentsRoutes from './appointments';
 
 const router = Router();
 
@@ -22,6 +23,7 @@ router.get('/', (req, res) => {
 router.use('/invitations', invitationsRoutes);
 router.use('/booking-confirmation', bookingConfirmationRoutes);
 router.use('/calendar', calendarRoutes);
+router.use('/appointments', appointmentsRoutes);
 router.use('/auth/google', googleAuthRoutes);
 router.use('/auth/outlook', outlookAuthRoutes);
 router.use('/debug', debugRoutes);
