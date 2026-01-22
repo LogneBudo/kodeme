@@ -1,63 +1,22 @@
-import { getOrganization } from "./organizations";
+const API_BASE = "/api";
 
-// ============ TIER LIMIT CHECKING (SKELETON) ============
-
-/**
- * Check if organization can add more users (based on tier)
- * This is a skeleton; full logic implemented in Phase 3/4 with auth context
- */
 export async function canAddUserToTenant(orgId: string): Promise<boolean> {
-  try {
-    const org = await getOrganization(orgId);
-    if (!org) throw new Error(`Organization ${orgId} not found`);
-
-    // TODO: Implement tier-based user limit checking
-    // For now, allow unlimited users
-    return true;
-  } catch (error) {
-    console.error(`Error checking user limit for org ${orgId}:`, error);
-    throw error;
-  }
+  const resp = await fetch(`${API_BASE}/tiers/can-add-user/${encodeURIComponent(orgId)}`);
+  if (!resp.ok) throw new Error('Failed to check user limit');
+  const data = await resp.json();
+  return !!data.allowed;
 }
 
-/**
- * Check if organization can add more branches (based on tier)
- * This is a skeleton; full logic implemented in Phase 3/4
- */
 export async function canAddBranchToTenant(orgId: string): Promise<boolean> {
-  try {
-    const org = await getOrganization(orgId);
-    if (!org) throw new Error(`Organization ${orgId} not found`);
-
-    // TODO: Implement tier-based branch limit checking
-    // For now, allow unlimited branches
-    return true;
-  } catch (error) {
-    console.error(`Error checking branch limit for org ${orgId}:`, error);
-    throw error;
-  }
+  const resp = await fetch(`${API_BASE}/tiers/can-add-branch/${encodeURIComponent(orgId)}`);
+  if (!resp.ok) throw new Error('Failed to check branch limit');
+  const data = await resp.json();
+  return !!data.allowed;
 }
 
-/**
- * Check if organization has access to a feature (based on tier)
- * This is a skeleton; full logic implemented in Phase 3/4
- */
-export async function hasTierFeature(
-  orgId: string,
-  feature: string
-): Promise<boolean> {
-  try {
-    const org = await getOrganization(orgId);
-    if (!org) throw new Error(`Organization ${orgId} not found`);
-
-    // TODO: Implement feature-flag checking based on subscription_tier
-    // For now, allow all features
-    return true;
-  } catch (error) {
-    console.error(
-      `Error checking feature access for org ${orgId}, feature ${feature}:`,
-      error
-    );
-    throw error;
-  }
+export async function hasTierFeature(orgId: string, feature: string): Promise<boolean> {
+  const resp = await fetch(`${API_BASE}/tiers/has-feature/${encodeURIComponent(orgId)}/${encodeURIComponent(feature)}`);
+  if (!resp.ok) throw new Error('Failed to check feature access');
+  const data = await resp.json();
+  return !!data.allowed;
 }
