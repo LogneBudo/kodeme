@@ -11,7 +11,7 @@ export async function listTenantCalendars(orgId: string): Promise<Calendar[]> {
     throw new Error("orgId is required");
   }
   try {
-    const resp = await fetch(`${API_BASE_URL}/calendars?orgId=${encodeURIComponent(orgId)}`);
+    const resp = await fetch(`${API_BASE_URL}/calendars?org_id=${encodeURIComponent(orgId)}`);
     if (!resp.ok) {
       const text = await resp.text();
       throw new Error(`Backend error listing calendars: ${resp.status} ${text}`);
@@ -54,7 +54,7 @@ export async function getTenantCalendar(
   }
   try {
     const resp = await fetch(
-      `${API_BASE_URL}/calendars/${encodeURIComponent(calendarId)}?orgId=${encodeURIComponent(orgId)}`
+      `${API_BASE_URL}/calendars/${encodeURIComponent(calendarId)}?org_id=${encodeURIComponent(orgId)}`
     );
     if (!resp.ok) {
       if (resp.status === 404) return null;
@@ -84,7 +84,7 @@ export async function createTenantCalendar(
     const resp = await fetch(`${API_BASE_URL}/calendars`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orgId, userId, calendar: data }),
+      body: JSON.stringify({ org_id: orgId, userId, calendar: data }),
     });
 
     if (!resp.ok) {
@@ -115,7 +115,7 @@ export async function updateTenantCalendar(
     const resp = await fetch(`${API_BASE_URL}/calendars/${calendarId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orgId, updates }),
+      body: JSON.stringify({ org_id: orgId, updates }),
     });
 
     if (!resp.ok) {
@@ -142,7 +142,7 @@ export async function deleteTenantCalendar(orgId: string, calendarId: string): P
     const resp = await fetch(`${API_BASE_URL}/calendars/${calendarId}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orgId }),
+      body: JSON.stringify({ org_id: orgId }),
     });
 
     if (!resp.ok) {
