@@ -7,7 +7,8 @@ export async function canAddUserToTenant(req: Request, res: Response) {
     const ok = await tiersService.canAddUserToTenant(orgId);
     res.json({ allowed: ok });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to check user limit' });
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message || 'Failed to check user limit' });
   }
 }
 
@@ -17,7 +18,8 @@ export async function canAddBranchToTenant(req: Request, res: Response) {
     const ok = await tiersService.canAddBranchToTenant(orgId);
     res.json({ allowed: ok });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to check branch limit' });
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message || 'Failed to check branch limit' });
   }
 }
 
@@ -27,6 +29,7 @@ export async function hasTierFeature(req: Request, res: Response) {
     const ok = await tiersService.hasTierFeature(orgId, feature);
     res.json({ allowed: ok });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Failed to check feature access' });
+    const message = err instanceof Error ? err.message : String(err);
+    res.status(500).json({ error: message || 'Failed to check feature access' });
   }
 }

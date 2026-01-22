@@ -1,5 +1,5 @@
 // import API_BASE_URL from your config if needed
-const API_BASE_URL = "/api";
+import API_BASE_URL from '../../config/api';
 import type { Restaurant } from "../../types/restaurant";
 
 // ============ SETTINGS ============

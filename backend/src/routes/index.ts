@@ -16,6 +16,7 @@ import appointmentsRoutes from './appointments';
 import calendarsRoutes from './calendars';
 import organizationsRoutes from './organizations';
 import tiersRoutes from './tiers';
+import timeslotsRoutes from './timeslots';
 
 const router = Router();
 
@@ -31,6 +32,7 @@ router.use('/appointments', appointmentsRoutes);
 router.use('/calendars', calendarsRoutes);
 router.use('/organizations', organizationsRoutes);
 router.use('/tiers', tiersRoutes);
+router.use('/timeslots', timeslotsRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/auth/google', googleAuthRoutes);
 router.use('/auth/outlook', outlookAuthRoutes);
