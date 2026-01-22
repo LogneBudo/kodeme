@@ -58,7 +58,9 @@ function mapCalendarDoc(doc: FirebaseFirestore.DocumentSnapshot<FirebaseFirestor
  */
 export const listTenantCalendars = async (req: Request, res: Response) => {
   const { orgId } = req.query as Record<string, string>;
-  if (!orgId) return res.status(400).json({ error: 'orgId required' });
+    const queryParams = req.query as Record<string, string>;
+    const orgId = queryParams.orgId || queryParams.org_id;
+    if (!orgId) return res.status(400).json({ error: 'orgId required' });
 
   try {
     const snapshot = await db
@@ -116,7 +118,9 @@ export const listTenantCalendars = async (req: Request, res: Response) => {
 export const getTenantCalendar = async (req: Request, res: Response) => {
   const { orgId } = req.query as Record<string, string>;
   const { id } = req.params;
-  if (!orgId || !id) return res.status(400).json({ error: 'orgId and calendarId required' });
+    const queryParams2 = req.query as Record<string, string>;
+    const orgId2 = queryParams2.orgId || queryParams2.org_id;
+    if (!orgId2 || !id) return res.status(400).json({ error: 'org_id and calendarId required' });
 
   try {
     const docRef = db.collection('calendars').doc(id);
@@ -224,7 +228,11 @@ type UpdateCalendarData = Partial<Pick<CalendarDoc, 'name' | 'address' | 'locati
  */
 export const postCreateTenantCalendar = async (req: Request, res: Response) => {
   const { orgId, userId, data } = req.body as { orgId?: string; userId?: string; data?: CreateCalendarData };
-  if (!orgId || !userId || !data) return res.status(400).json({ error: 'orgId, userId and data required' });
+    const body = req.body as Record<string, unknown>;
+    const orgIdBody = (body.orgId as string) || (body.org_id as string) || undefined;
+    const userId = body.userId as string | undefined;
+    const data = body.data as CreateCalendarData | undefined;
+    if (!orgIdBody || !userId || !data) return res.status(400).json({ error: 'org_id, userId and data required' });
 
   try {
     const docRef = await db.collection('calendars').add({
@@ -302,7 +310,10 @@ export const postCreateTenantCalendar = async (req: Request, res: Response) => {
 export const putUpdateTenantCalendar = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { orgId, updates } = req.body as { orgId?: string; updates?: UpdateCalendarData };
-  if (!id || !orgId || !updates) return res.status(400).json({ error: 'id, orgId and updates required' });
+    const body2 = req.body as Record<string, unknown>;
+    const orgIdBody2 = (body2.orgId as string) || (body2.org_id as string) || undefined;
+    const updates = body2.updates as UpdateCalendarData | undefined;
+    if (!id || !orgIdBody2 || !updates) return res.status(400).json({ error: 'id, org_id and updates required' });
 
   try {
     const docRef = db.collection('calendars').doc(id);
@@ -360,7 +371,9 @@ export const putUpdateTenantCalendar = async (req: Request, res: Response) => {
 export const deleteTenantCalendar = async (req: Request, res: Response) => {
   const { id } = req.params;
   const { orgId } = req.query as Record<string, string>;
-  if (!id || !orgId) return res.status(400).json({ error: 'id and orgId required' });
+    const queryParams3 = req.query as Record<string, string>;
+    const orgId3 = queryParams3.orgId || queryParams3.org_id;
+    if (!id || !orgId3) return res.status(400).json({ error: 'id and org_id required' });
 
   try {
     const docRef = db.collection('calendars').doc(id);
