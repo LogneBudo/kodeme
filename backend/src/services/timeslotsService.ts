@@ -1,11 +1,22 @@
 import { db } from './firebase';
 import { Timestamp } from 'firebase-admin/firestore';
 
+type TimeSlotDoc = {
+  date: string;
+  time: string;
+  status?: string;
+  org_id?: string;
+  calendar_id?: string;
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+  [key: string]: unknown;
+};
+
 export async function listTimeSlots() {
   const slotsRef = db.collection('time_slots');
   const snapshot = await slotsRef.orderBy('date', 'asc').get();
   const slots = snapshot.docs.map(d => {
-    const data = d.data();
+    const data = d.data() as TimeSlotDoc;
     return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() };
   });
   slots.sort((a,b)=>{
@@ -20,11 +31,11 @@ export async function getTimeSlot(id: string) {
   const docRef = db.collection('time_slots').doc(id);
   const snap = await docRef.get();
   if (!snap.exists) return null;
-  const data = snap.data();
+  const data = snap.data() as TimeSlotDoc;
   return { id: snap.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() };
 }
 
-export async function createTimeSlot(data: any) {
+export async function createTimeSlot(data: Partial<TimeSlotDoc>) {
   const slotsRef = db.collection('time_slots');
   const now = Timestamp.now();
   const docRef = await slotsRef.add({
@@ -37,11 +48,15 @@ export async function createTimeSlot(data: any) {
   return { id: docRef.id, ...data, createdAt: now.toDate(), updatedAt: now.toDate() };
 }
 
-export async function updateTimeSlot(id: string, patch: any) {
+export async function updateTimeSlot(id: string, patch: Partial<TimeSlotDoc>) {
   const docRef = db.collection('time_slots').doc(id);
-  const updateData = { ...patch, updatedAt: Timestamp.now() };
-  delete updateData.id; delete updateData.createdAt; delete updateData.org_id; delete updateData.calendar_id;
-  await docRef.update(updateData);
+  const updateData = { ...patch, updatedAt: Timestamp.now() } as Partial<TimeSlotDoc> & { updatedAt: Timestamp };
+  const safeUpdateData = { ...updateData } as Record<string, unknown>;
+  delete safeUpdateData['id'];
+  delete safeUpdateData['createdAt'];
+  delete safeUpdateData['org_id'];
+  delete safeUpdateData['calendar_id'];
+  await docRef.update(safeUpdateData);
   return getTimeSlot(id);
 }
 
@@ -50,10 +65,10 @@ export async function deleteTimeSlot(id: string) {
   return true;
 }
 
-export async function bulkCreateTimeSlots(items: any[]) {
+export async function bulkCreateTimeSlots(items: Partial<TimeSlotDoc>[]) {
   const slotsRef = db.collection('time_slots');
   const now = Timestamp.now();
-  const created: any[] = [];
+  const created: Array<Record<string, unknown>> = [];
   for (const item of items) {
     const docRef = await slotsRef.add({ date: item.date, time: item.time, status: item.status || 'available', createdAt: now, updatedAt: now });
     created.push({ id: docRef.id, ...item, createdAt: now.toDate(), updatedAt: now.toDate() });
@@ -68,36 +83,40 @@ export async function listTenantTimeSlots(orgId: string, calendarId: string) {
   const snapshot = await q.get();
   if (!snapshot.empty) {
     const slots = snapshot.docs.map(d => {
-      const data = d.data();
+      const data = d.data() as TimeSlotDoc;
       return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() };
     });
     return slots;
   }
   // fallback legacy
   const all = await slotsRef.orderBy('date','asc').get();
-  return all.docs.map(d=>{ const data=d.data(); return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() }; });
+  return all.docs.map(d=>{ const data=d.data() as TimeSlotDoc; return { id: d.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() }; });
 }
 
 export async function getTenantTimeSlot(orgId: string, calendarId: string, id: string) {
   const docRef = db.collection('time_slots').doc(id);
   const snap = await docRef.get();
   if (!snap.exists) return null;
-  const data = snap.data();
+  const data = snap.data() as TimeSlotDoc;
   if (data.org_id !== orgId || data.calendar_id !== calendarId) throw new Error('Time slot does not belong to this org/branch');
   return { id: snap.id, ...data, createdAt: data.createdAt?.toDate?.() ?? new Date(), updatedAt: data.updatedAt?.toDate?.() ?? new Date() };
 }
 
-export async function createTenantTimeSlot(orgId: string, calendarId: string, item: any) {
+export async function createTenantTimeSlot(orgId: string, calendarId: string, item: Partial<TimeSlotDoc>) {
   const now = Timestamp.now();
   const docRef = await db.collection('time_slots').add({ org_id: orgId, calendar_id: calendarId, date: item.date, time: item.time, status: item.status || 'available', createdAt: now, updatedAt: now });
   return { id: docRef.id, org_id: orgId, calendar_id: calendarId, ...item, createdAt: now.toDate(), updatedAt: now.toDate() };
 }
 
-export async function updateTenantTimeSlot(orgId: string, calendarId: string, id: string, patch: any) {
+export async function updateTenantTimeSlot(orgId: string, calendarId: string, id: string, patch: Partial<TimeSlotDoc>) {
   await getTenantTimeSlot(orgId, calendarId, id);
-  const updateData = { ...patch, updatedAt: Timestamp.now() };
-  delete updateData.id; delete updateData.org_id; delete updateData.calendar_id; delete updateData.createdAt;
-  await db.collection('time_slots').doc(id).update(updateData);
+  const updateData = { ...patch, updatedAt: Timestamp.now() } as Partial<TimeSlotDoc> & { updatedAt: Timestamp };
+  const safeUpdateData = { ...updateData } as Record<string, unknown>;
+  delete safeUpdateData['id'];
+  delete safeUpdateData['org_id'];
+  delete safeUpdateData['calendar_id'];
+  delete safeUpdateData['createdAt'];
+  await db.collection('time_slots').doc(id).update(safeUpdateData);
   return getTenantTimeSlot(orgId, calendarId, id);
 }
 
