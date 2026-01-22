@@ -28,7 +28,7 @@ export async function listTenantCalendars(orgId: string): Promise<Calendar[]> {
 export async function getCalendarUnsafe(calendarId: string): Promise<Calendar | null> {
   if (!calendarId) return null;
   try {
-    const resp = await fetch(`${API_BASE_URL}/calendars/${encodeURIComponent(calendarId)}`);
+    const resp = await fetch(`${API_BASE_URL}/calendars/unsafe/${encodeURIComponent(calendarId)}`);
     if (!resp.ok) {
       if (resp.status === 404) return null;
       const text = await resp.text();
