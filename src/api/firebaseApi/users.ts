@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "./../../firebase";
+import API_BASE_URL from '../../config/api';
 
 // ============ USERS ============
 
@@ -24,6 +25,14 @@ export type User = {
 };
 
 export async function listUsers(): Promise<User[]> {
+  // Try backend API first
+  try {
+    const resp = await fetch(`${API_BASE_URL}/users`);
+    if (resp.ok) return resp.json();
+  } catch (err) {
+    // fallthrough to Firestore
+  }
+
   try {
     const usersRef = collection(db, "users");
     const q = query(usersRef, orderBy("createdAt", "desc"));
@@ -52,11 +61,19 @@ export async function addUser(
   subscription_tier: string = "free",
   created_by?: string
 ): Promise<User | null> {
+  // Try backend API first
+  try {
+    const body = { uid, email, role, subscription_tier, created_by };
+    const resp = await fetch(`${API_BASE_URL}/users`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (resp.ok) return resp.json();
+  } catch (err) {
+    // fallback to Firestore
+  }
+
   try {
     // Enforce free plan: one organization per user
     const selectedTier = subscription_tier || "free";
     if (selectedTier === "free" && created_by) {
-      // If the user already has an org_id or owns any organization, block creation
       const userRef = doc(db, "users", created_by);
       const userSnap = await getDoc(userRef);
       const existingOrgId = userSnap.exists() ? (userSnap.data().org_id || null) : null;
@@ -94,6 +111,13 @@ export async function addUser(
 
 export async function updateUserRole(userId: string, role: "admin" | "user"): Promise<boolean> {
   try {
+    const resp = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(userId)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role }) });
+    if (resp.ok) return true;
+  } catch (err) {
+    // fallback
+  }
+
+  try {
     const userRef = doc(db, "users", userId);
     await updateDoc(userRef, {
       role,
@@ -107,6 +131,13 @@ export async function updateUserRole(userId: string, role: "admin" | "user"): Pr
 }
 
 export async function deleteUser(userId: string): Promise<boolean> {
+  try {
+    const resp = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(userId)}`, { method: 'DELETE' });
+    if (resp.ok) return true;
+  } catch (err) {
+    // fallback
+  }
+
   try {
     const userRef = doc(db, "users", userId);
     await deleteDoc(userRef);
@@ -124,6 +155,13 @@ export async function deleteUser(userId: string): Promise<boolean> {
 export async function listTenantUsers(orgId: string): Promise<User[]> {
   if (!orgId) {
     throw new Error("orgId is required");
+  }
+  // Try backend API first
+  try {
+    const resp = await fetch(`${API_BASE_URL}/users/tenant/${encodeURIComponent(orgId)}`);
+    if (resp.ok) return resp.json();
+  } catch (err) {
+    // fallback to Firestore
   }
 
   try {
@@ -201,6 +239,13 @@ export async function inviteUserToTenant(
   if (!userId || !orgId || !branchAssignments || Object.keys(branchAssignments).length === 0) {
     throw new Error("userId, orgId, and branchAssignments are required");
   }
+  // Try backend API first
+  try {
+    const resp = await fetch(`${API_BASE_URL}/users/tenant/${encodeURIComponent(orgId)}/invite`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId, branchAssignments }) });
+    if (resp.ok) return true;
+  } catch (err) {
+    // fallback
+  }
 
   try {
     const userRef = doc(db, "users", userId);
@@ -233,6 +278,13 @@ export async function inviteUserToTenant(
 export async function removeUserFromTenant(userId: string): Promise<boolean> {
   if (!userId) {
     throw new Error("userId is required");
+  }
+  // Try backend API first
+  try {
+    const resp = await fetch(`${API_BASE_URL}/users/${encodeURIComponent(userId)}/removeFromTenant`, { method: 'POST' });
+    if (resp.ok) return true;
+  } catch (err) {
+    // fallback
   }
 
   try {
