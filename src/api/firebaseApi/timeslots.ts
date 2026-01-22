@@ -1,182 +1,44 @@
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  getDocs,
-  getDoc,
-  doc,
-  query,
-  where,
-  orderBy,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "./../../firebase";
 import type { TimeSlot } from "../../types/timeSlot";
-import { getOrganization } from "./organizations";
-import { listTenantCalendars } from "./calendars";
-// ============ TIME SLOTS ============
 
-export async function listTimeSlots(orgId: string): Promise<TimeSlot[]> {
-  try {
-    // Enforce plan limits: max calendars per organization
-    
-    const org = await getOrganization(orgId);
-    const tier = (org?.subscription_tier || "free") as import("../../types/subscriptionTier").SubscriptionTierName;
-    const { TIER_DEFINITIONS } = await import("../../types/subscriptionTier");
-    const maxCalendars = TIER_DEFINITIONS[tier].features.calendar_max_calendars;
-    const existing = await listTenantCalendars(orgId);
-    if (existing.length >= maxCalendars) {
-      throw new Error(`Your plan allows up to ${maxCalendars} calendar${maxCalendars > 1 ? 's' : ''}.`);
-    }
-    const slotsRef = collection(db, "time_slots");
-    // Single orderBy keeps us within Firestore's built-in indexes; we sort by time client-side
-    const q = query(slotsRef, orderBy("date", "asc"));
-    const snapshot = await getDocs(q);
+const API_BASE = "/api";
 
-    const slots = snapshot.docs.map((doc) => {
-      const data = doc.data();
-      return {
-        id: doc.id,
-        date: data.date,
-        time: data.time,
-        status: data.status,
-        createdAt: data.createdAt?.toDate() || new Date(),
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-      } as TimeSlot;
-    });
-
-    // Sort by date then time client-side
-    return slots.sort((a, b) => {
-      const d = a.date.localeCompare(b.date);
-      if (d !== 0) return d;
-      return a.time.localeCompare(b.time);
-    });
-  } catch (error) {
-    console.error("Error fetching time slots:", error);
-    return [];
-  }
+export async function listTimeSlots(): Promise<TimeSlot[]> {
+  const resp = await fetch(`${API_BASE}/timeslots`);
+  if (!resp.ok) throw new Error('Failed to list time slots');
+  return resp.json();
 }
 
 export async function getTimeSlot(id: string): Promise<TimeSlot | null> {
-  try {
-    const docRef = doc(db, "time_slots", id);
-    const docSnap = await getDoc(docRef);
-
-    if (!docSnap.exists()) return null;
-
-    const data = docSnap.data();
-    return {
-      id: docSnap.id,
-      date: data.date,
-      time: data.time,
-      status: data.status,
-      createdAt: data.createdAt?.toDate() || new Date(),
-      updatedAt: data.updatedAt?.toDate() || new Date(),
-    } as TimeSlot;
-  } catch (error) {
-    console.error("Error fetching time slot:", error);
-    return null;
-  }
+  const resp = await fetch(`${API_BASE}/timeslots/${encodeURIComponent(id)}`);
+  if (!resp.ok) return null;
+  return resp.json();
 }
 
-export async function createTimeSlot(
-  data: Omit<TimeSlot, "id" | "createdAt" | "updatedAt">
-): Promise<TimeSlot> {
-  try {
-    const slotsRef = collection(db, "time_slots");
-    const now = Timestamp.now();
-
-    const docRef = await addDoc(slotsRef, {
-      date: data.date,
-      time: data.time,
-      status: data.status || "available",
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    return {
-      id: docRef.id,
-      ...data,
-      createdAt: now.toDate(),
-      updatedAt: now.toDate(),
-    };
-  } catch (error) {
-    console.error("Error creating time slot:", error);
-    throw error;
-  }
+export async function createTimeSlot(data: Omit<TimeSlot, 'id' | 'createdAt' | 'updatedAt'>): Promise<TimeSlot> {
+  const resp = await fetch(`${API_BASE}/timeslots`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  if (!resp.ok) throw new Error('Failed to create time slot');
+  return resp.json();
 }
 
-// Fix updateTimeSlot
-export async function updateTimeSlot(
-  id: string,
-  patch: Partial<TimeSlot>
-): Promise<TimeSlot | null> {
-  try {
-    const docRef = doc(db, "time_slots", id);
-    // Remove id and createdAt from patch using destructuring
-    // Remove id and createdAt from patch using a utility function
-    const omit = <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
-      const ret = { ...obj };
-      for (const key of keys) {
-        delete ret[key];
-      }
-      return ret;
-    };
-    const updateData = {
-      ...omit(patch, ["id", "createdAt"]),
-      updatedAt: Timestamp.now(),
-    };
-    await updateDoc(docRef, updateData);
-    return getTimeSlot(id);
-  } catch (error) {
-    console.error("Error updating time slot:", error);
-    return null;
-  }
+export async function updateTimeSlot(id: string, patch: Partial<TimeSlot>): Promise<TimeSlot | null> {
+  const resp = await fetch(`${API_BASE}/timeslots/${encodeURIComponent(id)}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+  if (!resp.ok) return null;
+  return resp.json();
 }
 
 export async function deleteTimeSlot(id: string): Promise<boolean> {
-  try {
-    const docRef = doc(db, "time_slots", id);
-    await deleteDoc(docRef);
-    return true;
-  } catch (error) {
-    console.error("Error deleting time slot:", error);
-    return false;
-  }
+  const resp = await fetch(`${API_BASE}/timeslots/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  return resp.ok;
 }
 
-export async function bulkCreateTimeSlots(
-  data: Omit<TimeSlot, "id" | "createdAt" | "updatedAt">[]
-): Promise<TimeSlot[]> {
-  try {
-    const slotsRef = collection(db, "time_slots");
-    const now = Timestamp.now();
-    const created: TimeSlot[] = [];
-
-    for (const slotData of data) {
-      const docRef = await addDoc(slotsRef, {
-        date: slotData.date,
-        time: slotData.time,
-        status: slotData.status || "available",
-        createdAt: now,
-        updatedAt: now,
-      });
-
-      created.push({
-        id: docRef.id,
-        ...slotData,
-        status: slotData.status || "available",
-        createdAt: now.toDate(),
-        updatedAt: now.toDate(),
-      });
-    }
-
-    return created;
-  } catch (error) {
-    console.error("Error bulk creating time slots:", error);
-    throw error;
+export async function bulkCreateTimeSlots(data: Omit<TimeSlot, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<TimeSlot[]> {
+  // backend currently does not expose a bulk endpoint; fallback to multiple creates
+  const created: TimeSlot[] = [];
+  for (const item of data) {
+    const c = await createTimeSlot(item);
+    created.push(c);
   }
+  return created;
 }
 
 // ============================================================================
