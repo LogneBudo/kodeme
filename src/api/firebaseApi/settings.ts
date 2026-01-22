@@ -1,10 +1,5 @@
-import {
-  getDoc,
-  doc,
-  setDoc,
-  Timestamp,
-} from "firebase/firestore";
-import { db } from "./../../firebase";
+// import API_BASE_URL from your config if needed
+const API_BASE_URL = "/api";
 import type { Restaurant } from "../../types/restaurant";
 
 // ============ SETTINGS ============
@@ -57,7 +52,6 @@ export type Settings = {
   curatedList?: string;
 };
 
-const SETTINGS_DOC = "main";
 const DEFAULT_WORKING_DAYS: WorkingDays = [1, 2, 3, 4, 5];
 
 function normalizeWorkingDays(raw: unknown): WorkingDays {
@@ -89,90 +83,26 @@ function normalizeWorkingDays(raw: unknown): WorkingDays {
 
 export async function getSettings(): Promise<Settings> {
   try {
-    const settingsRef = doc(db, "settings", SETTINGS_DOC);
-    const settingsDoc = await getDoc(settingsRef);
-
-    if (settingsDoc.exists()) {
-      const data = settingsDoc.data();
-      return {
-        id: settingsDoc.id,
-        workingHours: data.workingHours || { startTime: "09:00", endTime: "17:00" },
-        workingDays: normalizeWorkingDays(data.workingDays),
-        blockedSlots: data.blockedSlots || [],
-        oneOffUnavailableSlots: data.oneOffUnavailableSlots || [],
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        calendarSync: data.calendarSync || {
-          autoCreateEvents: true,
-          showBusyTimes: false,
-          syncCancellations: true,
-        },
-        restaurantCity: data.restaurantCity || "",
-        restaurantCountry: data.restaurantCountry || "",
-        restaurantPerimeterKm: data.restaurantPerimeterKm || 5,
-        restaurants: data.restaurants || [],
-        curatedList: data.curatedList || "",
-      };
-    } else {
-      // Return default settings if not found
-      return {
-        workingHours: { startTime: "09:00", endTime: "17:00" },
-        workingDays: DEFAULT_WORKING_DAYS,
-        blockedSlots: [],
-        oneOffUnavailableSlots: [],
-        calendarSync: {
-          autoCreateEvents: true,
-          showBusyTimes: false,
-          syncCancellations: true,
-        },
-        restaurantCity: "",
-        restaurantCountry: "",
-        restaurantPerimeterKm: 5,
-        restaurants: [],
-        curatedList: "",
-      };
-    }
+    const resp = await fetch(`${API_BASE_URL}/settings`);
+    if (!resp.ok) throw new Error("Failed to fetch settings");
+    const data = await resp.json() as Settings;
+    const rawWorkingDays = (data as unknown as { workingDays?: unknown }).workingDays;
+    data.workingDays = normalizeWorkingDays(rawWorkingDays);
+    return data;
   } catch (error) {
     console.error("Error fetching settings:", error);
-    // Return default settings on error
-    return {
-      workingHours: { startTime: "09:00", endTime: "17:00" },
-      workingDays: DEFAULT_WORKING_DAYS,
-      blockedSlots: [],
-      oneOffUnavailableSlots: [],
-      calendarSync: {
-        autoCreateEvents: false,
-        showBusyTimes: false,
-        syncCancellations: false,
-      },
-      restaurantCity: "",
-      restaurantCountry: "",
-      restaurantPerimeterKm: 5,
-      restaurants: [],
-      curatedList: "",
-    };
+    throw error;
   }
 }
 
 export async function updateSettings(settings: Settings): Promise<boolean> {
   try {
-    const settingsRef = doc(db, "settings", SETTINGS_DOC);
-    await setDoc(settingsRef, {
-      workingHours: settings.workingHours,
-      workingDays: settings.workingDays || DEFAULT_WORKING_DAYS,
-      blockedSlots: settings.blockedSlots,
-      oneOffUnavailableSlots: settings.oneOffUnavailableSlots || [],
-      calendarSync: settings.calendarSync || {
-        autoCreateEvents: true,
-        showBusyTimes: false,
-        syncCancellations: true,
-      },
-      restaurantCity: settings.restaurantCity || "",
-      restaurantCountry: settings.restaurantCountry || "",
-      restaurantPerimeterKm: settings.restaurantPerimeterKm || 5,
-      restaurants: settings.restaurants || [],
-      curatedList: settings.curatedList || "",
-      updatedAt: Timestamp.now(),
+    const resp = await fetch(`${API_BASE_URL}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
     });
+    if (!resp.ok) throw new Error("Failed to update settings");
     return true;
   } catch (error) {
     console.error("Error updating settings:", error);
@@ -186,63 +116,17 @@ export async function updateSettings(settings: Settings): Promise<boolean> {
  * Get settings for a specific org/branch
  * Settings are stored with key format: {orgId}_{calendarId}
  */
-export async function getTenantSettings(
-  orgId: string,
-  calendarId: string
-): Promise<Settings> {
-  if (!orgId || !calendarId) {
-    throw new Error("orgId and calendarId are required");
-  }
-
+export async function getTenantSettings(orgId: string, calendarId: string): Promise<Settings> {
+  if (!orgId || !calendarId) throw new Error("orgId and calendarId are required");
   try {
-    const settingsKey = `${orgId}_${calendarId}`;
-    const settingsRef = doc(db, "settings", settingsKey);
-    const settingsDoc = await getDoc(settingsRef);
-
-    if (settingsDoc.exists()) {
-      const data = settingsDoc.data();
-      return {
-        id: settingsDoc.id,
-        workingHours: data.workingHours || { startTime: "09:00", endTime: "17:00" },
-        workingDays: normalizeWorkingDays(data.workingDays),
-        blockedSlots: data.blockedSlots || [],
-        oneOffUnavailableSlots: data.oneOffUnavailableSlots || [],
-        updatedAt: data.updatedAt?.toDate() || new Date(),
-        calendarSync: data.calendarSync || {
-          autoCreateEvents: true,
-          showBusyTimes: false,
-          syncCancellations: true,
-        },
-        restaurantCity: data.restaurantCity || "",
-        restaurantCountry: data.restaurantCountry || "",
-        restaurantPerimeterKm: data.restaurantPerimeterKm || 5,
-        restaurants: data.restaurants || [],
-        curatedList: data.curatedList || "",
-      };
-    } else {
-      // Return default settings if not found
-      return {
-        workingHours: { startTime: "09:00", endTime: "17:00" },
-        workingDays: DEFAULT_WORKING_DAYS,
-        blockedSlots: [],
-        oneOffUnavailableSlots: [],
-        calendarSync: {
-          autoCreateEvents: true,
-          showBusyTimes: false,
-          syncCancellations: true,
-        },
-        restaurantCity: "",
-        restaurantCountry: "",
-        restaurantPerimeterKm: 5,
-        restaurants: [],
-        curatedList: "",
-      };
-    }
+    const resp = await fetch(`${API_BASE_URL}/settings/${orgId}/${calendarId}`);
+    if (!resp.ok) throw new Error("Failed to fetch tenant settings");
+    const data = await resp.json() as Settings;
+    const rawWorkingDays = (data as unknown as { workingDays?: unknown }).workingDays;
+    data.workingDays = normalizeWorkingDays(rawWorkingDays);
+    return data;
   } catch (error) {
-    console.error(
-      `Error fetching settings for org=${orgId}, branch=${calendarId}:`,
-      error
-    );
+    console.error(`Error fetching settings for org=${orgId}, branch=${calendarId}:`, error);
     throw error;
   }
 }
@@ -250,43 +134,18 @@ export async function getTenantSettings(
 /**
  * Update settings for a specific org/branch
  */
-export async function updateTenantSettings(
-  orgId: string,
-  calendarId: string,
-  settings: Settings
-): Promise<boolean> {
-  if (!orgId || !calendarId) {
-    throw new Error("orgId and calendarId are required");
-  }
-
+export async function updateTenantSettings(orgId: string, calendarId: string, settings: Settings): Promise<boolean> {
+  if (!orgId || !calendarId) throw new Error("orgId and calendarId are required");
   try {
-    const settingsKey = `${orgId}_${calendarId}`;
-    const settingsRef = doc(db, "settings", settingsKey);
-    await setDoc(settingsRef, {
-      org_id: orgId,
-      calendar_id: calendarId,
-      workingHours: settings.workingHours,
-      workingDays: settings.workingDays || DEFAULT_WORKING_DAYS,
-      blockedSlots: settings.blockedSlots,
-      oneOffUnavailableSlots: settings.oneOffUnavailableSlots || [],
-      calendarSync: settings.calendarSync || {
-        autoCreateEvents: true,
-        showBusyTimes: false,
-        syncCancellations: true,
-      },
-      restaurantCity: settings.restaurantCity || "",
-      restaurantCountry: settings.restaurantCountry || "",
-      restaurantPerimeterKm: settings.restaurantPerimeterKm || 5,
-      restaurants: settings.restaurants || [],
-      curatedList: settings.curatedList || "",
-      updatedAt: Timestamp.now(),
+    const resp = await fetch(`${API_BASE_URL}/settings/${orgId}/${calendarId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(settings),
     });
+    if (!resp.ok) throw new Error("Failed to update tenant settings");
     return true;
   } catch (error) {
-    console.error(
-      `Error updating settings for org=${orgId}, branch=${calendarId}:`,
-      error
-    );
+    console.error(`Error updating settings for org=${orgId}, branch=${calendarId}:`, error);
     throw error;
   }
 }
